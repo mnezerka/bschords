@@ -15,7 +15,8 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-D__WXDEBUG__" />
-					<Add directory="D:\wxwidgets\lib\gcc_lib\mswud" />
+					<Add option="-DWXUSINGDLL" />
+					<Add directory="$(#wx)\lib\gcc_dll_unicode_debug\mswud" />
 				</Compiler>
 				<ResourceCompiler>
 					<Add directory="D:\wxwidgets\lib\gcc_lib\mswud" />
@@ -26,7 +27,7 @@
 					<Add library="libwxjpegd.a" />
 					<Add library="libwxtiffd.a" />
 					<Add library="libwxzlibd.a" />
-					<Add directory="D:\wxwidgets\lib\gcc_lib" />
+					<Add directory="$(#wx)\lib\gcc_dll_unicode_debug" />
 				</Linker>
 			</Target>
 			<Target title="release_win">
@@ -83,6 +84,8 @@
 			<Add library="libwsock32.a" />
 			<Add library="libodbc32.a" />
 		</Linker>
+		<Unit filename="src\bschordpro.cpp" />
+		<Unit filename="src\bschordpro.h" />
 		<Unit filename="src\bschordsApp.cpp" />
 		<Unit filename="src\bschordsApp.h" />
 		<Unit filename="src\bschordsMain.cpp" />

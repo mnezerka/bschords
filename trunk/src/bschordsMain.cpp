@@ -18,6 +18,8 @@
 #include "bschordsMain.h"
 #include <wx/treectrl.h>
 #include <wx/dir.h>
+#include <wx/stc/stc.h>
+
 
 //helper functions
 enum wxbuildinfoformat {
@@ -86,13 +88,15 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 
 	wxSplitterWindow *splitterSong = new wxSplitterWindow(splitterMain, -1, wxPoint(0, 0), wxSize(400, 400), wxSP_BORDER);
 
-	m_songContent = new wxRichTextCtrl(splitterSong);
+	m_songContent = new wxRichTextCtrl(splitterSong, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
+
+    //wxString *defaultText = new wxString(_("Default text"));
+    //m_songContent->AppendText(L"Ahoj");
 
 	m_preview = new bschordsPreview(splitterSong, m_songContent);
 	m_preview->SetScrollbars(20, 20, 50, 50);
 
 	//wxTextCtrl *editWindow = new wxTextCtrl(splitter, -1, _T("initial text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-
 
 	wxTreeCtrl *tree = new wxTreeCtrl(splitterMain);
 
@@ -112,6 +116,8 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 		wxLogInfo(file);
 		cont = dir.GetNext(&file);
 	}
+
+    //wxStyledTextCtrl *x = new wxStyledTextCtrl(this);
 }
 
 
@@ -143,3 +149,6 @@ void bschordsFrame::OnSongContentChange(wxCommandEvent& event)
 	m_preview->Update();
 
 }
+
+
+

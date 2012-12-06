@@ -7,8 +7,8 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="debug">
-				<Option output="bin\debug\bschordprotest" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\debug\" />
+				<Option output="bin\debugtst\bschordprotest" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\debugtst\" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -31,6 +31,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add option="-DBSCHORDPRO_TEST" />
 		</Compiler>
 		<Unit filename="src\bschordpro.cpp" />
 		<Unit filename="src\bschordpro.h" />

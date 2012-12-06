@@ -114,16 +114,18 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 
 			// look for end character
 			for (unsigned int j = i + 1; j <= lineTo; j++)
+			{
 				if (line[j] == endChar)
 				{
 					endPos = j;
 					break;
 				}
-
+			}
 			// if end character was found
+			cout << (endPos >= 0 ? "yes" : "no") << endl;
 			if (endPos >= 0)
 			{
-				//cout << "we have section: " << i << " " << endPos << endl;
+				cout << "we have section: " << i << " " << endPos << endl;
 
                 if (curText.length() > 0)
                 {
@@ -140,7 +142,13 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 						parseChord(line.substr(i + 1, endPos - i - 1));
 						break;
 				}
+
 				i = endPos + 1;
+			}
+			else
+			{
+                curText += line[i];
+                i++;
 			}
 		}
 		// space is delimiter of text blocks
@@ -179,6 +187,7 @@ void BSChordProParser::parseChord(const std::string& chord)
 	m_eventHandler->onChord(chord);
 }
 
+#ifdef BSCHORDPRO_TEST
 int main(int argc, char **argv)
 {
 	BSChordProEventHandler x;
@@ -196,10 +205,12 @@ int main(int argc, char **argv)
 
     //p.parse("x [A][B][C] [First]misa[C]Chord");
 
-    p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+    //p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
 
+    p.parse("[A");
 
     //p.parse("x\ny\nz");
 	return 0;
 }
+#endif // BSCHORDPRO_TEST
 

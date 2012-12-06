@@ -17,6 +17,8 @@
 
 #include "bschordsMain.h"
 #include <wx/treectrl.h>
+#include <wx/listctrl.h>
+#include <wx/imaglist.h>
 #include <wx/dir.h>
 #include <wx/stc/stc.h>
 
@@ -84,9 +86,9 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     SetStatusText(wxbuildinfo(short_f), 1);
 #endif // wxUSE_STATUSBAR
 
-	wxSplitterWindow *splitterMain = new wxSplitterWindow(this, -1, wxPoint(0, 0), wxSize(400, 400), wxSP_BORDER);
+	wxSplitterWindow *splitterMain = new wxSplitterWindow(this, -1, wxDefaultPosition,  wxDefaultSize, wxSP_BORDER);
 
-	wxSplitterWindow *splitterSong = new wxSplitterWindow(splitterMain, -1, wxPoint(0, 0), wxSize(400, 400), wxSP_BORDER);
+	wxSplitterWindow *splitterSong = new wxSplitterWindow(splitterMain, -1, wxDefaultPosition, wxDefaultSize, wxSP_BORDER);
 
 	m_songContent = new wxRichTextCtrl(splitterSong, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 
@@ -95,13 +97,34 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 
 	m_preview = new bschordsPreview(splitterSong, m_songContent);
 	m_preview->SetScrollbars(20, 20, 50, 50);
+	m_preview->SetBackgroundColour(wxColour(255, 255, 255));
+	m_preview->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 
 	//wxTextCtrl *editWindow = new wxTextCtrl(splitter, -1, _T("initial text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
 
-	wxTreeCtrl *tree = new wxTreeCtrl(splitterMain);
+	//wxTreeCtrl *tree = new wxTreeCtrl(splitterMain);
 
-	splitterMain->SplitVertically( tree, splitterSong);
-	splitterSong->SplitVertically( m_songContent, m_preview);
+	wxListView *fsList = new wxListView(splitterMain, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_LIST);
+
+	splitterMain->SplitVertically(fsList, splitterSong, 100);
+	splitterSong->SplitVertically(m_songContent, m_preview, 0);
+
+
+	wxImageList *m_pImageList = new wxImageList(16,16);
+	wxIcon icon;
+	icon.LoadFile(wxT("res/directory.ico"), wxBITMAP_TYPE_PNG);
+	m_pImageList->Add(icon);
+	fsList->SetImageList(m_pImageList, wxIMAGE_LIST_SMALL);
+
+     // Add first column
+	wxListItem col0;
+    col0.SetId(0);
+    col0.SetText(_("File"));
+    //col0.SetWidth(50);
+    fsList->InsertColumn(0, col0);
+
+
+	//fsList->SetItem(item);
 
 	//ctor
 	wxDir dir(wxGetCwd());
@@ -112,9 +135,15 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 
 	while (cont)
 	{
-		wxPuts(file);
-		wxLogInfo(file);
+		wxListItem item;
+		//item.SetId(34);
+		item.SetText(file);
+		fsList->InsertItem(item);
+
+		//wxPuts(file);
+		//wxLogInfo(file);
 		cont = dir.GetNext(&file);
+
 	}
 
     //wxStyledTextCtrl *x = new wxStyledTextCtrl(this);

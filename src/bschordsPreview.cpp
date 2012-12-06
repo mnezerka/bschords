@@ -6,9 +6,9 @@
 
 // http://wiki.wxwidgets.org/Converting_everything_to_and_from_wxString#std::string_to_wxString
 
-#define BSCHP_OFFSET_Y 10
+#define BSCHP_OFFSET_Y 30
 #define BSCHP_OFFSET_X 10
-#define BSCHP_LINE_OFFSET 10
+#define BSCHP_LINE_SPACING 30
 #define BSCHP_CHORD_OFFSET 3
 
 
@@ -54,7 +54,7 @@ void BSChordProDCPainter::onText(const std::string& text)
 }
 
 void BSChordProDCPainter::onLineBegin() { m_posX = BSCHP_OFFSET_X; };
-void BSChordProDCPainter::onLineEnd() { m_posY += 15; };
+void BSChordProDCPainter::onLineEnd() { m_posY += BSCHP_LINE_SPACING; };
 void BSChordProDCPainter::onCommand(const std::string& command) { };
 
 void BSChordProDCPainter::onChord(const std::string& chord)
@@ -75,6 +75,7 @@ bschordsPreview::bschordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl)
 	: wxScrolledWindow(parent)
 {
 	m_sourceCtrl = sourceCtrl;
+
 }
 
 bschordsPreview::~bschordsPreview()

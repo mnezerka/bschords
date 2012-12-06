@@ -122,10 +122,9 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 				}
 			}
 			// if end character was found
-			cout << (endPos >= 0 ? "yes" : "no") << endl;
 			if (endPos >= 0)
 			{
-				cout << "we have section: " << i << " " << endPos << endl;
+				//cout << "we have section: " << i << " " << endPos << endl;
 
                 if (curText.length() > 0)
                 {
@@ -205,9 +204,9 @@ int main(int argc, char **argv)
 
     //p.parse("x [A][B][C] [First]misa[C]Chord");
 
-    //p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+    p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
 
-    p.parse("[A");
+    //p.parse("[A");
 
     //p.parse("x\ny\nz");
 	return 0;

@@ -19,10 +19,11 @@ void BSChordProEventHandlerTxt::onLineEnd()
     cout << endl << endl;
 };
 
-void BSChordProEventHandlerTxt::onCommand(const std::string& command)
+void BSChordProEventHandlerTxt::onCommand(const std::string& command, const std::string& value)
 {
-    cout << command;
+    cout << "command: " << command << " with value: " << value;
 };
+
 void BSChordProEventHandlerTxt::onChord(const std::string& chord)
 {
     m_chordBuffer.append(chord);
@@ -178,7 +179,57 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 
 void BSChordProParser::parseCommand(const std::string& cmd)
 {
-	m_eventHandler->onCommand(cmd);
+    //cout << "parsing >" << cmd << "<" << endl;
+    // default values
+    //size_t cmdValBegin = -1;
+    //size_t cmdEnd = -1;
+
+    // trim cmd string
+    //size_t cmdIdBegin = cmd.find_first_not_of(' ');
+    size_t cmdEnd = cmd.find_last_not_of(' ');
+
+    std::string cmdId("");
+    std::string cmdVal("");
+
+    // look for optional command value
+    size_t sepPos = cmd.find_first_of(':');
+
+    //cout << "seppos is " << sepPos << endl;
+
+    // if separator is present
+    if (sepPos != std::string::npos)
+    {
+        // get command id
+        if (sepPos > 0)
+        {
+            size_t first = cmd.find_first_not_of(' ', 0);
+            size_t last = cmd.find_last_not_of(' ', sepPos - 1);
+            // set command id only if not empty
+            if (last != std::string::npos && first < last)
+            {
+                //cout << first <<  " " << last << endl;
+                cmdId.assign(cmd, first, last - first + 1);
+            }
+        }
+
+        // get value
+        if (sepPos < cmdEnd)
+        {
+            size_t first = cmd.find_first_not_of(' ', sepPos + 1);
+            if (first != std::string::npos && first < cmdEnd)
+            {
+                //cout << first << " " << cmdEnd << endl;
+                cmdVal.assign(cmd, first, cmdEnd - first + 1);
+            }
+        }
+    }
+
+    //cout << "command id is: >" << cmdId << "<" << endl;
+    //cout << "value is: >" << cmdVal << "<" << endl;
+    //if ()
+
+    if (cmdId.length() > 0)
+        m_eventHandler->onCommand(cmdId, cmdVal);
 }
 
 void BSChordProParser::parseChord(const std::string& chord)
@@ -204,7 +255,17 @@ int main(int argc, char **argv)
 
     //p.parse("x [A][B][C] [First]misa[C]Chord");
 
-    p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+    p.parse("{title: Song1}");
+    //p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+
+    p.parse("{title  :  Song1}");
+    p.parse("{title:Song1}");
+    p.parse("{  title  :  Song1  }");
+    p.parse("{title:}");
+    p.parse("{:}");
+    p.parse("{ :}");
+    p.parse("{}");
+
 
     //p.parse("[A");
 

@@ -1,0 +1,6 @@
+mondrian ICON "bschordsicon.ico"
+
+#include "wx/msw/wx.rc"
+
+iconsmall   ICON    "bitmaps/directory.ico"
+

@@ -15,6 +15,7 @@
 #pragma hdrstop
 #endif //__BORLANDC__
 
+
 #include "bschordsApp.h"
 #include "bschordsMain.h"
 
@@ -22,9 +23,18 @@ IMPLEMENT_APP(bschordsApp);
 
 bool bschordsApp::OnInit()
 {
+	config = new wxFileConfig(_("BSChords"));
+	config->Read(_("xxx"));
+
     bschordsFrame* frame = new bschordsFrame(0L, _("wxWidgets Application Template"));
-    
+
     frame->Show();
-    
+
     return true;
+}
+
+int bschordsApp::OnExit()
+{
+
+	delete config;
 }

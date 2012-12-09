@@ -17,6 +17,7 @@
 #include <wx/splitter.h>
 #include <wx/textctrl.h>
 #include <wx/richtext/richtextctrl.h>
+#include <wx/stc/stc.h>
 
 #include "bschordsApp.h"
 #include "bschordsPreview.h"
@@ -30,14 +31,18 @@ class bschordsFrame: public wxFrame
     private:
 		bschordsPreview *m_preview;
 		wxRichTextCtrl *m_songContent;
+		//wxStyledTextCtrl *m_songContent;
         enum
         {
             idMenuQuit = 1000,
             idMenuAbout,
-            idMenuPreferences
+            idMenuPreferences,
+            idMenuViewEditor,
+            idMenuViewPreview
         };
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
+        void OnPreferences(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSongContentChange(wxCommandEvent& event);
         DECLARE_EVENT_TABLE()

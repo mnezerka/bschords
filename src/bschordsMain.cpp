@@ -15,12 +15,14 @@
 #pragma hdrstop
 #endif //__BORLANDC__
 
-#include "bschordsMain.h"
+
 #include <wx/treectrl.h>
 #include <wx/listctrl.h>
 #include <wx/imaglist.h>
 #include <wx/dir.h>
-#include <wx/stc/stc.h>
+
+#include "bschordsMain.h"
+#include "bschordsPreferences.h"
 
 
 //helper functions
@@ -54,7 +56,8 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
     EVT_CLOSE(bschordsFrame::OnClose)
     EVT_MENU(idMenuQuit, bschordsFrame::OnQuit)
-    EVT_MENU(idMenuAbout, bschordsFrame::OnAbout)
+    EVT_MENU(idMenuPreferences, bschordsFrame::OnPreferences)
+        EVT_MENU(idMenuAbout, bschordsFrame::OnAbout)
     EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
 END_EVENT_TABLE()
 
@@ -72,6 +75,11 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     editMenu->Append(idMenuPreferences, _("&Preferences"), _("Application preferences"));
     mbar->Append(editMenu, _("&Edit"));
 
+    wxMenu* viewMenu = new wxMenu(_T(""));
+    viewMenu->Append(idMenuViewEditor, _("&Editor"), _("Song editor"));
+    viewMenu->Append(idMenuViewEditor, _("&Preview"), _("Song preview"));
+    mbar->Append(viewMenu, _("&View"));
+
     wxMenu* helpMenu = new wxMenu(_T(""));
     helpMenu->Append(idMenuAbout, _("&About\tF1"), _("Show info about this application"));
     mbar->Append(helpMenu, _("&Help"));
@@ -86,13 +94,19 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     SetStatusText(wxbuildinfo(short_f), 1);
 #endif // wxUSE_STATUSBAR
 
+	int top = wxGetApp().config->Read(_("/global/top"), 100);
+	int left = wxGetApp().config->Read(_("/global/left"), 100);
+	int width = wxGetApp().config->Read(_("/global/width"), 500);
+	int height = wxGetApp().config->Read(_("/global/height"), 500);
+	SetSize(left, top, width, height, 0);
+
 	wxSplitterWindow *splitterMain = new wxSplitterWindow(this, -1, wxDefaultPosition,  wxDefaultSize, wxSP_BORDER);
 
 	wxSplitterWindow *splitterSong = new wxSplitterWindow(splitterMain, -1, wxDefaultPosition, wxDefaultSize, wxSP_BORDER);
 
 	m_songContent = new wxRichTextCtrl(splitterSong, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 
-    //wxString *defaultText = new wxString(_("Default text"));
+   //wxString *defaultText = new wxString(_("Default text"));
     //m_songContent->AppendText(L"Ahoj");
 
 	m_preview = new bschordsPreview(splitterSong, m_songContent);
@@ -111,10 +125,10 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 
 
 	wxImageList *m_pImageList = new wxImageList(16,16);
-	wxIcon icon;
-	icon.LoadFile(wxT("res/directory.ico"), wxBITMAP_TYPE_PNG);
-	m_pImageList->Add(icon);
-	fsList->SetImageList(m_pImageList, wxIMAGE_LIST_SMALL);
+	//wxIcon icon;
+	//icon.LoadFile(wxT("res/directory.ico"), wxBITMAP_TYPE_PNG);
+	//m_pImageList->Add(icon);
+	//fsList->SetImageList(m_pImageList, wxIMAGE_LIST_SMALL);
 
      // Add first column
 	wxListItem col0;
@@ -122,7 +136,6 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     col0.SetText(_("File"));
     //col0.SetWidth(50);
     fsList->InsertColumn(0, col0);
-
 
 	//fsList->SetItem(item);
 
@@ -147,6 +160,7 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	}
 
     //wxStyledTextCtrl *x = new wxStyledTextCtrl(this);
+
 }
 
 
@@ -162,13 +176,32 @@ void bschordsFrame::OnClose(wxCloseEvent &event)
 
 void bschordsFrame::OnQuit(wxCommandEvent &event)
 {
+ 	// store window size
+ 	int x, y;
+ 	GetSize(&x, &y);
+
+	wxGetApp().config->Write(_("/global/width"), x);
+	wxGetApp().config->Write(_("/global/height"), y);
+
+ 	GetPosition(&x, &y);
+	wxGetApp().config->Write(_("/global/left"), x);
+	wxGetApp().config->Write(_("/global/top"), y);
+
     Destroy();
+}
+
+void bschordsFrame::OnPreferences(wxCommandEvent &event)
+{
+    bschordsPreferences* dlg = new bschordsPreferences(0L, _("wxWidgets Application Template"));
+
+    dlg->Show();
 }
 
 void bschordsFrame::OnAbout(wxCommandEvent &event)
 {
     wxString msg = wxbuildinfo(long_f);
-    wxMessageBox(msg, _("BSChords application, Author: michal.nezerka@gmail.com"));
+    msg.append(_("\n\nmichal.nezerka@gmail.com\n\nhttp://blue.pavoucek.cz"));
+    wxMessageBox(msg, _("BSChords application"));
 }
 
 void bschordsFrame::OnSongContentChange(wxCommandEvent& event)

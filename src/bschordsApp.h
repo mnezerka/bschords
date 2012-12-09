@@ -11,11 +11,19 @@
 #define BSCHORDSAPP_H
 
 #include <wx/app.h>
+#include <wx/fileconf.h>
+
+
 
 class bschordsApp : public wxApp
 {
     public:
+		wxConfig *config;
+
         virtual bool OnInit();
+        virtual int OnExit();
 };
+
+DECLARE_APP(bschordsApp);
 
 #endif // BSCHORDSAPP_H

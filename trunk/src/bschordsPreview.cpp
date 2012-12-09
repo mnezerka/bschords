@@ -113,6 +113,7 @@ void bschordsPreview::OnDraw(wxDC& dc)
 
         //dc.DrawText(line, 10, i * 15 + 20);
     }
+
 	//wxString title = wxString::Format(_("Number of lines: %d"), lines);
 	//dc.DrawText(title, 10, 10);
 

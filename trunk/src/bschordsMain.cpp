@@ -23,7 +23,7 @@
 
 #include "bschordsMain.h"
 #include "bschordsPreferences.h"
-
+#include "bschordsicon.xpm"
 
 //helper functions
 enum wxbuildinfoformat {
@@ -64,6 +64,9 @@ END_EVENT_TABLE()
 bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     : wxFrame(frame, -1, title)
 {
+
+    SetIcon(wxICON(bschordsicon));
+
 #if wxUSE_MENUS
     // create a menu bar
     wxMenuBar* mbar = new wxMenuBar();
@@ -124,7 +127,7 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	splitterSong->SplitVertically(m_songContent, m_preview, 0);
 
 
-	wxImageList *m_pImageList = new wxImageList(16,16);
+	//wxImageList *m_pImageList = new wxImageList(16,16);
 	//wxIcon icon;
 	//icon.LoadFile(wxT("res/directory.ico"), wxBITMAP_TYPE_PNG);
 	//m_pImageList->Add(icon);

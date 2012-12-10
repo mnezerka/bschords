@@ -23,10 +23,10 @@ IMPLEMENT_APP(bschordsApp);
 
 bool bschordsApp::OnInit()
 {
-	config = new wxFileConfig(_("BSChords"));
+	config = new wxConfig(_("BSChords"));
 	config->Read(_("xxx"));
 
-    bschordsFrame* frame = new bschordsFrame(0L, _("wxWidgets Application Template"));
+    bschordsFrame* frame = new bschordsFrame(0L, _("BSChords"));
 
     frame->Show();
 
@@ -35,6 +35,7 @@ bool bschordsApp::OnInit()
 
 int bschordsApp::OnExit()
 {
-
 	delete config;
+
+	return 0;
 }

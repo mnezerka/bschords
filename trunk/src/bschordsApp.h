@@ -12,8 +12,7 @@
 
 #include <wx/app.h>
 #include <wx/fileconf.h>
-
-
+#include <wx/config.h>
 
 class bschordsApp : public wxApp
 {

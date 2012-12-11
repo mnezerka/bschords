@@ -14,9 +14,11 @@ void BSChordProEventHandlerTxt::onLineBegin()
 
 void BSChordProEventHandlerTxt::onLineEnd()
 {
-    cout << m_chordBuffer << endl;
+    if (m_chordBuffer.find_first_not_of(' ') != std::string::npos)
+        cout << endl << m_chordBuffer << endl;
+
     cout << m_textBuffer;
-    cout << endl << endl;
+    cout << endl;
 };
 
 void BSChordProEventHandlerTxt::onCommand(const std::string& command, const std::string& value)
@@ -49,29 +51,30 @@ void BSChordProEventHandlerTxt::onText(const std::string& text)
 //////////////////////////////////////////////////////////////////////////////
 void BSChordProParser::parse(const std::string& s)
 {
-	bool onSeparator = false;
+	bool onLineSeparator = false;
 	unsigned int lineFrom = 0;
 	unsigned int lineTo = 0;
 
 	if (m_eventHandler == NULL)
 		return;
 
+    // loop over all characters of parsed string (buffer)
 	for (unsigned int i = 0; i < s.length(); i++)
 	{
 		if (s[i] == '\n' || s[i] == '\r')
 		{
-			onSeparator = true;
+			onLineSeparator = true;
 		}
 		else
 		{
-			if (!onSeparator)
+			if (!onLineSeparator)
 			{
 				lineTo = i;
 			}
 			else
 			{
 				parseLine(s, lineFrom, lineTo);
-				onSeparator = false;
+				onLineSeparator = false;
 				lineFrom = lineTo = i;
 			}
 		}
@@ -82,9 +85,22 @@ void BSChordProParser::parse(const std::string& s)
 		parseLine(s, lineFrom, s.length() - 1);
 }
 
-void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom, unsigned int lineTo)
+void BSChordProParser::parseLine(const std::string& strBuffer, unsigned int lineFrom, unsigned int lineTo)
 {
 	string curText = "";
+
+    // first check if strBuffer should be parsed
+    size_t firstCharPos = strBuffer.find_first_not_of(' ', lineFrom);
+
+    //cout << lineFrom << ":" << lineTo << ":" << firstCharPos << endl;
+
+    // skip emtpy lines (containing only spaces)
+    //if (firstCharPos > lineTo)
+    //    return;
+
+    // skip comments
+    if (strBuffer[firstCharPos] == '#')
+        return;
 
     m_eventHandler->onLineBegin();
 
@@ -95,13 +111,13 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 	while (i <= lineTo)
 	{
 		// commands and chords (start symbol cannot be at the end of line)
-		if ((line[i] == '{' || line[i] == '[') && i < lineTo)
+		if ((strBuffer[i] == '{' || strBuffer[i] == '[') && i < lineTo)
 		{
 			int endPos = -1;
 			char endChar = 0;
 			enum { eCmd, eChord } sectionType;
 
-			switch (line[i])
+			switch (strBuffer[i])
 			{
 				case '{':
 					endChar = '}';
@@ -116,7 +132,7 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 			// look for end character
 			for (unsigned int j = i + 1; j <= lineTo; j++)
 			{
-				if (line[j] == endChar)
+				if (strBuffer[j] == endChar)
 				{
 					endPos = j;
 					break;
@@ -136,10 +152,10 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 				{
 					case eCmd:
 						//cout << "we have command " << line.substr(i + 1, pos - i - 1) << endl;
-						parseCommand(line.substr(i + 1, endPos - i - 1));
+						parseCommand(strBuffer.substr(i + 1, endPos - i - 1));
 						break;
 					case eChord:
-						parseChord(line.substr(i + 1, endPos - i - 1));
+						parseChord(strBuffer.substr(i + 1, endPos - i - 1));
 						break;
 				}
 
@@ -147,23 +163,23 @@ void BSChordProParser::parseLine(const std::string& line, unsigned int lineFrom,
 			}
 			else
 			{
-                curText += line[i];
+                curText += strBuffer[i];
                 i++;
 			}
 		}
 		// space is delimiter of text blocks
-		else if (line[i] == ' ')
+		else if (strBuffer[i] == ' ')
 		{
 		    m_eventHandler->onText(curText);
             curText.erase();
-            curText += line[i];
+            curText += strBuffer[i];
             m_eventHandler->onText(curText);
             curText.erase();
             i++;
 		}
 		else {
-			//cout << "char" << line[i] << endl;
-			curText += line[i];
+			//cout << "char" << strBuffer[i] << endl;
+			curText += strBuffer[i];
 			i++;
 		}
 	}
@@ -244,6 +260,7 @@ int main(int argc, char **argv)
 	BSChordProEventHandlerTxt y;
 	//x.onLine("ahoj");
 
+	//BSChordProParser p(&x);
 	BSChordProParser p(&y);
 
 	//p.parse("0123456789012345678\nand this is second line.\n\rAnd this is third line\r\r\rAnd last one");
@@ -255,9 +272,11 @@ int main(int argc, char **argv)
 
     //p.parse("x [A][B][C] [First]misa[C]Chord");
 
-    p.parse("{title: Song1}");
-    //p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+    //p.parse("{title: Song1}");
+    p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+    p.parse("\nHold to a dream, carry it up and down\nFollow a star, search the world around\nHold to a dream, carry it close to me\nI'm frozen in time, you alone can set me free");
 
+    /*
     p.parse("{title  :  Song1}");
     p.parse("{title:Song1}");
     p.parse("{  title  :  Song1  }");
@@ -265,7 +284,9 @@ int main(int argc, char **argv)
     p.parse("{:}");
     p.parse("{ :}");
     p.parse("{}");
+    */
 
+    //p.parse("#  ahoj\n#ja jsem misa\n \na ty?");
 
     //p.parse("[A");
 

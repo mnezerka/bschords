@@ -8,8 +8,9 @@
 
 // http://wiki.wxwidgets.org/Converting_everything_to_and_from_wxString#std::string_to_wxString
 
+
+#define BSCHP_OFFSET_X 30
 #define BSCHP_OFFSET_Y 30
-#define BSCHP_OFFSET_X 10
 #define BSCHP_LINE_SPACING 30
 #define BSCHP_CHORD_OFFSET 3
 
@@ -57,16 +58,29 @@ BSChordProDCPainter::BSChordProDCPainter(wxDC& dc)
 {
     // 1 logical unit = 1 mm
     //m_dc.SetFont();'
+
+    // set map mode to milimeters
     m_dc.SetMapMode(wxMM_METRIC);
-    m_dc.SetFont(wxFont(10, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Arial")));
-    m_dc.SetUserScale(0.3, 0.3);
+
+    // set default zoom
+    m_dc.SetUserScale(0.5, 0.5);
+
+    m_dc.SetFont(wxFont(6, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Arial")));
+
+    // white background
     m_dc.DrawRectangle(0, 0, BSCHP_X, BSCHP_Y);
     //wxPen pen(*wxGREY_PEN, 1); // red pen of width 1
     //dc.SetPen(pen);
     //m_dc.SetPen(wxGREY_PEN);
+
+    // draw border line
     m_dc.DrawRectangle(BSCHP_OFFSET_X, BSCHP_OFFSET_Y, BSCHP_X - 2 * BSCHP_OFFSET_X, BSCHP_Y - 2 * BSCHP_OFFSET_Y);
+
     wxSize eMSize = m_dc.GetTextExtent(_("M"));
+
     m_eMHeight = eMSize.GetHeight();
+
+    m_posY = BSCHP_OFFSET_Y;
 
 //    m_dc.SetFontSize()
 };
@@ -109,16 +123,29 @@ void BSChordProDCPainter::onChord(const std::string& chord)
 void BSChordProDCPainter::onLineBegin() { m_posX = BSCHP_OFFSET_X; m_hasChords = false; };
 void BSChordProDCPainter::onLineEnd()
 {
-    for (int i = 0; i < m_chordLine.size(); i++)
-        m_dc.DrawText(*m_chordLine[i]->txt, m_chordLine[i]->posX, m_posY + BSCHP_OFFSET_Y - m_eMHeight - BSCHP_CHORD_OFFSET);
+    //std::cout << "OnLineEnd, m_posY is " << m_posY << endl;
 
     if (m_chordLine.size() > 0)
-        m_posY += BSCHP_LINE_SPACING;
+    {
+        for (int i = 0; i < m_chordLine.size(); i++)
+            m_dc.DrawText(*m_chordLine[i]->txt, m_chordLine[i]->posX, m_posY);
+
+        m_posY += m_eMHeight + BSCHP_CHORD_OFFSET;
+
+        while (!m_chordLine.empty())
+            m_chordLine.pop_back();
+    }
 
     for (int i = 0; i < m_textLine.size(); i++)
-        m_dc.DrawText(*m_textLine[i]->txt, m_textLine[i]->posX, m_posY + BSCHP_OFFSET_Y - m_eMHeight - BSCHP_CHORD_OFFSET);
+        m_dc.DrawText(*m_textLine[i]->txt, m_textLine[i]->posX, m_posY);
+
+    while (!m_textLine.empty())
+        m_textLine.pop_back();
+
 
     m_posY += BSCHP_LINE_SPACING;
+
+
 };
 void BSChordProDCPainter::onCommand(const std::string& command) { };
 
@@ -143,6 +170,8 @@ void bschordsPreview::OnDraw(wxDC& dc)
 
 	//wxRichTextBuffer &textBuffer = m_sourceCtrl->GetBuffer();
 
+    std::cout << "OnDraw" << endl;
+
     BSChordProDCPainter y(dc);
 	//x.onLine("ahoj");
 
@@ -157,15 +186,16 @@ void bschordsPreview::OnDraw(wxDC& dc)
 
 	int lines = m_sourceCtrl->GetNumberOfLines();
 
-    wxString line;
+    wxString text;
     for (int i = 0; i < lines; i++)
     {
-        line = m_sourceCtrl->GetLineText(i);
-
-        p.parse(std::string(line.mb_str()));
+        text += m_sourceCtrl->GetLineText(i);
+        text += wxT('\n');
+    }
+    p.parse(std::string(text.mb_str()));
 
         //dc.DrawText(line, 10, i * 15 + 20);
-    }
+
 
 	//wxString title = wxString::Format(_("Number of lines: %d"), lines);
 	//dc.DrawText(title, 10, 10);

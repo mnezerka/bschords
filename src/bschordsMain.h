@@ -18,6 +18,7 @@
 #include <wx/textctrl.h>
 #include <wx/richtext/richtextctrl.h>
 #include <wx/stc/stc.h>
+#include <wx/aui/aui.h>
 
 #include "bschordsApp.h"
 #include "bschordsPreview.h"
@@ -40,11 +41,13 @@ class bschordsFrame: public wxFrame
             idMenuViewEditor,
             idMenuViewPreview
         };
+        wxAuiManager m_auiMgr;
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSongContentChange(wxCommandEvent& event);
+
         DECLARE_EVENT_TABLE()
 };
 

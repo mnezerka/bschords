@@ -64,10 +64,10 @@ END_EVENT_TABLE()
 bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     : wxFrame(frame, -1, title)
 {
+    //m_auiMgr.SetManagedWindow(this);
 
     SetIcon(wxICON(bschordsicon));
 
-#if wxUSE_MENUS
     // create a menu bar
     wxMenuBar* mbar = new wxMenuBar();
     wxMenu* fileMenu = new wxMenu(_T(""));
@@ -88,14 +88,12 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     mbar->Append(helpMenu, _("&Help"));
 
     SetMenuBar(mbar);
-#endif // wxUSE_MENUS
 
-#if wxUSE_STATUSBAR
+
     // create a status bar with some information about the used wxWidgets version
     CreateStatusBar(2);
     SetStatusText(_("This is BSChords application!"),0);
     SetStatusText(wxbuildinfo(short_f), 1);
-#endif // wxUSE_STATUSBAR
 
 	int top = wxGetApp().config->Read(_("/global/top"), 100);
 	int left = wxGetApp().config->Read(_("/global/left"), 100);
@@ -113,9 +111,9 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     //m_songContent->AppendText(L"Ahoj");
 
 	m_preview = new bschordsPreview(splitterSong, m_songContent);
-	m_preview->SetScrollbars(20, 20, 50, 50);
-	m_preview->SetBackgroundColour(wxColour(255, 255, 255));
-	m_preview->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+	//m_preview->SetScrollbars(20, 20, 50, 50);
+	//m_preview->SetBackgroundColour(wxColour(255, 255, 255));
+	//m_preview->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 
 	//wxTextCtrl *editWindow = new wxTextCtrl(splitter, -1, _T("initial text"), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
 
@@ -163,7 +161,6 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	}
 
     //wxStyledTextCtrl *x = new wxStyledTextCtrl(this);
-
 }
 
 

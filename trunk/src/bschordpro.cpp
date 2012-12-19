@@ -14,43 +14,52 @@ void BSChordProEventHandlerTxt::onLineBegin()
 
 void BSChordProEventHandlerTxt::onLineEnd()
 {
-    if (m_chordBuffer.find_first_not_of(' ') != std::string::npos)
-        cout << endl << m_chordBuffer << endl;
+    if (m_chordBuffer.find_first_not_of(L' ') != wstring::npos)
+        wcout << endl << m_chordBuffer << endl;
 
-    cout << m_textBuffer;
-    cout << endl;
+    wcout << m_textBuffer;
+    wcout << endl;
 };
 
-void BSChordProEventHandlerTxt::onCommand(const std::string& command, const std::string& value)
+void BSChordProEventHandlerTxt::onCommand(const wstring& command, const wstring& value)
 {
-    cout << "command: " << command << " with value: " << value;
+    wcout << L"command: " << command << L" with value: " << value;
 };
 
-void BSChordProEventHandlerTxt::onChord(const std::string& chord)
+void BSChordProEventHandlerTxt::onChord(const wstring& chord)
 {
     m_chordBuffer.append(chord);
-    m_chordBuffer.append(" ");
+    m_chordBuffer.append(L" ");
 };
 
-void BSChordProEventHandlerTxt::onText(const std::string& text)
+void BSChordProEventHandlerTxt::onText(const wstring& text)
 {
     m_textBuffer.append(text);
 
     int diff = m_textBuffer.length() - m_chordBuffer.length();
 
     if (diff > 0)
-        m_chordBuffer.append(diff, ' ');
+        m_chordBuffer.append(diff, L' ');
     else
     {
-        m_textBuffer.append(-1 * diff, ' ');
+        m_textBuffer.append(-1 * diff, L' ');
     }
 
 };
 
 
 //////////////////////////////////////////////////////////////////////////////
-void BSChordProParser::parse(const std::string& s)
+void BSChordProParser::parse(const wstring& s)
 {
+    /*wcout << L"size of wchar_t:"<< sizeof(wchar_t) << endl;
+    wcout << L"size of buffer: "<< sizeof(s) << endl;
+    wcout << L"len of buffer: "<< s.size() << endl;
+    wcout << static_cast<unsigned int>(static_cast<unsigned short>(L'\n')) << endl;
+    for (size_t i = 0; i < s.size(); i++)
+    {
+        wcout << i << ": "<< static_cast<unsigned int>(static_cast<unsigned short>(s[i])) << endl;
+    }*/
+
 	bool onLineSeparator = false;
 	unsigned int lineFrom = 0;
 	unsigned int lineTo = 0;
@@ -58,10 +67,10 @@ void BSChordProParser::parse(const std::string& s)
 	if (m_eventHandler == NULL)
 		return;
 
-    // loop over all characters of parsed string (buffer)
-	for (unsigned int i = 0; i < s.length(); i++)
+    // loop over all characters of parsed wstring (buffer)
+	for (size_t i = 0; i < s.length(); i++)
 	{
-		if (s[i] == '\n' || s[i] == '\r')
+		if (s[i] == L'\n' || s[i] == L'\r')
 		{
 			onLineSeparator = true;
 		}
@@ -82,24 +91,24 @@ void BSChordProParser::parse(const std::string& s)
 
 	// consume last line
 	if (lineFrom < s.length())
-		parseLine(s, lineFrom, s.length() - 1);
+		parseLine(s, lineFrom, lineTo);
 }
 
-void BSChordProParser::parseLine(const std::string& strBuffer, unsigned int lineFrom, unsigned int lineTo)
+void BSChordProParser::parseLine(const wstring& strBuffer, unsigned int lineFrom, unsigned int lineTo)
 {
-	string curText = "";
+	wstring curText = L"";
 
     // first check if strBuffer should be parsed
-    size_t firstCharPos = strBuffer.find_first_not_of(' ', lineFrom);
+    size_t firstCharPos = strBuffer.find_first_not_of(L' ', lineFrom);
 
-    //cout << lineFrom << ":" << lineTo << ":" << firstCharPos << endl;
+    //wcout << L"from: " << lineFrom << L", to:" << lineTo << L", first char pos:" << firstCharPos << endl;
 
     // skip emtpy lines (containing only spaces)
     //if (firstCharPos > lineTo)
     //    return;
 
     // skip comments
-    if (strBuffer[firstCharPos] == '#')
+    if (strBuffer[firstCharPos] == L'#')
         return;
 
     m_eventHandler->onLineBegin();
@@ -111,7 +120,7 @@ void BSChordProParser::parseLine(const std::string& strBuffer, unsigned int line
 	while (i <= lineTo)
 	{
 		// commands and chords (start symbol cannot be at the end of line)
-		if ((strBuffer[i] == '{' || strBuffer[i] == '[') && i < lineTo)
+		if ((strBuffer[i] == L'{' || strBuffer[i] == L'[') && i < lineTo)
 		{
 			int endPos = -1;
 			char endChar = 0;
@@ -119,12 +128,12 @@ void BSChordProParser::parseLine(const std::string& strBuffer, unsigned int line
 
 			switch (strBuffer[i])
 			{
-				case '{':
-					endChar = '}';
+				case L'{':
+					endChar = L'}';
 					sectionType = eCmd;
 					break;
-				case '[':
-					endChar = ']';
+				case L'[':
+					endChar = L']';
 					sectionType = eChord;
 					break;
 			}
@@ -168,7 +177,7 @@ void BSChordProParser::parseLine(const std::string& strBuffer, unsigned int line
 			}
 		}
 		// space is delimiter of text blocks
-		else if (strBuffer[i] == ' ')
+		else if (strBuffer[i] == L' ')
 		{
 		    m_eventHandler->onText(curText);
             curText.erase();
@@ -193,35 +202,35 @@ void BSChordProParser::parseLine(const std::string& strBuffer, unsigned int line
     m_eventHandler->onLineEnd();
 }
 
-void BSChordProParser::parseCommand(const std::string& cmd)
+void BSChordProParser::parseCommand(const wstring& cmd)
 {
     //cout << "parsing >" << cmd << "<" << endl;
     // default values
     //size_t cmdValBegin = -1;
     //size_t cmdEnd = -1;
 
-    // trim cmd string
+    // trim cmd wstring
     //size_t cmdIdBegin = cmd.find_first_not_of(' ');
-    size_t cmdEnd = cmd.find_last_not_of(' ');
+    size_t cmdEnd = cmd.find_last_not_of(L' ');
 
-    std::string cmdId("");
-    std::string cmdVal("");
+    wstring cmdId(L"");
+    wstring cmdVal(L"");
 
     // look for optional command value
-    size_t sepPos = cmd.find_first_of(':');
+    size_t sepPos = cmd.find_first_of(L':');
 
     //cout << "seppos is " << sepPos << endl;
 
     // if separator is present
-    if (sepPos != std::string::npos)
+    if (sepPos != wstring::npos)
     {
         // get command id
         if (sepPos > 0)
         {
-            size_t first = cmd.find_first_not_of(' ', 0);
-            size_t last = cmd.find_last_not_of(' ', sepPos - 1);
+            size_t first = cmd.find_first_not_of(L' ', 0);
+            size_t last = cmd.find_last_not_of(L' ', sepPos - 1);
             // set command id only if not empty
-            if (last != std::string::npos && first < last)
+            if (last != string::npos && first < last)
             {
                 //cout << first <<  " " << last << endl;
                 cmdId.assign(cmd, first, last - first + 1);
@@ -231,8 +240,8 @@ void BSChordProParser::parseCommand(const std::string& cmd)
         // get value
         if (sepPos < cmdEnd)
         {
-            size_t first = cmd.find_first_not_of(' ', sepPos + 1);
-            if (first != std::string::npos && first < cmdEnd)
+            size_t first = cmd.find_first_not_of(L' ', sepPos + 1);
+            if (first != string::npos && first < cmdEnd)
             {
                 //cout << first << " " << cmdEnd << endl;
                 cmdVal.assign(cmd, first, cmdEnd - first + 1);
@@ -248,7 +257,7 @@ void BSChordProParser::parseCommand(const std::string& cmd)
         m_eventHandler->onCommand(cmdId, cmdVal);
 }
 
-void BSChordProParser::parseChord(const std::string& chord)
+void BSChordProParser::parseChord(const wstring& chord)
 {
 	m_eventHandler->onChord(chord);
 }
@@ -273,8 +282,8 @@ int main(int argc, char **argv)
     //p.parse("x [A][B][C] [First]misa[C]Chord");
 
     //p.parse("{title: Song1}");
-    p.parse("[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
-    p.parse("\nHold to a dream, carry it up and down\nFollow a star, search the world around\nHold to a dream, carry it close to me\nI'm frozen in time, you alone can set me free");
+    p.parse(L"[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+    p.parse(L"\nHold to a dream, carry it up and down\nFollow a star, search the world around\nHold to a dream, carry it close to me\nI'm frozen in time, you alone can set me free");
 
     /*
     p.parse("{title  :  Song1}");

@@ -63,11 +63,13 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
 
 	// create buttons
 
-    wxBoxSizer* btnSizer = new wxBoxSizer(wxHORIZONTAL);
-    wxButton *BtnCancel = new wxButton(this, wxID_ANY, wxT("&Cancel"), wxDefaultPosition, wxDefaultSize, 0);
-    wxButton *BtnOk = new wxButton(this, wxID_ANY, wxT("&Ok"), wxDefaultPosition, wxDefaultSize, 0);
-    btnSizer->Add(BtnCancel, 0, wxALL, 5);
-    btnSizer->Add(BtnOk, 0, wxALL, 5);
+    //wxBoxSizer* btnSizer = new wxBoxSizer(wxHORIZONTAL);
+    //wxButton *BtnCancel = new wxButton(this, wxID_ANY, wxT("&Cancel"), wxDefaultPosition, wxDefaultSize, 0);
+    //wxButton *BtnOk = new wxButton(this, wxID_ANY, wxT("&Ok"), wxDefaultPosition, wxDefaultSize, 0);
+    //btnSizer->Add(BtnCancel, 0, wxALL, 5);
+    //btnSizer->Add(BtnOk, 0, wxALL, 5);
+
+    wxSizer* btnSizer = CreateButtonSizer(wxOK | wxCANCEL);
 
 	// create tree control
     wxTreebook* m_bookCtrl = new wxTreebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);

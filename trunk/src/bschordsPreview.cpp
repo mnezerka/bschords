@@ -8,7 +8,6 @@
 
 // http://wiki.wxwidgets.org/Converting_everything_to_and_from_wxString#std::string_to_wxString
 
-
 #define BSCHP_OFFSET_X 30
 #define BSCHP_OFFSET_Y 30
 #define BSCHP_LINE_SPACING 0
@@ -37,7 +36,7 @@ class BSChordProDCPainter : public BSChordProEventHandler
         BSChordProDCPainter(wxDC& dc);
 		virtual void onLineBegin();
         virtual void onLineEnd();
-		virtual void onCommand(const wstring& command);
+		virtual void onCommand(const wstring& command, const wstring& value);
 		virtual void onChord(const wstring& chord);
 		virtual void onText(const wstring& text);
     private:
@@ -53,32 +52,28 @@ class BSChordProDCPainter : public BSChordProEventHandler
         wxFont *fontTitle_;
         wxFont *fontChords_;
         wxFont *fontText_;
-        // this macro declares and partly implements MyList class
-
-	    //string m_chordBuffer;
-        //string m_textBuffer;
 };
 
 BSChordProDCPainter::BSChordProDCPainter(wxDC& dc)
     : m_dc(dc), m_posY(0), m_posX(0), m_posXChord(0), m_eMHeight(0)
 {
-    fontTitle_ = new wxFont(8, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Arial"));
+    fontTitle_ = new wxFont(6, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Arial"));
     fontChords_ = new wxFont(3, wxSWISS, wxITALIC, wxNORMAL, false, wxT("Arial"));
-    fontText_ = new wxFont(10, wxDEFAULT, wxNORMAL, wxNORMAL, false, wxT("Arial"));
+    fontText_ = new wxFont(4, wxDEFAULT, wxNORMAL, wxNORMAL, false, wxT("Arial"));
     //fontText_->Scale(ZOOM);
 
     m_dc.SetFont(wxFont(6, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Arial")));
 
     // white background
-    m_dc.DrawRectangle(0, 0, BSCHP_X * ZOOM, BSCHP_Y * ZOOM);
-    //wxPen pen(*wxGREY_PEN, 1); // red pen of width 1
-    //dc.SetPen(pen);
-    m_dc.SetPen(*wxGREY_PEN);
+    m_dc.DrawRectangle(0, 0, BSCHP_X, BSCHP_Y);
+    wxPen pen(wxColour(200, 200, 200), 0.1); // red pen of width 1
+    m_dc.SetPen(pen);
+    //m_dc.SetPen(*wxGREY_PEN);
 
     // draw border line
-    m_dc.DrawRectangle(BSCHP_OFFSET_X * ZOOM, BSCHP_OFFSET_Y  * ZOOM, (BSCHP_X - 2 * BSCHP_OFFSET_X) * ZOOM, (BSCHP_Y - 2 * BSCHP_OFFSET_Y)  * ZOOM);
+    m_dc.DrawRectangle(BSCHP_OFFSET_X, BSCHP_OFFSET_Y, BSCHP_X - 2 * BSCHP_OFFSET_X, BSCHP_Y - 2 * BSCHP_OFFSET_Y);
 
-    m_posY = BSCHP_OFFSET_Y * ZOOM;
+    m_posY = BSCHP_OFFSET_Y;
 };
 
 void BSChordProDCPainter::onText(const wstring& text)
@@ -96,7 +91,7 @@ void BSChordProDCPainter::onText(const wstring& text)
     m_posX += textSize.GetWidth();
 
     if (m_posX > m_posXChord)
-        m_posXChord = m_posX * ZOOM;
+        m_posXChord = m_posX;
 }
 
 void BSChordProDCPainter::onChord(const wstring& chord)
@@ -110,9 +105,20 @@ void BSChordProDCPainter::onChord(const wstring& chord)
     m_chordLine.push_back(item);
 
     m_posXChord += textSize.GetWidth();
-};
+}
 
-void BSChordProDCPainter::onLineBegin() { m_posX = BSCHP_OFFSET_X * ZOOM; m_hasChords = false; };
+void BSChordProDCPainter::onCommand(const wstring& command, const wstring& value)
+{
+    m_dc.SetFont(*fontTitle_);
+    if (command == L"title")
+    {
+        m_dc.DrawText(value, BSCHP_OFFSET_X, m_posY);
+        m_posY += m_dc.GetCharHeight() + BSCHP_LINE_SPACING;
+    }
+    cout << "drawing command" << endl;
+}
+
+void BSChordProDCPainter::onLineBegin() { m_posX = BSCHP_OFFSET_X; m_hasChords = false; };
 void BSChordProDCPainter::onLineEnd()
 {
     //std::cout << "OnLineEnd, m_posY is " << m_posY << endl;
@@ -122,9 +128,9 @@ void BSChordProDCPainter::onLineEnd()
         wcout << L"drawing chord line" << endl;
         m_dc.SetFont(*fontChords_);
         for (size_t i = 0; i < m_chordLine.size(); i++)
-            m_dc.DrawText(*m_chordLine[i]->txt, m_chordLine[i]->posX * ZOOM, m_posY);
+            m_dc.DrawText(*m_chordLine[i]->txt, m_chordLine[i]->posX, m_posY);
 
-        m_posY += m_dc.GetCharHeight() + BSCHP_CHORD_OFFSET * ZOOM;
+        m_posY += m_dc.GetCharHeight() + BSCHP_CHORD_OFFSET;
 
         while (!m_chordLine.empty())
             m_chordLine.pop_back();
@@ -137,14 +143,8 @@ void BSChordProDCPainter::onLineEnd()
     while (!m_textLine.empty())
         m_textLine.pop_back();
 
-    m_posY += m_dc.GetCharHeight() + BSCHP_LINE_SPACING * ZOOM;
+    m_posY += m_dc.GetCharHeight() + BSCHP_LINE_SPACING;
 
-};
-void BSChordProDCPainter::onCommand(const wstring& command)
-{
-    m_dc.SetFont(*fontTitle_);
-    m_dc.DrawText(command, BSCHP_OFFSET_X * ZOOM, m_posY);
-    m_posY += BSCHP_LINE_SPACING;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -197,8 +197,7 @@ void bschordsPreview::OnDraw(wxDC& dc)
     dc.SetMapMode(wxMM_METRIC);
 
 	//wxRichTextBuffer &textBuffer = m_sourceCtrl->GetBuffer();
-
-
+    dc.SetUserScale(ZOOM, ZOOM);
 
     wxSize x = GetClientSize();
     cout << "Client size: " << x.GetWidth() << "x" << x.GetHeight() << " px" << endl;
@@ -225,18 +224,6 @@ void bschordsPreview::OnDraw(wxDC& dc)
     wxCoord y1 = dc.LogicalToDeviceY(wxCoord(1000));
     cout << "1000 mm size: " << x1 << " x " << y1 << endl;
 
-    BSChordProDCPainter y(dc);
-	//x.onLine("ahoj");
-
-	BSChordProParser p(&y);
-
-	//p.parse("0123456789012345678\nand this is second line.\n\rAnd this is third line\r\r\rAnd last one");
-	//       012345678901234567 89 01234567890
-	//p.parse("{title: Song1}xxx\n \nmisa[]nez");
-	//p.parse("{title: Wild Horses}\n[Hm]Childwood [G]living\n[Hm]Is easy to [G]do");
-
-	//p.parse("All that you [Am]wanted\nis easy [D][G][A] to [C]do.");
-
 	int lines = m_sourceCtrl->GetNumberOfLines();
 
     wxString text;
@@ -246,14 +233,11 @@ void bschordsPreview::OnDraw(wxDC& dc)
             text.Append(wxT("\n"));
         text.Append(m_sourceCtrl->GetLineText(i));
     }
+
+    BSChordProDCPainter y(dc);
+
+	BSChordProParser p(&y);
+
     //wcout << text.wc_str() << endl;
     p.parse(std::wstring(text.wc_str()));
-
-
-        //dc.DrawText(line, 10, i * 15 + 20);
-
-
-	//wxString title = wxString::Format(_("Number of lines: %d"), lines);
-	//dc.DrawText(title, 10, 10);
-
 }

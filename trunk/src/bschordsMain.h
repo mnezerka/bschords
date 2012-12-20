@@ -18,7 +18,8 @@
 #include <wx/textctrl.h>
 #include <wx/richtext/richtextctrl.h>
 #include <wx/stc/stc.h>
-#include <wx/aui/aui.h>
+//#include <wx/aui/aui.h>
+#include <wx/dirctrl.h>
 
 #include "bschordsApp.h"
 #include "bschordsPreview.h"
@@ -33,20 +34,20 @@ class bschordsFrame: public wxFrame
 		bschordsPreview *m_preview;
 		wxRichTextCtrl *m_songContent;
 		//wxStyledTextCtrl *m_songContent;
-        enum
-        {
-            idMenuQuit = 1000,
-            idMenuAbout,
-            idMenuPreferences,
-            idMenuViewEditor,
-            idMenuViewPreview
-        };
-        wxAuiManager m_auiMgr;
+		wxGenericDirCtrl* m_dirCtrl;
+
+        //wxAuiManager m_auiMgr;
+
+        void PopulateToolbar(wxToolBarBase* toolBar);
+        void RecreateToolbar();
+
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSongContentChange(wxCommandEvent& event);
+        void OnToolChord(wxCommandEvent& WXUNUSED(event));
+        void OnFSBrowserSelChanged(wxTreeEvent& event);
 
         DECLARE_EVENT_TABLE()
 };

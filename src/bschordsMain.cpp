@@ -299,9 +299,17 @@ void bschordsFrame::OnPreferences(wxCommandEvent &event)
 	bschordsPreferences* dlg = new bschordsPreferences(0L, _("wxWidgets Application Template"));
 
 	if (dlg->ShowModal() == wxID_OK)
-		{
-			wxMessageBox(_("ahoj"));
-		};
+    {
+        wxMessageBox(_("ahoj"));
+
+        // copy font information from preferences to application
+        for (int i = 0; i < BS_FONT_LAST; i++)
+        {
+            std::cout << i << " native info: " << dlg->m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << endl;
+            wxGetApp().m_fonts[i] = dlg->m_fonts[i];
+        }
+    }
+    dlg->Destroy();
 }
 
 void bschordsFrame::OnAbout(wxCommandEvent &event)

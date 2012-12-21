@@ -3,6 +3,8 @@
 #include <wx/richtext/richtextbuffer.h>
 #include <wx/pen.h>
 #include <vector>
+
+#include "bschordsApp.h"
 #include "bschordsPreview.h"
 #include "bschordpro.h"
 
@@ -14,10 +16,10 @@
 #define BSCHP_CHORD_OFFSET 0
 
 // page size
-#define BSCHP_X 210
-#define BSCHP_Y 297
+#define BSCHP_X 2100
+#define BSCHP_Y 2970
 
-#define ZOOM 1
+#define ZOOM 2
 
 int mm2Px(const int n, const int zoom)
 {
@@ -49,22 +51,11 @@ class BSChordProDCPainter : public BSChordProEventHandler
 		bool m_hasChords;
 		vector<BSLineItem*> m_chordLine;
 		vector<BSLineItem*> m_textLine;
-
-		wxFont *fontTitle_;
-		wxFont *fontChords_;
-		wxFont *fontText_;
 };
 
 BSChordProDCPainter::BSChordProDCPainter(wxDC& dc)
 	: m_dc(dc), m_posY(0), m_posX(0), m_posXChord(0), m_eMHeight(0)
 {
-	fontTitle_ = new wxFont(6, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Arial"));
-	fontChords_ = new wxFont(3, wxSWISS, wxITALIC, wxNORMAL, false, wxT("Arial"));
-	fontText_ = new wxFont(4, wxDEFAULT, wxNORMAL, wxNORMAL, false, wxT("Arial"));
-	//fontText_->Scale(ZOOM);
-
-	//m_dc.SetFont(wxFont(6, wxSWISS, wxNORMAL, wxNORMAL, false, wxT("Arial")));
-
 	// white background
 	m_dc.DrawRectangle(0, 0, BSCHP_X, BSCHP_Y);
 	wxPen pen(wxColour(200, 200, 200), 0.1); // red pen of width 1
@@ -87,7 +78,7 @@ void BSChordProDCPainter::onText(const wstring& text)
 	//item->txt = new wxString(text.c_str(), wxConvUTF8);
 	item->txt = new wxString(text);
 	//wcout << L"Converted >" << item->txt->wc_str() << L"<" << endl;
-	//m_dc.SetFont(*fontText_);
+    m_dc.SetFont(wxGetApp().m_fonts[BS_FONT_TEXT]);
 	wxSize textSize = m_dc.GetTextExtent(*item->txt);
 	item->width = textSize.GetWidth();
 	item->posX = m_posX;
@@ -106,7 +97,7 @@ void BSChordProDCPainter::onChord(const wstring& chord)
 {
 	BSLineItem *item = new BSLineItem();
 	//item->txt = new wxString(chord.c_str(), wxConvUTF8);
-	//m_dc.SetFont(*fontChords_);
+    m_dc.SetFont(wxGetApp().m_fonts[BS_FONT_CHORDS]);
 	item->txt = new wxString(chord);
 	wxSize textSize = m_dc.GetTextExtent(*item->txt);
 	item->width = textSize.GetWidth();
@@ -121,10 +112,11 @@ void BSChordProDCPainter::onCommand(const wstring& command, const wstring& value
 {
 	//m_dc.SetFont(*fontTitle_);
 	if (command == L"title")
-		{
-			m_dc.DrawText(value, BSCHP_OFFSET_X, m_posY);
-			m_posY += m_dc.GetCharHeight() + BSCHP_LINE_SPACING;
-		}
+    {
+        m_dc.SetFont(wxGetApp().m_fonts[BS_FONT_TITLE]);
+		m_dc.DrawText(value, BSCHP_OFFSET_X, m_posY);
+		m_posY += m_dc.GetCharHeight() + BSCHP_LINE_SPACING;
+	}
 	cout << "drawing command" << endl;
 }
 
@@ -139,7 +131,7 @@ void BSChordProDCPainter::onLineEnd()
 	if (m_chordLine.size() > 0)
 		{
 			wcout << L"drawing chord line" << endl;
-			//m_dc.SetFont(*fontChords_);
+            m_dc.SetFont(wxGetApp().m_fonts[BS_FONT_CHORDS]);
 			for (size_t i = 0; i < m_chordLine.size(); i++)
 				m_dc.DrawText(*m_chordLine[i]->txt, m_chordLine[i]->posX, m_posY);
 
@@ -149,7 +141,7 @@ void BSChordProDCPainter::onLineEnd()
 				m_chordLine.pop_back();
 		}
 
-	//m_dc.SetFont(*fontText_);
+    m_dc.SetFont(wxGetApp().m_fonts[BS_FONT_TEXT]);
 	for (size_t i = 0; i < m_textLine.size(); i++)
 		{
 			//wcout << L"drawing text: " <<
@@ -213,7 +205,7 @@ void bschordsPreview::OnDraw(wxDC& dc)
 
 
 	// set map mode to milimeters, 1 logical unit = 1 mm
-	dc.SetMapMode(wxMM_METRIC);
+	dc.SetMapMode(wxMM_LOMETRIC);
 
 	//wxRichTextBuffer &textBuffer = m_sourceCtrl->GetBuffer();
 	dc.SetUserScale(ZOOM, ZOOM);

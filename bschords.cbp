@@ -101,10 +101,12 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="`wx-config --cxxflags`" />
+					<Add directory="src/wxpdfdoc/include" />
 				</Compiler>
 				<Linker>
 					<Add option="`wx-config --libs`" />
 					<Add library="wx_gtk2u_stc-2.8" />
+					<Add library="fontconfig" />
 				</Linker>
 			</Target>
 			<Target title="release_linux">
@@ -119,6 +121,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-g" />
 					<Add option="`wx-config --cxxflags`" />
 					<Add option="-DBSCHORDPRO_TEST" />
 				</Compiler>
@@ -189,6 +192,660 @@
 			<Option target="release_linux" />
 		</Unit>
 		<Unit filename="src/bschordsPreview.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/songstylesheet.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/songstylesheet.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfannotation.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfarraydouble.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfarraytypes.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfbarcode.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfbookmark.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfcffdecoder.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfcffindex.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfcjkfontdata.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfcolour.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfcoonspatchmesh.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfcorefontdata.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfdc.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfdc28.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfdc29.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfdoc.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfdocdef.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfdocument.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfencoding.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfencrypt.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffont.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdata.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdatacore.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdataopentype.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdatatruetype.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdatatype0.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdatatype1.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdescription.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontdetails.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontextended.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontmacosx.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontmanager.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontparser.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontparsertruetype.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontparsertype1.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontsubsetcff.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontsubsettruetype.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdffontvolt.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfform.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfgradient.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfgraphics.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfimage.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfinfo.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdflayer.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdflinestyle.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdflinks.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfobjects.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfparser.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfpattern.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfprint.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfproperties.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfrijndael.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfshape.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfspotcolour.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdftemplate.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfutility.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/include/wx/pdfxml.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfannotation.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfbarcode.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcffdecoder.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcffindex.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcjkfontdata.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcmapdata.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcodepagedata.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcolour.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcolourdata.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcorefontdata.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfcorefontkerning.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfdc.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfdc28.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfdc29.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfdecode.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfdocument.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfencoding.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfencrypt.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffont.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdata.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdatacore.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdataopentype.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdatatruetype.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdatatype0.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdatatype1.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdescription.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontdetails.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontextended.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontmanager.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontparser.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontparsertruetype.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontparsertype1.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontsubsetcff.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontsubsettruetype.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdffontvolt.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfform.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfglyphnames.inc">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfgradient.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfgraphics.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfimage.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfkernel.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdflayer.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfobjects.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfocg.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfparser.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfpattern.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfprint.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfrijndael.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdftemplate.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfutility.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/wxpdfdoc/src/pdfxml.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />

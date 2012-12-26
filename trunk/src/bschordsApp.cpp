@@ -20,6 +20,8 @@
 #include "bschordsApp.h"
 #include "bschordsMain.h"
 
+// TODO: Hiding of preview window
+
 IMPLEMENT_APP(bschordsApp);
 
 bool bschordsApp::OnInit()
@@ -53,7 +55,7 @@ int bschordsApp::OnExit()
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)
     {
-        std::cout << i << " user desc: " << m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << endl;
+        std::cout << i << " user desc: " << m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
         wxString nativeFontInfo = m_fonts[i].GetNativeFontInfoDesc();
         wxString key(_("/fonts/"));
         key += fontNames[i];

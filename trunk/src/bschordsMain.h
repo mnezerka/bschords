@@ -35,19 +35,38 @@ class bschordsFrame: public wxFrame
 		wxRichTextCtrl *m_songContent;
 		//wxStyledTextCtrl *m_songContent;
 		wxGenericDirCtrl* m_dirCtrl;
+		wxComboBox *m_zoomCtrl;
+		wxSplitterWindow *m_splitterMain;
+		wxSplitterWindow *m_splitterSong;
+		wxToolBar *m_toolBar;
+
+		wxString m_filePath;
+		bool m_fileChanged;
 
         //wxAuiManager m_auiMgr;
 
-        void PopulateToolbar(wxToolBarBase* toolBar);
-        void RecreateToolbar();
+        void PopulateToolbar();
+        void OpenFile(const wxString filePath);
+		void SaveFile();
+        void CloseFile();
+        void UpdateTitle();
 
+		void OnFileNewSong(wxCommandEvent& event);
+		void OnFileOpenSong(wxCommandEvent& event);
+		void OnFileSaveSong(wxCommandEvent& event);
+		void OnFileSaveAsSong(wxCommandEvent& event);
+		void OnFileCloseSong(wxCommandEvent& event);
+		void OnFileExportSong(wxCommandEvent& event);
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
+        void OnViewEditor(wxCommandEvent& event);
+        void OnViewPreview(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSongContentChange(wxCommandEvent& event);
         void OnToolChord(wxCommandEvent& WXUNUSED(event));
         void OnFSBrowserSelChanged(wxTreeEvent& event);
+		void OnZoomChanged(wxCommandEvent& event);
 
         DECLARE_EVENT_TABLE()
 };

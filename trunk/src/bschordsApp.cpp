@@ -26,8 +26,12 @@ IMPLEMENT_APP(bschordsApp);
 
 bool bschordsApp::OnInit()
 {
+	//-----------------------------------------------------------------
+	// load and initialize configuration data
 	config = new wxConfig(_("BSChords"));
 
+	//-----------------------------------------------------------------
+	// initialize fonts
     for (int i = 0; i < BS_FONT_LAST; i++)
     {
         wxString key(_("/fonts/"));
@@ -43,6 +47,22 @@ bool bschordsApp::OnInit()
         //cout << font;
     }
 
+	//-----------------------------------------------------------------
+	// initialize printing
+	m_printData = new wxPrintData;
+    // you could set an initial paper size here
+	m_printData->SetPaperId(wxPAPER_A4); // for everyone else
+    m_pageSetupData = new wxPageSetupDialogData;
+    // copy over initial paper size from print record
+    (*m_pageSetupData) = *m_printData;
+
+    // set some initial page margins in mm.
+    //m_pageSetupData->SetMarginTopLeft(wxPoint(15, 15));
+    //m_pageSetupData->SetMarginBottomRight(wxPoint(15, 15));
+
+	//-----------------------------------------------------------------
+	// open main window (frame)
+
     bschordsFrame* frame = new bschordsFrame(0L, _("BSChords"));
 
     frame->Show();
@@ -52,6 +72,7 @@ bool bschordsApp::OnInit()
 
 int bschordsApp::OnExit()
 {
+	//-----------------------------------------------------------------
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)
     {
@@ -63,7 +84,12 @@ int bschordsApp::OnExit()
         std::cout << nativeFontInfo.c_str() << std::endl;
     }
 
+	//-----------------------------------------------------------------
+    // save configuration data
 	delete config;
 
-	return 0;
+	delete m_printData;
+    delete m_pageSetupData;
+
+    return wxApp::OnExit();
 }

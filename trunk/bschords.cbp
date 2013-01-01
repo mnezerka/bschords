@@ -7,8 +7,8 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="debug_win">
-				<Option output="bin\debug\bschords" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\debug\" />
+				<Option output="bin/debug/bschords" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
@@ -22,10 +22,10 @@
 					<Add option="-D__GNUWIN32__" />
 					<Add option="-D__WXMSW__" />
 					<Add option="-DwxUSE_UNICODE" />
-					<Add directory="$(#wx)\lib\gcc_dll_unicode_debug\mswud" />
+					<Add directory="$(#wx)/lib/gcc_dll_unicode_debug/mswud" />
 				</Compiler>
 				<ResourceCompiler>
-					<Add directory="D:\wxwidgets\lib\gcc_lib\mswud" />
+					<Add directory="D:/wxwidgets/lib/gcc_lib/mswud" />
 				</ResourceCompiler>
 				<Linker>
 					<Add option="-mthreads" />
@@ -47,12 +47,12 @@
 					<Add library="libcomctl32.a" />
 					<Add library="libwsock32.a" />
 					<Add library="libodbc32.a" />
-					<Add directory="$(#wx)\lib\gcc_dll_unicode_debug" />
+					<Add directory="$(#wx)/lib/gcc_dll_unicode_debug" />
 				</Linker>
 			</Target>
 			<Target title="release_win">
-				<Option output="bin\release\bschords" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\release\" />
+				<Option output="bin/release/bschords" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
@@ -64,10 +64,10 @@
 					<Add option="-D__GNUWIN32__" />
 					<Add option="-D__WXMSW__" />
 					<Add option="-DwxUSE_UNICODE" />
-					<Add directory="D:\wxwidgets\lib\gcc_lib\mswu" />
+					<Add directory="D:/wxwidgets/lib/gcc_lib/mswu" />
 				</Compiler>
 				<ResourceCompiler>
-					<Add directory="D:\wxwidgets\lib\gcc_lib\mswu" />
+					<Add directory="D:/wxwidgets/lib/gcc_lib/mswu" />
 				</ResourceCompiler>
 				<Linker>
 					<Add option="-s" />
@@ -90,18 +90,18 @@
 					<Add library="libcomctl32.a" />
 					<Add library="libwsock32.a" />
 					<Add library="libodbc32.a" />
-					<Add directory="D:\wxwidgets\lib\gcc_lib" />
+					<Add directory="D:/wxwidgets/lib/gcc_lib" />
 				</Linker>
 			</Target>
 			<Target title="debug_linux">
-				<Option output="bin\debug\bschords" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\debug\" />
+				<Option output="bin/debug/bschords" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="`wx-config --cxxflags`" />
-					<Add directory="src\wxpdfdoc\include" />
+					<Add directory="src/wxpdfdoc/include" />
 				</Compiler>
 				<Linker>
 					<Add option="`wx-config --libs`" />
@@ -110,14 +110,14 @@
 				</Linker>
 			</Target>
 			<Target title="release_linux">
-				<Option output="bin\release\bschords" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\release\" />
+				<Option output="bin/release/bschords" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 			</Target>
 			<Target title="cli_debug_linux">
-				<Option output="bin\debug\bschordscli" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\clidebug\" />
+				<Option output="bin/debug/bschordscli" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/clidebug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -130,8 +130,8 @@
 				</Linker>
 			</Target>
 			<Target title="cli_debug_win">
-				<Option output="bin\debug\bschordscli" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\clidebug\" />
+				<Option output="bin/debug/bschordscli" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/clidebug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -141,123 +141,81 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add directory="D:\wxwidgets\include" />
-			<Add directory="D:\wxwidgets\contrib\include" />
+			<Add directory="D:/wxwidgets/include" />
+			<Add directory="D:/wxwidgets/contrib/include" />
 		</Compiler>
 		<ResourceCompiler>
-			<Add directory="D:\wxwidgets\include" />
+			<Add directory="D:/wxwidgets/include" />
 		</ResourceCompiler>
-		<Unit filename="src\bschordpro.cpp" />
-		<Unit filename="src\bschordpro.h" />
-		<Unit filename="src\bschordsApp.cpp">
+		<Unit filename="src/bschordpro.cpp" />
+		<Unit filename="src/bschordpro.h" />
+		<Unit filename="src/bschordsApp.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsApp.h">
+		<Unit filename="src/bschordsApp.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsMain.cpp">
+		<Unit filename="src/bschordsMain.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsMain.h">
+		<Unit filename="src/bschordsMain.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreferences.cpp">
+		<Unit filename="src/bschordsPreferences.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreferences.h">
+		<Unit filename="src/bschordsPreferences.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreview.cpp">
+		<Unit filename="src/bschordsPreview.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreview.h">
+		<Unit filename="src/bschordsPreview.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\songstylesheet.cpp">
+		<Unit filename="src/bschordsdcpainter.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\songstylesheet.h">
+		<Unit filename="src/bschordsdcpainter.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfcjkfontdata.inc">
+		<Unit filename="src/songstylesheet.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfcmapdata.inc">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfcodepagedata.inc">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfcolourdata.inc">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfcorefontdata.inc">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfcorefontkerning.inc">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfdc28.inc">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfdc29.inc">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\wxpdfdoc\src\pdfglyphnames.inc">
+		<Unit filename="src/songstylesheet.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />

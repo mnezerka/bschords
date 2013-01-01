@@ -57,6 +57,9 @@ class bschordsFrame: public wxFrame
 		void OnFileSaveAsSong(wxCommandEvent& event);
 		void OnFileCloseSong(wxCommandEvent& event);
 		void OnFileExportSong(wxCommandEvent& event);
+		void OnFilePrint(wxCommandEvent& event);
+		void OnFilePrintPreview(wxCommandEvent& event);
+		void OnFilePageSetup(wxCommandEvent& event);
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
@@ -70,6 +73,29 @@ class bschordsFrame: public wxFrame
 
         DECLARE_EVENT_TABLE()
 };
+
+// Defines a new printout class to print our document
+class BSChordsPrintout: public wxPrintout
+{
+	public:
+		BSChordsPrintout(bschordsFrame* frame, const wxString &title = _("My printout"))
+        : wxPrintout(title) { m_frame = frame; }
+
+    virtual bool OnPrintPage(int page);
+    virtual bool HasPage(int page);
+    virtual bool OnBeginDocument(int startPage, int endPage);
+    virtual void GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo);
+
+    void DrawPageOne();
+    void DrawPageTwo();
+
+    // Writes a header on a page. Margin units are in millimetres.
+    bool WritePageHeader(wxPrintout *printout, wxDC *dc, const wxString& text, float mmToLogical);
+
+private:
+    bschordsFrame *m_frame;
+};
+
 
 
 #endif // BSCHORDSMAIN_H

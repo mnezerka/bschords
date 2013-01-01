@@ -14,6 +14,7 @@
 #include <wx/fileconf.h>
 #include <wx/config.h>
 #include <wx/font.h>
+#include <wx/print.h>
 
 enum {
     BS_FONT_TITLE,
@@ -37,12 +38,16 @@ struct FontInfo
     FontInfo() : font(NULL) { font = new wxFont(*wxNORMAL_FONT); };
 };
 
-
 class bschordsApp : public wxApp
 {
     public:
 		wxConfig *config;
         wxFont m_fonts[BS_FONT_LAST];
+        // Global print data, to remember settings during the session
+		wxPrintData *m_printData;
+		// Global page setup data
+		wxPageSetupDialogData* m_pageSetupData;
+
         virtual bool OnInit();
         virtual int OnExit();
 };

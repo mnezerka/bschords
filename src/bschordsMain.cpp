@@ -26,8 +26,8 @@
 #include <wx/srchctrl.h>
 #include <wx/textfile.h>
 #include <wx/filename.h>
-#include <wx/pdfdoc.h>
-#include <wx/pdffontmanager.h>
+//#include <wx/pdfdoc.h>
+//#include <wx/pdffontmanager.h>
 
 #include "bschordsMain.h"
 #include "bschordsPreferences.h"
@@ -149,6 +149,10 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	fileMenu->Append(wxID_CLOSE, _("&Close song"), _("Close song file"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(ID_MENU_FILE_EXPORT, _("&Export to PDF ..."), _("Export song file to PDF"));
+	fileMenu->AppendSeparator();
+	fileMenu->Append(wxID_PRINT_SETUP, _("Page setup..."), _("Page setup for printing"));
+    fileMenu->Append(wxID_PRINT, _("&Print..."), _("Print"));
+    fileMenu->Append(wxID_PREVIEW, _("Print Pre&view"), _("Preview"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(wxID_ANY, _("Song &information..."), _("Close song file"));
 	fileMenu->Append(idMenuQuit, _("&Quit\tAlt-F4"), _("Quit the application"));
@@ -369,7 +373,7 @@ void bschordsFrame::OnFileExportSong(wxCommandEvent& event)
 	{
 		//m_filePath = saveDlg->GetPath();
 		//SaveFile();
-		wxPdfDocument pdf;
+/*		wxPdfDocument pdf;
 		pdf.Open();
 		pdf.SetFont(_("Helvetica"), _(""), 10);
 
@@ -377,6 +381,7 @@ void bschordsFrame::OnFileExportSong(wxCommandEvent& event)
 		pdf.AddPage();
 		pdf.Write(20, _("This is sample text"));
 		pdf.SaveAsFile(saveDlg->GetPath());
+		*/
 	}
 }
 

@@ -28,11 +28,12 @@
 class bschordsFrame: public wxFrame
 {
     public:
+        wxRichTextCtrl *m_songContent;
         bschordsFrame(wxFrame *frame, const wxString& title);
         ~bschordsFrame();
     private:
 		bschordsPreview *m_preview;
-		wxRichTextCtrl *m_songContent;
+
 		//wxStyledTextCtrl *m_songContent;
 		wxGenericDirCtrl* m_dirCtrl;
 		wxComboBox *m_zoomCtrl;
@@ -63,6 +64,7 @@ class bschordsFrame: public wxFrame
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
+        void OnStyleSheet(wxCommandEvent& event);
         void OnViewEditor(wxCommandEvent& event);
         void OnViewPreview(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);

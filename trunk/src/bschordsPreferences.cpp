@@ -37,7 +37,7 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
     // copy font information from application
     for (int i = 0; i < BS_FONT_LAST; i++)
     {
-         m_fonts[i] = wxGetApp().m_fonts[i];
+         m_fonts[i] = wxGetApp().m_styleSheet.m_fonts[i];
     }
 
 	// create a dummy image list with a few icons
@@ -57,8 +57,10 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
     wxSizer* btnSizer = CreateButtonSizer(wxOK | wxCANCEL);
 
 	// create tree control
-    wxTreebook* m_bookCtrl = new wxTreebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
-    m_bookCtrl->SetImageList(m_imageList);
+    //wxTreebook* m_bookCtrl = new wxTreebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
+    //m_bookCtrl->SetImageList(m_imageList);
+
+	wxNotebook* m_bookCtrl = new wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
 
 	wxPanel *panel1 = new wxPanel(m_bookCtrl);
 	wxBoxSizer* panel1Sizer = new wxBoxSizer(wxVERTICAL);
@@ -69,12 +71,27 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
 	panel1Sizer->Add(st1);
 	panel1->SetSizer(panel1Sizer);
 
-    //////////////////////// fonts panel ////////////////////////////////
-	wxPanel *fontsPanel = new wxPanel(m_bookCtrl);
-    wxBoxSizer* fontsPanelSizer = new wxBoxSizer(wxVERTICAL);
+    //////////////////////// stylesheet panel ////////////////////////////////
+	wxPanel *ssPanel = new wxPanel(m_bookCtrl);
+	wxBoxSizer* ssPanelSizer = new wxBoxSizer(wxVERTICAL);
+
+	// margins panel
+    wxPanel *marginsPanel = new wxPanel(ssPanel);
+    wxGridSizer* marginsSizer = new wxGridSizer(3, 2, 4, 4);
+	marginsSizer->Add(new wxStaticText(marginsPanel, wxID_ANY, _("Left")), 5);
+	marginsSizer->Add(new wxTextCtrl(marginsPanel, wxID_ANY, _("0")));
+	marginsSizer->Add(new wxStaticText(marginsPanel, wxID_ANY, _("Top")));
+	marginsSizer->Add(new wxTextCtrl(marginsPanel, wxID_ANY, _("0")));
+	marginsSizer->Add(new wxStaticText(marginsPanel, wxID_ANY, _("Right")));
+	marginsSizer->Add(new wxTextCtrl(marginsPanel, wxID_ANY, _("0")));
+	marginsSizer->Add(new wxStaticText(marginsPanel, wxID_ANY, _("Bottom")));
+	marginsSizer->Add(new wxTextCtrl(marginsPanel, wxID_ANY, _("0")));
+    marginsPanel->SetSizer(marginsSizer);
+    marginsSizer->Layout();
+    ssPanelSizer->Add(marginsPanel, 0, wxALL, 3);
 
     // font selection controls
-    wxPanel *fontSelPanel = new wxPanel(fontsPanel);
+    wxPanel *fontSelPanel = new wxPanel(ssPanel);
     wxBoxSizer* fontSelSizer = new wxBoxSizer(wxHORIZONTAL);
 	fontSelType = new wxComboBox(fontSelPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(100,-1) );
     for (int i = 0; i < BS_FONT_LAST; i++)
@@ -88,13 +105,13 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
 
     fontSelPanel->SetSizer(fontSelSizer);
     fontSelSizer->Layout();
-    fontsPanelSizer->Add(fontSelPanel, 0, wxEXPAND);
+    ssPanelSizer->Add(fontSelPanel, 0, wxEXPAND);
 
     // font preview controls
-    wxPanel *fontsPreviewPanel = new wxPanel(fontsPanel);
+    wxPanel *fontsPreviewPanel = new wxPanel(ssPanel);
     fontsPreviewPanel->SetBackgroundColour(wxColour(255, 255, 255));
 	fontsPreviewPanel->SetBackgroundStyle(wxBG_STYLE_COLOUR);
-    fontsPanelSizer->Add(fontsPreviewPanel, 1, wxALL | wxEXPAND, 5);
+    ssPanelSizer->Add(fontsPreviewPanel, 1, wxALL | wxEXPAND, 5);
     wxBoxSizer* fontsPreviewPanelSizer = new wxBoxSizer(wxVERTICAL);
 
     // create test tests to demonstrate font look
@@ -106,11 +123,13 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
     }
     fontsPreviewPanel->SetSizer(fontsPreviewPanelSizer);
     fontsPreviewPanel->Layout();
-    fontsPanel->SetSizer(fontsPanelSizer);
-    fontsPanel->Layout();
+    ssPanel->SetSizer(ssPanelSizer);
+    ssPanel->Layout();
 
 	m_bookCtrl->AddPage(panel1, _("General"), false, 0);
-	m_bookCtrl->AddPage(fontsPanel, _("Fonts"), false, 1);
+	m_bookCtrl->AddPage(ssPanel, _("Fonts"), false, 1);
+	wxPanel* pageStyleSheet = CreateStyleSheetPage(m_bookCtrl);
+	m_bookCtrl->AddPage(pageStyleSheet, _("Stylesheet"), false, 2);
 
 	mainSizer->Add(m_bookCtrl, 0, wxALL | wxEXPAND, 5);
 
@@ -124,7 +143,82 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
     this->SetSizer(mainSizer);
     this->Layout();
     mainSizer->Fit(this);
+}
 
+wxPanel* bschordsPreferences::CreateStyleSheetPage(wxWindow* parent)
+{
+    wxPanel* panel = new wxPanel(parent, wxID_ANY);
+
+    wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
+    wxBoxSizer *item0 = new wxBoxSizer( wxVERTICAL );
+
+	// --------------------------------------------------------------------------------------
+	// margins panel
+	wxStaticBox* marginsStaticBox = new wxStaticBox(panel, wxID_ANY, _("Margins"));
+    wxBoxSizer* marginsStaticBoxSizer = new wxStaticBoxSizer(marginsStaticBox, wxVERTICAL );
+    item0->Add(marginsStaticBoxSizer, 0, wxGROW|wxALL, 5);
+
+    wxGridSizer* marginsSizer = new wxGridSizer(3, 3, 4, 4);
+	marginsSizer->AddSpacer(1);
+	marginsSizer->Add(new wxTextCtrl(panel, wxID_ANY, _("top")));
+	marginsSizer->AddSpacer(1);
+	marginsSizer->Add(new wxTextCtrl(panel, wxID_ANY, _("left")));
+
+	wxPanel *whitePagePanel = new wxPanel(panel);
+    whitePagePanel->SetBackgroundColour(wxColour(255, 255, 255));
+	whitePagePanel->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+    marginsSizer->Add(whitePagePanel, 0, wxALL | wxEXPAND);
+
+	//marginsSizer->AddSpacer(1);
+	marginsSizer->Add(new wxTextCtrl(panel, wxID_ANY, _("right")));
+	marginsSizer->AddSpacer(1);
+	marginsSizer->Add(new wxTextCtrl(panel, wxID_ANY, _("0")));
+    marginsStaticBoxSizer->Add(marginsSizer, 0, wxALL, 3);
+
+	// --------------------------------------------------------------------------------------
+    // font selection controls
+    wxStaticBox* fontsStaticBox = new wxStaticBox(panel, wxID_ANY, _("Fonts"));
+    wxBoxSizer* fontsStaticBoxSizer = new wxStaticBoxSizer(fontsStaticBox, wxVERTICAL );
+    item0->Add(fontsStaticBoxSizer, 0, wxGROW|wxALL, 5);
+
+    //wxPanel *fontSelPanel = new wxPanel(ssPanel);
+    wxBoxSizer* fontSelSizer = new wxBoxSizer(wxHORIZONTAL);
+	fontSelType = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(100,-1) );
+    for (int i = 0; i < BS_FONT_LAST; i++)
+        fontSelType->Append(fontNames[i]);
+	fontSelType->Select(0);
+
+	fontSelSizer->Add(fontSelType, 0, wxALL | wxALIGN_CENTER, 2);
+    wxButton *fontSelButton = new wxButton(panel, idBtnSelFont, _("Font..."));
+    fontSelSizer->Add(fontSelButton, 0, wxALL | wxALIGN_CENTER, 5);
+    fontSelSizer->Add(new wxStaticText(panel, wxID_ANY, _("Select font")), 0, wxALL | wxALIGN_CENTER, 10);
+	fontsStaticBoxSizer->Add(fontSelSizer);
+
+    // font preview controls
+    wxPanel *fontsPreviewPanel = new wxPanel(panel);
+    fontsPreviewPanel->SetBackgroundColour(wxColour(255, 255, 255));
+	fontsPreviewPanel->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+    fontsStaticBoxSizer->Add(fontsPreviewPanel, 1, wxALL | wxEXPAND, 5);
+    wxBoxSizer* fontsPreviewPanelSizer = new wxBoxSizer(wxVERTICAL);
+
+    // create test tests to demonstrate font look
+    for (int i = 0; i < BS_FONT_LAST; i++)
+    {
+        fontTextTitles[i] = new wxStaticText(fontsPreviewPanel, wxID_ANY, fontNames[i]);
+        fontTextTitles[i]->SetFont(m_fonts[i]);
+        fontsPreviewPanelSizer->Add(fontTextTitles[i], 0, wxALL | wxALIGN_CENTER, 10);
+    }
+    fontsPreviewPanel->SetSizer(fontsPreviewPanelSizer);
+
+
+	// global stuff
+    topSizer->Add( item0, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );
+    topSizer->AddSpacer(5);
+
+    panel->SetSizer(topSizer);
+    topSizer->Fit(panel);
+
+    return panel;
 }
 
 

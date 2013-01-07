@@ -7,34 +7,42 @@
  * License:
  **************************************************************/
 
-#ifndef BSCHORDSPREFERENCES_H
-#define BSCHORDSPREFERENCES_H
+#ifndef SONGSTYLESHEETDLG_H
+#define SONGSTYLESHEETDLG_H
 
 #ifndef WX_PRECOMP
     #include <wx/wx.h>
 #endif
 
-#include "bschordsApp.h"
 
 #include <wx/button.h>
 #include <wx/statline.h>
 
-class bschordsPreferences: public wxDialog
+#include "bschordsApp.h"
+#include "songstylesheet.h"
+
+class SongStyleSheetDlg: public wxDialog
 {
     public:
-        bschordsPreferences(wxDialog *dlg, const wxString& title);
-        ~bschordsPreferences();
+        SongStyleSheetDlg(wxDialog *dlg, const wxString& title, SongStyleSheet *styleSheet);
+        ~SongStyleSheetDlg();
+        bool TransferDataToWindow();
+        bool TransferDataFromWindow();
         wxFont m_fonts[BS_FONT_LAST];
+        wxString m_pageWidth;
+        wxString m_pageHeight;
+        wxString m_marginLeft;
+        wxString m_marginTop;
+        wxString m_marginRight;
+        wxString m_marginBottom;
 
     protected:
         enum
         {
             idBtnQuit = 1000,
-            idBtnAbout,
             idBtnSelFont
         };
         wxStaticText* m_staticText1;
-        wxButton* BtnAbout;
         wxStaticLine* m_staticline1;
         wxButton* BtnQuit;
         wxStaticText *fontTestTitle;
@@ -42,14 +50,17 @@ class bschordsPreferences: public wxDialog
         wxComboBox *fontSelType;
 
     private:
+		SongStyleSheet *m_styleSheet;
+
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
-        void OnAbout(wxCommandEvent& event);
         void OnSelFont(wxCommandEvent &event);
 
-        wxPanel* CreateStyleSheetPage(wxWindow* parent);
+		wxPanel* CreatePageSetupPage(wxWindow* parent);
+        wxPanel* CreateFontsPage(wxWindow* parent);
+
 
         DECLARE_EVENT_TABLE()
 };
 
-#endif // BSCHORDSPREFERENCES_H
+#endif // SONGSTYLESHEETDLG_H

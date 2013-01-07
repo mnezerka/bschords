@@ -10,14 +10,14 @@
 #include "bschordpro.h"
 
 
-#define BSCHP_OFFSET_X 30
-#define BSCHP_OFFSET_Y 30
-#define BSCHP_LINE_SPACING 0
-#define BSCHP_CHORD_OFFSET 0
+//#define BSCHP_OFFSET_X 30
+//#define BSCHP_OFFSET_Y 30
+//#define BSCHP_LINE_SPACING 0
+//#define BSCHP_CHORD_OFFSET 0
 
 // page size
-#define BSCHP_X 210
-#define BSCHP_Y 297
+//#define BSCHP_X 210
+//#define BSCHP_Y 297
 
 /* mm per inch */
 #define MM_PER_IN (25.4)
@@ -44,6 +44,7 @@ class BSChordsDCPainter : public BSChordProEventHandler
 
 	private:
 		wxDC& m_dc;
+		SongStyleSheet *m_ss;
 		wxSize m_dcPPI;
 		int m_posY;
 		int m_posX;
@@ -52,6 +53,9 @@ class BSChordsDCPainter : public BSChordProEventHandler
 		bool m_hasChords;
 		vector<BSLineItem*> m_chordLine;
 		vector<BSLineItem*> m_textLine;
+		enum { SECTION_NONE, SECTION_VERSE, SECTION_CHORUS } m_section;
+		int m_verseCounter;
+		bool m_isLineEmpty;
 };
 
 #endif // BSCHORDSDCPAINTER_H

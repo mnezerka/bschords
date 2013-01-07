@@ -67,8 +67,8 @@ void bschordsPreview::setZoom(float zoom)
 	m_zoom = zoom;
 
 	wxSize newVirtSize;
-	newVirtSize.SetWidth((int)(BSCHP_X * m_zoom * m_screenPPI.GetWidth() / MM_PER_IN));
-	newVirtSize.SetHeight((int)(BSCHP_Y * m_zoom * m_screenPPI.GetHeight() / MM_PER_IN));
+	newVirtSize.SetWidth((int)(wxGetApp().m_styleSheet.m_pageSize.GetWidth() * m_zoom * m_screenPPI.GetWidth() / MM_PER_IN));
+	newVirtSize.SetHeight((int)(wxGetApp().m_styleSheet.m_pageSize.GetWidth() * m_zoom * m_screenPPI.GetHeight() / MM_PER_IN));
 
 	//cout << "Setting virtual size to: " << newVirtSize.GetWidth() << "x" << newVirtSize.GetHeight() << " px" << endl;
 

@@ -37,7 +37,9 @@
 
 #include "bschordsMain.h"
 #include "bschordsPreferences.h"
+#include "songstylesheetdlg.h"
 #include "bschordsicon.xpm"
+#include "bschordsdcpainter.h"
 
 //helper functions
 enum wxbuildinfoformat {
@@ -49,21 +51,21 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 	wxString wxbuild(wxVERSION_STRING);
 
 	if (format == long_f )
-		{
+	{
 #if defined(__WXMSW__)
-			wxbuild << _T("-Windows");
+		wxbuild << _T("-Windows");
 #elif defined(__WXMAC__)
-			wxbuild << _T("-Mac");
+		wxbuild << _T("-Mac");
 #elif defined(__UNIX__)
-			wxbuild << _T("-Linux");
+		wxbuild << _T("-Linux");
 #endif
 
 #if wxUSE_UNICODE
-			wxbuild << _T("-Unicode build");
+		wxbuild << _T("-Unicode build");
 #else
-			wxbuild << _T("-ANSI build");
+		wxbuild << _T("-ANSI build");
 #endif // wxUSE_UNICODE
-		}
+	}
 
 	return wxbuild;
 }
@@ -83,6 +85,7 @@ enum
 	idMenuQuit = 1000,
 	idMenuAbout,
 	idMenuPreferences,
+	ID_MENU_STYLESHEET,
 	idMenuViewEditor,
 	idMenuViewPreview,
 	ID_MENU_FILE_EXPORT,
@@ -134,6 +137,7 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(wxID_PRINT_SETUP, bschordsFrame::OnFilePageSetup)
 	EVT_MENU(idMenuQuit, bschordsFrame::OnQuit)
 	EVT_MENU(idMenuPreferences, bschordsFrame::OnPreferences)
+	EVT_MENU(ID_MENU_STYLESHEET, bschordsFrame::OnStyleSheet)
 	EVT_MENU(idMenuAbout, bschordsFrame::OnAbout)
 	EVT_MENU(idMenuViewEditor, bschordsFrame::OnViewEditor)
 	EVT_MENU(idMenuViewPreview, bschordsFrame::OnViewPreview)
@@ -169,6 +173,7 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 
 	wxMenu* editMenu = new wxMenu(_T(""));
 	editMenu->Append(idMenuPreferences, _("&Preferences..."), _("Application preferences"));
+	editMenu->Append(ID_MENU_STYLESHEET, _("&Song Stylesheet..."), _("Song Stylesheet preferences"));
 	mbar->Append(editMenu, _("&Edit"));
 
 	wxMenu* viewMenu = new wxMenu(_T(""));
@@ -403,9 +408,7 @@ void bschordsFrame::OnFilePrintPreview(wxCommandEvent& event)
 {
 	// Pass two printout objects: for preview, and possible printing.
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
-    wxPrintPreview *preview = new wxPrintPreview(
-		new BSChordsPrintout(this),
-		new BSChordsPrintout(this), &printDialogData);
+    wxPrintPreview *preview = new wxPrintPreview(new BSChordsPrintout(this), new BSChordsPrintout(this), &printDialogData);
 
     if (!preview->IsOk())
     {
@@ -464,8 +467,27 @@ void bschordsFrame::OnPreferences(wxCommandEvent &event)
         for (int i = 0; i < BS_FONT_LAST; i++)
         {
             std::cout << i << " native info: " << dlg->m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
-            wxGetApp().m_fonts[i] = dlg->m_fonts[i];
+            wxGetApp().m_styleSheet.m_fonts[i] = dlg->m_fonts[i];
         }
+    }
+    dlg->Destroy();
+}
+
+void bschordsFrame::OnStyleSheet(wxCommandEvent &event)
+{
+	SongStyleSheetDlg* dlg = new SongStyleSheetDlg(0L, _("Song Stylesheet Preferences"), &wxGetApp().m_styleSheet);
+	//dlg->m_pageWidth << wxGetApp().m_styleSheet.m_pageSize.GetWidth();
+
+	if (dlg->ShowModal() == wxID_OK)
+    {
+        // copy font information from preferences to application
+        for (int i = 0; i < BS_FONT_LAST; i++)
+        {
+            std::cout << i << " native info: " << dlg->m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
+            wxGetApp().m_styleSheet.m_fonts[i] = dlg->m_fonts[i];
+        }
+		m_preview->Refresh();
+		m_preview->Update();
     }
     dlg->Destroy();
 }
@@ -695,7 +717,7 @@ bool BSChordsPrintout::OnPrintPage(int page)
 
         // Draw page numbers at top left corner of printable area, sized so that
         // screen size of text matches paper size.
-        MapScreenSizeToPage();
+        //MapScreenSizeToPage();
 
         dc->DrawText(wxString::Format(wxT("PAGE %d"), page), 0, 0);
 
@@ -710,6 +732,45 @@ bool BSChordsPrintout::OnBeginDocument(int startPage, int endPage)
 	std::cout << "OnBeginDocument" << std::endl;
     if (!wxPrintout::OnBeginDocument(startPage, endPage))
         return false;
+
+	// set user scale to fit a4
+	//GetDC()->G
+	int pageSizeXMM, pageSizeYMM;
+	GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
+	cout << "page size mm: " << pageSizeXMM << "x" << pageSizeYMM << endl;
+
+	int pageSizeXPx, pageSizeYPx;
+	GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
+	cout << "page size px: " << pageSizeXPx << "x" << pageSizeYPx << endl;
+
+	wxSize dcSize = GetDC()->GetSize();
+	cout << "dc size in px: " << dcSize.GetWidth() << "x" << dcSize.GetHeight() << endl;
+
+	wxRect paperRect = GetPaperRectPixels();
+	cout << "paper rect in px: " << paperRect.GetLeft() << "," << paperRect.GetTop() << " - " << paperRect.GetRight() << "," << paperRect.GetBottom() << " - " << paperRect.GetWidth() << "x" << paperRect.GetHeight() << endl;
+
+    int ppiScreenX, ppiScreenY;
+    GetPPIScreen(&ppiScreenX, &ppiScreenY);
+    cout << "screen ppi: " << ppiScreenX << "x" << ppiScreenY << endl;
+    int ppiPrinterX, ppiPrinterY;
+    GetPPIPrinter(&ppiPrinterX, &ppiPrinterY);
+    cout << "printer ppi: " << ppiPrinterX << "x" << ppiPrinterY << endl;
+
+	wxSize paperPixels;
+	if (IsPreview())
+	{
+		paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
+		paperPixels.SetWidth(ppiScreenY * 290 / MM_PER_IN);
+	}
+	else
+	{
+		paperPixels.SetWidth(ppiPrinterX * 210 / MM_PER_IN);
+		paperPixels.SetWidth(ppiPrinterY * 290 / MM_PER_IN);
+	}
+	FitThisSizeToPaper(paperPixels);
+	double newScaleX, newScaleY;
+	GetDC()->GetUserScale(&newScaleX, &newScaleY);
+	cout << "new user scale: " << newScaleX << "x" << newScaleY << endl;
 
     return true;
 }
@@ -738,8 +799,8 @@ void BSChordsPrintout::DrawPageOne()
 
     // We know the graphic is 230x350. If we didn't know this, we'd need to
     // calculate it.
-    wxCoord maxX = 230;
-    wxCoord maxY = 350;
+    //wxCoord maxX = 230;
+    //wxCoord maxY = 350;
 
     // This sets the user scale and origin of the DC so that the image fits
     // within the paper rectangle (but the edges could be cut off by printers
@@ -800,8 +861,6 @@ void BSChordsPrintout::DrawPageOne()
 // wxCoord yoff = (fitRect.height - maxY);
 // OffsetLogicalOrigin(xoff, yoff);
 
-    //TODO: wxGetApp().Draw(*GetDC());
-
 	GetDC()->SetBackground(*wxWHITE_BRUSH);
     // dc.Clear();
     //GetDC()->SetFont(m_testFont);
@@ -822,6 +881,30 @@ void BSChordsPrintout::DrawPageOne()
     GetDC()->DrawRoundedRectangle(0, 20, 200, 80, 20);
 
     GetDC()->DrawText(_("Rectangle 200 by 80"), 40, 40);
+
+
+
+	//int paperSizeXMM, paperSizeYMM;
+	//GetPaperSizeMM(&paperSizeXMM, &paperSizeYMM);
+	//cout << "paper size mm: " << paperSizeXMM << "x" << paperSizeYMM << endl;
+	//GetDC()->SetUserScale(m_zoom, m_zoom);
+
+    // get lines from song book control
+	int lines = m_frame->m_songContent->GetNumberOfLines();
+	wxString text;
+	for (int i = 0; i < lines; i++)
+    {
+        if (text.size() > 0)
+			text.Append(wxT("\n"));
+		text.Append(m_frame->m_songContent->GetLineText(i));
+	}
+
+	BSChordsDCPainter y(*GetDC());
+	BSChordProParser p(&y);
+
+	//wcout << text.wc_str() << endl;
+	p.parse(std::wstring(text.wc_str()));
+
 }
 
 void BSChordsPrintout::DrawPageTwo()

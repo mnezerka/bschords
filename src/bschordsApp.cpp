@@ -30,6 +30,9 @@ bool bschordsApp::OnInit()
 	// load and initialize configuration data
 	config = new wxConfig(_("BSChords"));
 
+	m_styleSheet.LoadFromConfig(config);
+
+	/*
 	//-----------------------------------------------------------------
 	// initialize fonts
     for (int i = 0; i < BS_FONT_LAST; i++)
@@ -46,6 +49,7 @@ bool bschordsApp::OnInit()
         //fonts[i].name.
         //cout << font;
     }
+	*/
 
 	//-----------------------------------------------------------------
 	// initialize printing
@@ -72,17 +76,7 @@ bool bschordsApp::OnInit()
 
 int bschordsApp::OnExit()
 {
-	//-----------------------------------------------------------------
-    // save font information
-    for (int i = 0; i < BS_FONT_LAST; i++)
-    {
-        std::cout << i << " user desc: " << m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
-        wxString nativeFontInfo = m_fonts[i].GetNativeFontInfoDesc();
-        wxString key(_("/fonts/"));
-        key += fontNames[i];
-        config->Write(key, nativeFontInfo);
-        std::cout << nativeFontInfo.c_str() << std::endl;
-    }
+	m_styleSheet.SaveToConfig(config);
 
 	//-----------------------------------------------------------------
     // save configuration data

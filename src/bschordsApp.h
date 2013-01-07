@@ -10,46 +10,33 @@
 #ifndef BSCHORDSAPP_H
 #define BSCHORDSAPP_H
 
+#include <list>
+
 #include <wx/app.h>
 #include <wx/fileconf.h>
 #include <wx/config.h>
 #include <wx/font.h>
 #include <wx/print.h>
-
-enum {
-    BS_FONT_TITLE,
-    BS_FONT_TITLE_SUB,
-    BS_FONT_TEXT,
-    BS_FONT_CHORDS,
-    BS_FONT_LAST
-};
-
-static const wxString fontNames[] =
-{
-    _("Title"),
-    _("Subtitle"),
-    _("Text"),
-    _("Chords")
-};
-
-struct FontInfo
-{
-    wxFont *font;
-    FontInfo() : font(NULL) { font = new wxFont(*wxNORMAL_FONT); };
-};
+#include "songstylesheet.h"
 
 class bschordsApp : public wxApp
 {
     public:
 		wxConfig *config;
-        wxFont m_fonts[BS_FONT_LAST];
+        //wxFont m_fonts[BS_FONT_LAST];
         // Global print data, to remember settings during the session
 		wxPrintData *m_printData;
 		// Global page setup data
 		wxPageSetupDialogData* m_pageSetupData;
 
+		SongStyleSheet m_styleSheet;
+
         virtual bool OnInit();
         virtual int OnExit();
+
+	private:
+		//std::list<SongStylesheet> m_styleSheets;
+
 };
 
 DECLARE_APP(bschordsApp);

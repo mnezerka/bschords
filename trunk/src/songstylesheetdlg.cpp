@@ -19,7 +19,7 @@
 
 #include "songstylesheetdlg.h"
 #include <wx/treebook.h>
-#include <wx/imaglist.h>
+//#include <wx/imaglist.h>
 #include <wx/artprov.h>
 #include <wx/fontdlg.h>
 
@@ -45,12 +45,12 @@ SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongS
     // create buttons
     wxSizer* btnSizer = CreateButtonSizer(wxOK | wxCANCEL);
 
-	wxNotebook* m_bookCtrl = new wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWS_EX_VALIDATE_RECURSIVELY);
+	wxNotebook* m_bookCtrl = new wxNotebook(this, wxID_ANY); //, wxDefaultPosition, wxDefaultSize, wxWS_EX_VALIDATE_RECURSIVELY);
 
 	wxPanel* pagePageSetup = CreatePageSetupPage(m_bookCtrl);
 	wxPanel* pageFonts = CreateFontsPage(m_bookCtrl);
-	m_bookCtrl->AddPage(pagePageSetup, _("Page"), false, 2);
-	m_bookCtrl->AddPage(pageFonts, _("Fonts"), false, 2);
+	m_bookCtrl->AddPage(pagePageSetup, _("Page"), false);
+	m_bookCtrl->AddPage(pageFonts, _("Fonts"), false);
 	mainSizer->Add(m_bookCtrl, 0, wxALL | wxEXPAND, 5);
 
 	// static line

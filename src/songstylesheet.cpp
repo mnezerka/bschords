@@ -14,6 +14,8 @@ SongStyleSheet::SongStyleSheet()
 	m_marginLeft = m_marginRight = 15;
 	m_marginTop = 15;
 	m_marginBottom = 20;
+	m_lineSpacing = 0;
+	m_chordLineSpacing = 0;
 }
 
 SongStyleSheet::~SongStyleSheet()

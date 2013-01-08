@@ -53,12 +53,9 @@ void bschordsPreview::OnDraw(wxDC& dc)
 				text.Append(wxT("\n"));
 			text.Append(m_sourceCtrl->GetLineText(i));
 		}
-
-	BSChordsDCPainter y(dc);
-
+	// parse and draw
+	BSChordsDCPainter y(dc, m_screenPPI.GetWidth() / MM_PER_IN);
 	BSChordProParser p(&y);
-
-	//wcout << text.wc_str() << endl;
 	p.parse(std::wstring(text.wc_str()));
 }
 

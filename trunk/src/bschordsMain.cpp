@@ -818,7 +818,7 @@ void BSChordsPrintout::DrawPageOne()
 	//float scale = IsPreview() ? ppiScreenX / MM_PER_IN : ppiPrinterX / MM_PER_IN;
 	float scale = ppiScreenX / MM_PER_IN;
 
-	BSChordsDCPainter y(*GetDC(), scale);
+	bschords::TSetDCPainter y(*GetDC(), scale);
 	BSChordProParser p(&y);
 
 	//wcout << text.wc_str() << endl;

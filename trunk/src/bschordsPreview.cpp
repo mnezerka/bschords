@@ -54,7 +54,7 @@ void bschordsPreview::OnDraw(wxDC& dc)
 			text.Append(m_sourceCtrl->GetLineText(i));
 		}
 	// parse and draw
-	BSChordsDCPainter y(dc, m_screenPPI.GetWidth() / MM_PER_IN);
+	bschords::TSetDCPainter y(dc, m_screenPPI.GetWidth() / MM_PER_IN);
 	BSChordProParser p(&y);
 	p.parse(std::wstring(text.wc_str()));
 }
@@ -66,23 +66,6 @@ void bschordsPreview::setZoom(float zoom)
 	wxSize newVirtSize;
 	newVirtSize.SetWidth((int)(wxGetApp().m_styleSheet.m_pageSize.GetWidth() * m_zoom * m_screenPPI.GetWidth() / MM_PER_IN));
 	newVirtSize.SetHeight((int)(wxGetApp().m_styleSheet.m_pageSize.GetWidth() * m_zoom * m_screenPPI.GetHeight() / MM_PER_IN));
-
-	//cout << "Setting virtual size to: " << newVirtSize.GetWidth() << "x" << newVirtSize.GetHeight() << " px" << endl;
-
-	//wxCoord x = dc.LogicalToDeviceX(wxCoord(BSCHP_X));
-	//wxCoord y = dc.LogicalToDeviceY(wxCoord(BSCHP_Y));
-	//cout << "setting virtual size to: " << x << " x " << y << " (" << BSCHP_X << " x " << BSCHP_Y << "mm), zoom: " << m_zoom << endl;
-
-	//int lcx = dc.DeviceToLogicalX(x);
-	//int lcy = dc.DeviceToLogicalY(y);
-
-	//cout << "back computed: " << lcx << "x" << lcy << " mm" << endl;
-
-	//wxCoord x1 = dc.LogicalToDeviceX(wxCoord(1000));
-	//wxCoord y1 = dc.LogicalToDeviceY(wxCoord(1000));
-	//cout << "1000 mm size: " << x1 << " x " << y1 << endl;
-
-	//SetScrollbars(10, 10, x / 10, y / 10);
 
 	SetVirtualSize(newVirtSize);
 	SetScrollRate(10, 10);

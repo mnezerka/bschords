@@ -21,35 +21,82 @@
 
 /* mm per inch */
 #define MM_PER_IN (25.4)
+namespace bschords
+{
 
-struct BSLineItem
+class TSetDCPainter;
+
+struct TSetLineItem
 {
 	wxString *txt;
-	int posX;
-	long width;
+	wxRect m_bRect;
+
+	virtual ~TSetLineItem() { if (txt) delete txt; };
 };
 
-struct BSLine
+struct TSetLine
 {
-	vector<BSLineItem*> m_textItems;
-	vector<BSLineItem*> m_chordItems;
+	long m_posY;
+	vector<TSetLineItem*> m_textItems;
+	vector<TSetLineItem*> m_chordItems;
+	TSetLine() : m_posY(0) {};
+	virtual ~TSetLine(){
+		while (!m_textItems.empty()) { delete m_textItems.back(); m_textItems.pop_back(); }
+		while (!m_chordItems.empty()) { delete m_chordItems.back(); m_chordItems.pop_back(); }
+	}
 };
 
-struct BSBlock
+struct TSetBlock
 {
-	vector<BSLine*> m_lines;
+	TSetDCPainter *m_painter;
+	enum TBlockType { BLTYPE_NONE, BLTYPE_TEXT, BLTYPE_CHORUS, BLTYPE_HSPACE, BLTYPE_TITLE };
+
+	TSetBlock(TSetDCPainter *painter) : m_painter(painter) { };
+	virtual ~TSetBlock() { }
+	virtual void draw(const wxPoint pos) {};
+	virtual wxRect getBoundingRect() { return wxRect(0, 0, 0, 0); };
+	virtual TBlockType getType() { return BLTYPE_NONE; };
 };
 
-struct BSPage
+struct TSetBlockHSpace : public TSetBlock
 {
-	vector<BSBlock*> m_blocks;
+	TSetBlockHSpace(TSetDCPainter *painter) : TSetBlock(painter) { };
+	virtual ~TSetBlockHSpace() { }
+	virtual void draw(const wxPoint pos) {};
+	virtual TBlockType getType() { return BLTYPE_HSPACE; };
 };
 
-class BSChordsDCPainter : public BSChordProEventHandler
+struct TSetBlockTitle : public TSetBlock
+{
+	TSetLineItem* m_title;
+	TSetBlockTitle(TSetDCPainter *painter) : TSetBlock(painter), m_title(NULL) { };
+	virtual ~TSetBlockTitle() { delete m_title; }
+	virtual void draw(const wxPoint pos);
+	virtual TBlockType getType() { return BLTYPE_TITLE; };
+	virtual wxRect getBoundingRect();
+};
+
+struct TSetBlockText : public TSetBlock
+{
+	vector<TSetLine*> m_lines;
+	TSetBlockText(TSetDCPainter *painter) : TSetBlock(painter) { };
+	virtual ~TSetBlockText() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
+	virtual void draw(const wxPoint pos);
+	virtual TBlockType getType() { return BLTYPE_TEXT; };
+	virtual wxRect getBoundingRect();
+};
+
+struct TSetPage
+{
+	vector<TSetBlock*> m_blocks;
+	virtual ~TSetPage() { while (!m_blocks.empty()) { delete m_blocks.back(); m_blocks.pop_back(); } }
+};
+
+class TSetDCPainter : public BSChordProEventHandler
 {
 	public:
-		BSChordsDCPainter(wxDC& dc, float scale = 1);
-		virtual ~BSChordsDCPainter();
+		TSetDCPainter(wxDC& dc, float scale = 1);
+		virtual ~TSetDCPainter();
 		virtual void onBegin();
 		virtual void onEnd();
 		virtual void onLineBegin();
@@ -60,23 +107,25 @@ class BSChordsDCPainter : public BSChordProEventHandler
 		wxCoord getDeviceX(int numMM);
 		wxCoord getDeviceY(int numMM);
 
-	private:
 		SongStyleSheet *m_ss;
 		wxDC& m_dc;
 		wxSize m_dcPPI;
-		int m_posY;
 		int m_posX;
 		int m_posXChord;
 		int m_eMHeight;
 		bool m_hasChords;
-		vector<BSLineItem*> m_chordLine;
-		vector<BSLineItem*> m_textLine;
+		//vector<TSetLineItem*> m_chordLine;
+		//vector<TSetLineItem*> m_textLine;
 		enum { SECTION_NONE, SECTION_VERSE, SECTION_CHORUS } m_section;
 		int m_verseCounter;
 		bool m_isLineEmpty;
 		float m_scale;
-		BSPage m_page;
-		BSBlock *m_curBlock;
+		vector<TSetPage*> m_pages;
+		TSetBlock *m_curBlock;
+		TSetPage *m_curPage;
+		TSetLine *m_curLine;
 };
+
+}
 
 #endif // BSCHORDSDCPAINTER_H

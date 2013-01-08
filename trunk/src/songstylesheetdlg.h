@@ -35,6 +35,9 @@ class SongStyleSheetDlg: public wxDialog
         wxString m_marginTop;
         wxString m_marginRight;
         wxString m_marginBottom;
+        wxString m_cols;
+        wxString m_lineSpacing;
+        wxString m_lineChordSpacing;
 
     protected:
         enum

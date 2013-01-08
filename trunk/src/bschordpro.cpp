@@ -76,6 +76,8 @@ void BSChordProParser::parse(const wstring& s)
 	if (m_eventHandler == NULL)
 		return;
 
+	m_eventHandler->onBegin();
+
     // loop over all characters of parsed wstring (buffer) and look for line ends
     // each text line is parsed separately
     size_t i = 0;
@@ -104,6 +106,8 @@ void BSChordProParser::parse(const wstring& s)
 	// consume last line
 	if (lineFrom < s.length())
 		parseLine(s, lineFrom, lineLen);
+
+	m_eventHandler->onEnd();
 }
 
 void BSChordProParser::parseLine(const wstring& strBuffer, unsigned int lineFrom, unsigned int lineLen)

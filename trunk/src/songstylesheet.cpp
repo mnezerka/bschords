@@ -16,6 +16,7 @@ SongStyleSheet::SongStyleSheet()
 	m_marginBottom = 20;
 	m_lineSpacing = 0;
 	m_chordLineSpacing = 0;
+	m_cols = 1;
 }
 
 SongStyleSheet::~SongStyleSheet()
@@ -28,6 +29,16 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 	// load stylesheets
 	if (config->Exists(_("/stylesheet/")))
 	{
+		// load page size
+		m_pageSize.SetWidth(config->Read(_("stylesheet/page/width"), m_pageSize.GetWidth()));
+		m_pageSize.SetHeight(config->Read(_("stylesheet/page/height"), m_pageSize.GetHeight()));
+
+		// load margins
+		m_marginLeft = config->Read(_("stylesheet/page/margin-left"), m_marginLeft);
+		m_marginTop = config->Read(_("stylesheet/page/margin-top"), m_marginTop);
+		m_marginRight = config->Read(_("stylesheet/page/margin-right"), m_marginRight);
+		m_marginBottom = config->Read(_("stylesheet/page/margin-bottom"), m_marginBottom);
+
 		// read fonts
 		for (int i = 0; i < BS_FONT_LAST; i++)
 		{
@@ -40,14 +51,22 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 				std::cout << i << "native: " << nativeFontInfo.mb_str(wxConvUTF8) << std::endl;
 				m_fonts[i].SetNativeFontInfo(nativeFontInfo);
 			}
-			//fonts[i].name.
-			//cout << font;
 		}
 	}
 }
 
 void SongStyleSheet::SaveToConfig(wxConfig *config)
 {
+	// save page size
+	config->Write(_("stylesheet/page/width"), m_pageSize.GetWidth());
+	config->Write(_("stylesheet/page/height"), m_pageSize.GetHeight());
+
+	// save page margins
+	config->Write(_("stylesheet/page/margin-left"), m_marginLeft);
+	config->Write(_("stylesheet/page/margin-top"), m_marginTop);
+	config->Write(_("stylesheet/page/margin-right"), m_marginRight);
+	config->Write(_("stylesheet/page/margin-bottom"), m_marginBottom);
+
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)
     {

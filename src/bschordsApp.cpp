@@ -20,8 +20,6 @@
 #include "bschordsApp.h"
 #include "bschordsMain.h"
 
-// TODO: Hiding of preview window
-
 IMPLEMENT_APP(bschordsApp);
 
 bool bschordsApp::OnInit()

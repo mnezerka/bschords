@@ -65,6 +65,7 @@ class bschordsFrame: public wxFrame
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
         void OnStyleSheet(wxCommandEvent& event);
+        void OnViewFileBrowser(wxCommandEvent& event);
         void OnViewEditor(wxCommandEvent& event);
         void OnViewPreview(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);

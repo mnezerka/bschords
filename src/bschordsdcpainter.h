@@ -37,8 +37,8 @@ struct TSetLineItem
 struct TSetLine
 {
 	long m_posY;
-	vector<TSetLineItem*> m_textItems;
-	vector<TSetLineItem*> m_chordItems;
+	std::vector<TSetLineItem*> m_textItems;
+	std::vector<TSetLineItem*> m_chordItems;
 	TSetLine() : m_posY(0) {};
 	virtual ~TSetLine(){
 		while (!m_textItems.empty()) { delete m_textItems.back(); m_textItems.pop_back(); }
@@ -79,7 +79,7 @@ struct TSetBlockTitle : public TSetBlock
 
 struct TSetBlockText : public TSetBlock
 {
-	vector<TSetLine*> m_lines;
+	std::vector<TSetLine*> m_lines;
 	TSetBlockText(TSetDCPainter *painter) : TSetBlock(painter) { };
 	virtual ~TSetBlockText() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
 	virtual void draw(wxPoint pos);
@@ -95,7 +95,7 @@ struct TSetBlockChorus : public TSetBlockText
 
 struct TSetBlockTab : public TSetBlock
 {
-	vector<wxString*> m_lines;
+	std::vector<wxString*> m_lines;
 	TSetBlockTab(TSetDCPainter *painter) : TSetBlock(painter) { };
 	virtual ~TSetBlockTab() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
 	virtual TBlockType getType() { return BLTYPE_TAB; };
@@ -105,11 +105,11 @@ struct TSetBlockTab : public TSetBlock
 
 struct TSetPage
 {
-	vector<TSetBlock*> m_blocks;
+	std::vector<TSetBlock*> m_blocks;
 	virtual ~TSetPage() { while (!m_blocks.empty()) { delete m_blocks.back(); m_blocks.pop_back(); } }
 };
 
-class TSetDCPainter : public BSChordProEventHandler
+class TSetDCPainter : public bschordpro::EventHandler
 {
 	public:
 		TSetDCPainter(wxDC& dc, float scale = 1);
@@ -118,10 +118,10 @@ class TSetDCPainter : public BSChordProEventHandler
 		virtual void onEnd();
 		virtual void onLineBegin();
 		virtual void onLineEnd();
-		virtual void onCommand(const wstring& command, const wstring& value);
-		virtual void onChord(const wstring& chord);
-		virtual void onText(const wstring& text);
-		virtual void onLine(const wstring& line);
+		virtual void onCommand(const bschordpro::CommandType command, const std::wstring& value);
+		virtual void onChord(const std::wstring& chord);
+		virtual void onText(const std::wstring& text);
+		virtual void onLine(const std::wstring& line);
 		wxCoord getDeviceX(int numMM);
 		wxCoord getDeviceY(int numMM);
 
@@ -135,13 +135,13 @@ class TSetDCPainter : public BSChordProEventHandler
 		int m_posXChord;
 		int m_eMHeight;
 		bool m_hasChords;
-		//vector<TSetLineItem*> m_chordLine;
-		//vector<TSetLineItem*> m_textLine;
+		//std::vector<TSetLineItem*> m_chordLine;
+		//std::vector<TSetLineItem*> m_textLine;
 		enum { SECTION_NONE, SECTION_VERSE, SECTION_CHORUS } m_section;
 		int m_verseCounter;
 		bool m_isLineEmpty;
 		float m_scale;
-		vector<TSetPage*> m_pages;
+		std::vector<TSetPage*> m_pages;
 		TSetBlock *m_curBlock;
 		TSetPage *m_curPage;
 		TSetLine *m_curLine;

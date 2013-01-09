@@ -1,5 +1,20 @@
 #include "bschordpro.h"
 
+// TODO: Parsing of command should split line to two lines or ignore content around it (force user to write command on single lines)
+
+using namespace bschordpro;
+
+static const wchar_t *cmdTitle 				= L"title";
+static const wchar_t *cmdSubtitle			= L"subtitle";
+static const wchar_t *cmdChorusStart		= L"start_of_chorus";
+static const wchar_t *cmdChorusStartShort	= L"soc";
+static const wchar_t *cmdChorusEnd			= L"end_of_chorus";
+static const wchar_t *cmdChorusEndShort		= L"eoc";
+static const wchar_t *cmdTabStart			= L"start_of_tab";
+static const wchar_t *cmdTabStartShort		= L"sot";
+static const wchar_t *cmdTabEnd				= L"end_of_tab";
+static const wchar_t *cmdTabEndShort		= L"eot";
+
 /*
 
 End of lines
@@ -13,38 +28,34 @@ CR+LF: Microsoft Windows, DEC TOPS-10, RT-11 and most other early non-Unix and n
 
 */
 
-BSChordProEventHandlerTxt::BSChordProEventHandlerTxt()
-{
+EventHandlerTxt::EventHandlerTxt() { }
 
-}
-
-void BSChordProEventHandlerTxt::onLineBegin()
+void EventHandlerTxt::onLineBegin()
 {
     m_chordBuffer.erase();
     m_textBuffer.erase();
 }
 
-void BSChordProEventHandlerTxt::onLineEnd()
+void EventHandlerTxt::onLineEnd()
 {
-    if (m_chordBuffer.find_first_not_of(L' ') != wstring::npos)
-        wcout << endl << m_chordBuffer << endl;
+    if (m_chordBuffer.find_first_not_of(L' ') != std::wstring::npos)
+        std::wcout << std::endl << m_chordBuffer << std::endl;
 
-    wcout << m_textBuffer;
-    wcout << endl;
+    std::wcout << m_textBuffer << std::endl;
 }
 
-void BSChordProEventHandlerTxt::onCommand(const wstring& command, const wstring& value)
+void EventHandlerTxt::onCommand(const CommandType command, const std::wstring& value)
 {
-    wcout << L"command: " << command << L" with value: " << value;
+    std::wcout << L"command: " << command << L" with value: " << value;
 }
 
-void BSChordProEventHandlerTxt::onChord(const wstring& chord)
+void EventHandlerTxt::onChord(const std::wstring& chord)
 {
     m_chordBuffer.append(chord);
     m_chordBuffer.append(L" ");
 }
 
-void BSChordProEventHandlerTxt::onText(const wstring& text)
+void EventHandlerTxt::onText(const std::wstring& text)
 {
     m_textBuffer.append(text);
 
@@ -58,13 +69,13 @@ void BSChordProEventHandlerTxt::onText(const wstring& text)
     }
 }
 
-void BSChordProEventHandlerTxt::onLine(const wstring& line)
+void EventHandlerTxt::onLine(const std::wstring& line)
 {
     m_textBuffer.append(line);
 }
 
 //////////////////////////////////////////////////////////////////////////////
-void BSChordProParser::parse(const wstring& s)
+void Parser::parse(const std::wstring& s)
 {
     /*wcout << L"size of wchar_t:"<< sizeof(wchar_t) << endl;
     wcout << L"size of buffer: "<< sizeof(s) << endl;
@@ -83,7 +94,7 @@ void BSChordProParser::parse(const wstring& s)
 
 	m_eventHandler->onBegin();
 
-    // loop over all characters of parsed wstring (buffer) and look for line ends
+    // loop over all characters of parsed std::wstring (buffer) and look for line ends
     // each text line is parsed separately
     size_t i = 0;
 	while (i < s.length())
@@ -115,11 +126,11 @@ void BSChordProParser::parse(const wstring& s)
 	m_eventHandler->onEnd();
 }
 
-void BSChordProParser::parseLine(const wstring& strBuffer, unsigned int lineFrom, unsigned int lineLen)
+void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, unsigned int lineLen)
 {
 	bool lineHasCmd = false;
-	wstring curText = L"";
-	wstring line;
+	std::wstring curText = L"";
+	std::wstring line;
 
 	line.assign (strBuffer, lineFrom, lineLen);
 
@@ -129,12 +140,12 @@ void BSChordProParser::parseLine(const wstring& strBuffer, unsigned int lineFrom
 	while (true)
 	{
 		size_t cmdBegin = line.find_first_of(L'{');
-		if (cmdBegin == string::npos)
+		if (cmdBegin == std::wstring::npos)
 			break;
 
 		size_t cmdEnd = line.find_first_of(L'}', cmdBegin);
 
-		if (cmdEnd == string::npos)
+		if (cmdEnd == std::wstring::npos)
 			break;
 
 		// command found
@@ -238,13 +249,13 @@ void BSChordProParser::parseLine(const wstring& strBuffer, unsigned int lineFrom
     m_eventHandler->onLineEnd();
 }
 
-void BSChordProParser::parseCommand(const wstring& cmd)
+void Parser::parseCommand(const std::wstring& cmd)
 {
     //wcout << L"parsing >" << cmd << L"<" << endl;
     size_t cmdEnd = cmd.find_last_not_of(L' ');
 
-    wstring cmdId(L"");
-    wstring cmdVal(L"");
+    std::wstring cmdId(L"");
+    std::wstring cmdVal(L"");
 
     // look for optional command value
     size_t sepPos = cmd.find_first_of(L':');
@@ -252,7 +263,7 @@ void BSChordProParser::parseCommand(const wstring& cmd)
     //cout << "seppos is " << sepPos << endl;
 
     // if separator is present
-    if (sepPos != wstring::npos)
+    if (sepPos != std::wstring::npos)
     {
         // get command id
         if (sepPos > 0)
@@ -260,7 +271,7 @@ void BSChordProParser::parseCommand(const wstring& cmd)
             size_t first = cmd.find_first_not_of(L' ', 0);
             size_t last = cmd.find_last_not_of(L' ', sepPos - 1);
             // set command id only if not empty
-            if (last != string::npos && first < last)
+            if (last != std::wstring::npos && first < last)
             {
                 //cout << first <<  " " << last << endl;
                 cmdId.assign(cmd, first, last - first + 1);
@@ -271,7 +282,7 @@ void BSChordProParser::parseCommand(const wstring& cmd)
         if (sepPos < cmdEnd)
         {
             size_t first = cmd.find_first_not_of(L' ', sepPos + 1);
-            if (first != string::npos && first <= cmdEnd)
+            if (first != std::wstring::npos && first <= cmdEnd)
             {
                 //cout << first << " " << cmdEnd << endl;
                 cmdVal.assign(cmd, first, cmdEnd - first + 1);
@@ -284,7 +295,7 @@ void BSChordProParser::parseCommand(const wstring& cmd)
             size_t first = cmd.find_first_not_of(L' ', 0);
             size_t last = cmd.find_last_not_of(L' ');
             // set command id only if not empty
-            if (last != string::npos && first < last)
+            if (last != std::wstring::npos && first < last)
             {
                 //cout << first <<  " " << last << endl;
                 cmdId.assign(cmd, first, last - first + 1);
@@ -293,30 +304,47 @@ void BSChordProParser::parseCommand(const wstring& cmd)
 
     if (cmdId.length() > 0)
     {
-    	// switch on or off raw mode (no chords are parsed)
-		if (cmdId == bschordpro::CMD_TAB_START || cmdId == bschordpro::CMD_TAB_START_SHORT)
-			m_rawMode = true;
-		else if (cmdId == bschordpro::CMD_TAB_END || cmdId == bschordpro::CMD_TAB_END_SHORT)
-			m_rawMode = false;
+    	CommandType cmdType = CMD_NONE;
 
-        m_eventHandler->onCommand(cmdId, cmdVal);
+    	// switch on or off raw mode (no chords are parsed)
+		if (cmdId == cmdTabStart || cmdId == cmdTabStartShort)
+		{
+			m_rawMode = true;
+			cmdType = CMD_TAB_START;
+		}
+
+		else if (cmdId == ::cmdTabEnd || cmdId == ::cmdTabEndShort)
+		{
+			m_rawMode = false;
+			cmdType = CMD_TAB_START;
+		}
+		else if (cmdId == ::cmdChorusStart || cmdId == ::cmdChorusStartShort)
+			cmdType = CMD_CHORUS_START;
+		else if (cmdId == ::cmdChorusEnd || cmdId == ::cmdChorusEndShort)
+			cmdType = CMD_CHORUS_END;
+		else if (cmdId == ::cmdTitle)
+			cmdType = CMD_TITLE;
+		else if (cmdId == ::cmdSubtitle)
+			cmdType = CMD_SUBTITLE;
+
+        m_eventHandler->onCommand(cmdType, cmdVal);
     }
 }
 
-void BSChordProParser::parseChord(const wstring& chord)
+void Parser::parseChord(const std::wstring& chord)
 {
 	m_eventHandler->onChord(chord);
 }
 
-#ifdef BSCHORDPRO_TEST
+#ifdef _TEST
 int main(int argc, char **argv)
 {
-	BSChordProEventHandler x;
-	BSChordProEventHandlerTxt y;
+	EventHandler x;
+	EventHandlerTxt y;
 	//x.onLine("ahoj");
 
-	BSChordProParser p(&x);
-	//BSChordProParser p(&y);
+	Parser p(&x);
+	//Parser p(&y);
 
 	//p.parse("0123456789012345678\nand this is second line.\n\rAnd this is third line\r\r\rAnd last one");
 	//       012345678901234567 89 01234567890
@@ -350,5 +378,5 @@ int main(int argc, char **argv)
     //p.parse("x\ny\nz");
 	return 0;
 }
-#endif // BSCHORDPRO_TEST
+#endif // _TEST
 

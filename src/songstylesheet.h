@@ -22,6 +22,7 @@ enum {
     BS_FONT_TITLE_SUB,
     BS_FONT_TEXT,
     BS_FONT_CHORDS,
+    BS_FONT_TAB,
     BS_FONT_LAST
 };
 
@@ -30,7 +31,8 @@ static const wxString fontNames[] =
     _("Title"),
     _("Subtitle"),
     _("Text"),
-    _("Chords")
+    _("Chords"),
+    _("Tab")
 };
 
 struct FontInfo
@@ -56,7 +58,6 @@ class SongStyleSheet
 		virtual ~SongStyleSheet();
 		void LoadFromConfig(const wxConfig *config);
 		void SaveToConfig(wxConfig *config);
-
 
 	protected:
 

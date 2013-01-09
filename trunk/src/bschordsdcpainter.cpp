@@ -3,14 +3,53 @@
 
 using namespace bschords;
 
-// ------- TSetBlocks ----------------------------------------------------------------
+// ------- TSetBlock  --------------------------------------------------------
 
-void TSetBlockText::draw(const wxPoint pos)
+void TSetBlock::drawBoundingRect(const wxPoint pos)
+{
+	// select color according to block type
+	wxColour rectColor;
+	switch (getType())
+	{
+		case TSetBlock::BLTYPE_TITLE: rectColor.Set(0, 255, 0); break;
+		case TSetBlock::BLTYPE_HSPACE: rectColor.Set(255, 100, 100); break;
+		case TSetBlock::BLTYPE_CHORUS: rectColor.Set(255, 128, 0); break;
+		case TSetBlock::BLTYPE_TEXT: rectColor.Set(50, 50, 255); break;
+		default:
+			rectColor.Set(128, 128, 128);
+	}
+
+	// draw bounding rect
+	wxPen pen(rectColor, 0.1);
+	m_painter->m_dc.SetPen(pen);
+	wxRect r = getBoundingRect();
+	r.SetPosition(pos);
+	m_painter->m_dc.DrawRectangle(r);
+	m_painter->m_dc.DrawLine(r.GetPosition(), r.GetPosition() + r.GetSize());
+}
+
+// ------- TSetBlockHSpace  --------------------------------------------------------
+
+wxRect TSetBlockHSpace::getBoundingRect()
+{
+	wxRect result;
+
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+	result.SetHeight(m_painter->m_dc.GetCharHeight());
+	result.SetWidth(60);
+
+	return result;
+}
+
+// ------- TSetBlockText  ----------------------------------------------------------
+
+void TSetBlockText::draw(wxPoint pos)
 {
 	wxCoord posY = pos.y;
 
-	wxRect r = getBoundingRect();
-	m_painter->m_dc.DrawRectangle(pos.x, pos.y, r.GetWidth(), r.GetHeight());
+	// add block indent for chorus
+	if (getType() == TSetBlock::BLTYPE_CHORUS)
+		pos.x = pos.x + m_painter->getDeviceX(m_painter->m_ss->m_indentChorus);
 
 	// loop through block lines
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
@@ -28,7 +67,8 @@ void TSetBlockText::draw(const wxPoint pos)
 		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
 		for (size_t i = 0; i < line->m_textItems.size(); i++)
 			m_painter->m_dc.DrawText(*line->m_textItems[i]->txt, pos.x + line->m_textItems[i]->m_bRect.GetLeft(), posY);
-		posY += m_painter->m_dc.GetCharHeight();
+		if (line->m_textItems.size() > 0)
+			posY += m_painter->m_dc.GetCharHeight();
 	}
 }
 
@@ -40,7 +80,6 @@ wxRect TSetBlockText::getBoundingRect()
 	wxCoord lineHeightChord = m_painter->m_dc.GetCharHeight();
 	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
 	wxCoord lineHeightText = m_painter->m_dc.GetCharHeight();
-
 
 	wxCoord maxWidth = 0;
 	wxCoord height = 0;
@@ -70,16 +109,25 @@ wxRect TSetBlockText::getBoundingRect()
 		// -------- compute height
 		if (line->m_chordItems.size() > 0)
 			height += lineHeightChord;
-		height += lineHeightText;
+		if (line->m_textItems.size() > 0)
+			height += lineHeightText;
 	}
+
+	// add block indent for chorus
+	if (getType() == TSetBlock::BLTYPE_CHORUS)
+	{
+		maxWidth += m_painter->getDeviceX(m_painter->m_ss->m_indentChorus);
+	}
+
 	result.SetWidth(maxWidth);
 	result.SetHeight(height);
 
 	return result;
 }
 
+// ------- TSetBlockTitle  ----------------------------------------------------------
 
-void TSetBlockTitle::draw(const wxPoint pos)
+void TSetBlockTitle::draw(wxPoint pos)
 {
 	// typeset chord line (chord items)
 	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
@@ -91,34 +139,57 @@ wxRect TSetBlockTitle::getBoundingRect()
 	return m_title->m_bRect;
 }
 
+// ------- TSetBlockTab  ----------------------------------------------------------
+
+void TSetBlockTab::draw(wxPoint pos)
+{
+	// loop through block lines
+	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
+	{
+		wxString *line = m_lines[lineIx];
+		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+		m_painter->m_dc.DrawText(*line, pos);
+		pos.y += m_painter->m_dc.GetCharHeight();
+	}
+}
+
+wxRect TSetBlockTab::getBoundingRect()
+{
+	wxRect result;
+
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+	wxCoord lineHeight = m_painter->m_dc.GetCharHeight();
+
+	wxCoord maxWidth = 0;
+	wxCoord height = m_lines.size() * lineHeight;
+
+	// loop through block lines
+	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
+	{
+		wxString *line = m_lines[lineIx];
+		wxSize lineSize = m_painter->m_dc.GetTextExtent(*line);
+		if (lineSize.GetWidth() > maxWidth)
+			maxWidth = lineSize.GetWidth();
+	}
+
+	result.SetWidth(maxWidth);
+	result.SetHeight(height);
+
+	return result;
+}
+
 // ------- TSetDCPainter -------------------------------------------------------------
 
 TSetDCPainter::TSetDCPainter(wxDC& dc, float scale)
-	: m_ss(NULL), m_dc(dc), m_posX(0), m_posXChord(0), m_eMHeight(0), m_section(SECTION_NONE),
+	: m_drawTsetBlocks(false), m_drawTsetMargins(false), m_ss(NULL), m_dc(dc), m_posX(0), m_posXChord(0), m_eMHeight(0), m_section(SECTION_NONE),
 	m_verseCounter(1), m_isLineEmpty(true), m_scale(scale), m_curBlock(NULL)
 {
 	//m_dcPPI = dc.GetPPI();
 	//cout << "DC Painter PPI: (" << m_dcPPI.GetWidth() << "x" << m_dcPPI.GetHeight() << ")" << endl;
-
 	cout << "DC Painter Scale: " << scale << endl;
-
 	m_ss = &wxGetApp().m_styleSheet;
-
-	// draw white (paper) background
-	m_dc.DrawRectangle(0, 0, getDeviceX(m_ss->m_pageSize.GetWidth()) , getDeviceX(m_ss->m_pageSize.GetHeight()));
-
-	m_dc.SetBackgroundMode(wxTRANSPARENT);
-
-	// draw gray border to see typesetting area (margins)
-	wxPen pen(wxColour(200, 200, 200), 0.1); // red pen of width 1
-	m_dc.SetPen(pen);
-
-	// draw border line
-	m_dc.DrawRectangle(
-		getDeviceX(m_ss->m_marginLeft),
-		getDeviceY(m_ss->m_marginTop),
-		getDeviceX(m_ss->m_pageSize.GetWidth() - m_ss->m_marginLeft - m_ss->m_marginRight),
-		getDeviceY(m_ss->m_pageSize.GetHeight() - m_ss->m_marginTop - m_ss->m_marginBottom));
+	m_drawTsetBlocks = wxGetApp().config->Read(_("/global/show-tset-blocks"), 0l) > 0;
+	m_drawTsetMargins = wxGetApp().config->Read(_("/global/show-tset-margins"), 0l) > 0;
 }
 
 TSetDCPainter::~TSetDCPainter()
@@ -154,22 +225,71 @@ void TSetDCPainter::onEnd()
 {
 	cout << "OnBegin" << endl;
 
-	wxPoint pos;
-	pos.y = getDeviceY(m_ss->m_marginTop);
-	pos.x = getDeviceX(m_ss->m_marginLeft);
+	wxPoint pos(getDeviceX(m_ss->m_marginLeft), getDeviceY(m_ss->m_marginTop));
+	wxRect pageRect (
+		getDeviceX(m_ss->m_marginLeft),
+		getDeviceY(m_ss->m_marginTop),
+		getDeviceX(m_ss->m_pageSize.GetWidth() - m_ss->m_marginLeft - m_ss->m_marginRight),
+		getDeviceY(m_ss->m_pageSize.GetHeight() - m_ss->m_marginTop - m_ss->m_marginBottom));
+
+	// draw white (paper) background
+	m_dc.DrawRectangle(0, 0, getDeviceX(m_ss->m_pageSize.GetWidth()) , getDeviceX(m_ss->m_pageSize.GetHeight()));
+	m_dc.SetBackgroundMode(wxTRANSPARENT);
+
+	// draw gray border to see typesetting area (margins)
+	if (m_drawTsetMargins)
+	{
+		wxPen pen(wxColour(200, 200, 200), 0.1); // red pen of width 1
+		m_dc.SetPen(pen);
+		m_dc.DrawRectangle(pageRect);
+	}
+
+	int curColumn = 0;
+	wxCoord columnWidth = pageRect.GetWidth() / m_ss->m_cols;
+	wxRect colRect(pageRect);
+	colRect.SetWidth(columnWidth);
+	m_dc.SetClippingRegion(colRect);
 
 	// loop through current page blocks
 	for (size_t blockIx = 0; blockIx < m_curPage->m_blocks.size(); blockIx++)
 	{
 		TSetBlock *block = m_curPage->m_blocks[blockIx];
 
+		wxCoord blockHeight = block->getBoundingRect().GetHeight();
+
+		// check if we have enough space to draw block
+		if (pos.y + blockHeight > pageRect.GetBottom())
+		{
+			cout << "not enough space for block, pos.y: " << pos.y << " block height: " << blockHeight << endl;
+			if (curColumn < m_ss->m_cols - 1)
+			{
+				cout << "starting new column" << endl;
+				curColumn++;
+				colRect.SetLeft(colRect.GetLeft() + colRect.GetWidth());
+				m_dc.DestroyClippingRegion();
+				m_dc.SetClippingRegion(colRect);
+				pos.x = colRect.GetLeft();
+				pos.y = colRect.GetTop();
+			}
+			else
+			{
+				cout << "new page is required !!!" << endl;
+				break;
+			}
+		}
+
+		// draw bounding box
+		if (m_drawTsetBlocks)
+			block->drawBoundingRect(pos);
 		block->draw(pos);
 		pos.y += block->getBoundingRect().GetHeight();
+		//cout << "block height: " << block->getBoundingRect().GetHeight() << ", new pos.y: " << pos.y << endl;
 	}
 }
 
 void TSetDCPainter::onText(const wstring& text)
 {
+
 	// create new text line item
 	TSetLineItem *item = new TSetLineItem();
 	m_isLineEmpty = false;
@@ -195,6 +315,7 @@ void TSetDCPainter::onChord(const wstring& chord)
 
 	// create new chord line item
 	TSetLineItem *item = new TSetLineItem();
+	m_isLineEmpty = false;
     m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_CHORDS]);
 	// append one space for separation from next typeset chord
 	item->txt = new wxString(chord);
@@ -210,7 +331,7 @@ void TSetDCPainter::onChord(const wstring& chord)
 void TSetDCPainter::onCommand(const wstring& command, const wstring& value)
 {
 	//m_dc.SetFont(*fontTitle_);
-	if (command == L"title")
+	if (command == bschordpro::CMD_TITLE)
     {
 		TSetLineItem *item = new TSetLineItem();
 		m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
@@ -223,12 +344,53 @@ void TSetDCPainter::onCommand(const wstring& command, const wstring& value)
 		m_curPage->m_blocks.push_back(block);
 		m_curBlock = NULL;
 	}
+	else if (command == bschordpro::CMD_CHORUS_START || command == bschordpro::CMD_CHORUS_START_SHORT)
+	{
+		TSetBlockChorus *block = new TSetBlockChorus(this);
+		m_curPage->m_blocks.push_back(block);
+		m_curBlock = block;
+	}
+	else if (command == bschordpro::CMD_CHORUS_END || command == bschordpro::CMD_CHORUS_END_SHORT)
+	{
+		// if we are still in chorus block
+		if (m_curBlock->getType() == TSetBlock::BLTYPE_CHORUS)
+		{
+			// finish block
+			m_curBlock = NULL;
+		}
+		// else igonre end of chorus command
+	}
+	else if (command == bschordpro::CMD_TAB_START || command == bschordpro::CMD_TAB_START_SHORT)
+	{
+		TSetBlockTab *block = new TSetBlockTab(this);
+		m_curPage->m_blocks.push_back(block);
+		m_curBlock = block;
+	}
+	else if (command == bschordpro::CMD_TAB_END || command == bschordpro::CMD_TAB_END_SHORT)
+	{
+		// if we are still in chorus block
+		if (m_curBlock->getType() == TSetBlock::BLTYPE_TAB)
+		{
+			// finish block
+			m_curBlock = NULL;
+		}
+		// else igonre end of chorus command
+	}
+}
+
+void TSetDCPainter::onLine(const wstring& line)
+{
+	// for tab, capture block directly
+	if (m_curBlock != NULL)
+		if (m_curBlock->getType() == TSetBlock::BLTYPE_TAB)
+		{
+			static_cast<TSetBlockTab*>(m_curBlock)->m_lines.push_back(new wxString(line));
+			return;
+		}
 }
 
 void TSetDCPainter::onLineBegin()
 {
-	cout << "OnLineBegin" << endl;
-
 	// default line settings
 	m_posX = m_posXChord = 0;
 	m_hasChords = false;
@@ -238,8 +400,6 @@ void TSetDCPainter::onLineBegin()
 
 void TSetDCPainter::onLineEnd()
 {
-	cout << "OnLineEnd" << endl;
-
 	// check if we are inside some block
 	if (m_curBlock == NULL)
 	{
@@ -279,6 +439,12 @@ void TSetDCPainter::onLineEnd()
 				break;
 
 			case TSetBlock::BLTYPE_CHORUS:
+				// all lines are used if we are inside chorus (empty lines doesn't end block)
+				static_cast<TSetBlockChorus*>(m_curBlock)->m_lines.push_back(m_curLine);
+				break;
+
+			case TSetBlock::BLTYPE_TAB:
+			case TSetBlock::BLTYPE_TITLE:
 			case TSetBlock::BLTYPE_HSPACE:
 			case TSetBlock::BLTYPE_NONE:
 				break;

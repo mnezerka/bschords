@@ -14,6 +14,7 @@ SongStyleSheet::SongStyleSheet()
 	m_marginLeft = m_marginRight = 15;
 	m_marginTop = 15;
 	m_marginBottom = 20;
+	m_indentChorus = 0;
 	m_lineSpacing = 0;
 	m_chordLineSpacing = 0;
 	m_cols = 1;
@@ -38,6 +39,12 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 		m_marginTop = config->Read(_("stylesheet/page/margin-top"), m_marginTop);
 		m_marginRight = config->Read(_("stylesheet/page/margin-right"), m_marginRight);
 		m_marginBottom = config->Read(_("stylesheet/page/margin-bottom"), m_marginBottom);
+
+		// load other page options
+		m_cols = config->Read(_("stylesheet/page/cols"), m_cols);
+		m_lineSpacing = config->Read(_("stylesheet/page/line-spacing"), m_lineSpacing);
+		m_chordLineSpacing = config->Read(_("stylesheet/page/chord-line-spacing"), m_chordLineSpacing);
+		m_indentChorus = config->Read(_("stylesheet/page/indent-chorus"), m_indentChorus);
 
 		// read fonts
 		for (int i = 0; i < BS_FONT_LAST; i++)
@@ -66,6 +73,12 @@ void SongStyleSheet::SaveToConfig(wxConfig *config)
 	config->Write(_("stylesheet/page/margin-top"), m_marginTop);
 	config->Write(_("stylesheet/page/margin-right"), m_marginRight);
 	config->Write(_("stylesheet/page/margin-bottom"), m_marginBottom);
+
+	// save other page options
+	config->Write(_("stylesheet/page/cols"), m_cols);
+	config->Write(_("stylesheet/page/line-spacing"), m_lineSpacing);
+	config->Write(_("stylesheet/page/chord-line-spacing"), m_chordLineSpacing);
+	config->Write(_("stylesheet/page/indent-chorus"), m_indentChorus);
 
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)

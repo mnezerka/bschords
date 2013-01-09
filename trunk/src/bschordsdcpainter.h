@@ -49,11 +49,12 @@ struct TSetLine
 struct TSetBlock
 {
 	TSetDCPainter *m_painter;
-	enum TBlockType { BLTYPE_NONE, BLTYPE_TEXT, BLTYPE_CHORUS, BLTYPE_HSPACE, BLTYPE_TITLE };
+	enum TBlockType { BLTYPE_NONE, BLTYPE_TEXT, BLTYPE_CHORUS, BLTYPE_HSPACE, BLTYPE_TITLE, BLTYPE_TAB };
 
 	TSetBlock(TSetDCPainter *painter) : m_painter(painter) { };
 	virtual ~TSetBlock() { }
-	virtual void draw(const wxPoint pos) {};
+	virtual void draw(wxPoint pos) {};
+	virtual void drawBoundingRect(const wxPoint pos);
 	virtual wxRect getBoundingRect() { return wxRect(0, 0, 0, 0); };
 	virtual TBlockType getType() { return BLTYPE_NONE; };
 };
@@ -62,8 +63,8 @@ struct TSetBlockHSpace : public TSetBlock
 {
 	TSetBlockHSpace(TSetDCPainter *painter) : TSetBlock(painter) { };
 	virtual ~TSetBlockHSpace() { }
-	virtual void draw(const wxPoint pos) {};
 	virtual TBlockType getType() { return BLTYPE_HSPACE; };
+	virtual wxRect getBoundingRect();
 };
 
 struct TSetBlockTitle : public TSetBlock
@@ -71,7 +72,7 @@ struct TSetBlockTitle : public TSetBlock
 	TSetLineItem* m_title;
 	TSetBlockTitle(TSetDCPainter *painter) : TSetBlock(painter), m_title(NULL) { };
 	virtual ~TSetBlockTitle() { delete m_title; }
-	virtual void draw(const wxPoint pos);
+	virtual void draw(wxPoint pos);
 	virtual TBlockType getType() { return BLTYPE_TITLE; };
 	virtual wxRect getBoundingRect();
 };
@@ -81,8 +82,24 @@ struct TSetBlockText : public TSetBlock
 	vector<TSetLine*> m_lines;
 	TSetBlockText(TSetDCPainter *painter) : TSetBlock(painter) { };
 	virtual ~TSetBlockText() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
-	virtual void draw(const wxPoint pos);
+	virtual void draw(wxPoint pos);
 	virtual TBlockType getType() { return BLTYPE_TEXT; };
+	virtual wxRect getBoundingRect();
+};
+
+struct TSetBlockChorus : public TSetBlockText
+{
+	TSetBlockChorus(TSetDCPainter *painter) : TSetBlockText(painter) { };
+	virtual TBlockType getType() { return BLTYPE_CHORUS; };
+};
+
+struct TSetBlockTab : public TSetBlock
+{
+	vector<wxString*> m_lines;
+	TSetBlockTab(TSetDCPainter *painter) : TSetBlock(painter) { };
+	virtual ~TSetBlockTab() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
+	virtual TBlockType getType() { return BLTYPE_TAB; };
+	virtual void draw(wxPoint pos);
 	virtual wxRect getBoundingRect();
 };
 
@@ -104,8 +121,12 @@ class TSetDCPainter : public BSChordProEventHandler
 		virtual void onCommand(const wstring& command, const wstring& value);
 		virtual void onChord(const wstring& chord);
 		virtual void onText(const wstring& text);
+		virtual void onLine(const wstring& line);
 		wxCoord getDeviceX(int numMM);
 		wxCoord getDeviceY(int numMM);
+
+		bool m_drawTsetBlocks;
+		bool m_drawTsetMargins;
 
 		SongStyleSheet *m_ss;
 		wxDC& m_dc;

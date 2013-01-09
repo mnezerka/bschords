@@ -25,6 +25,8 @@ class bschordsPreferences: public wxDialog
         bschordsPreferences(wxDialog *dlg, const wxString& title);
         ~bschordsPreferences();
         wxFont m_fonts[BS_FONT_LAST];
+        bool m_showTsetBlocks;
+        bool m_showTsetMargins;
 
     protected:
         enum
@@ -33,6 +35,7 @@ class bschordsPreferences: public wxDialog
             idBtnAbout,
             idBtnSelFont
         };
+
         wxStaticText* m_staticText1;
         wxButton* BtnAbout;
         wxStaticLine* m_staticline1;
@@ -40,14 +43,14 @@ class bschordsPreferences: public wxDialog
         wxStaticText *fontTestTitle;
         wxStaticText *fontTextTitles[BS_FONT_LAST];
         wxComboBox *fontSelType;
-
     private:
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSelFont(wxCommandEvent &event);
 
-        wxPanel* CreateStyleSheetPage(wxWindow* parent);
+        wxPanel* CreateGeneralPage(wxWindow* parent);
+        wxPanel* CreateViewPage(wxWindow* parent);
 
         DECLARE_EVENT_TABLE()
 };

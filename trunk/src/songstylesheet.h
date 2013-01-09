@@ -48,10 +48,7 @@ class SongStyleSheet
 		wxCoord m_marginLeft;
 		wxCoord m_marginBottom;
 		wxCoord m_marginRight;
-		wxString m_Name;
-		wxString m_pageSizeName;
-		enum { SS_ORIENTATION_PORTRAIT, SS_ORIENTATION_LANDSCAPE} m_pageOrientation;
-
+		wxCoord m_indentChorus;
 		int m_cols;
 		int m_lineSpacing;
 		int m_chordLineSpacing;

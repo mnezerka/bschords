@@ -15,7 +15,7 @@ CR+LF: Microsoft Windows, DEC TOPS-10, RT-11 and most other early non-Unix and n
 
 BSChordProEventHandlerTxt::BSChordProEventHandlerTxt()
 {
-;
+
 }
 
 void BSChordProEventHandlerTxt::onLineBegin()
@@ -56,6 +56,11 @@ void BSChordProEventHandlerTxt::onText(const wstring& text)
     {
         m_textBuffer.append(-1 * diff, L' ');
     }
+}
+
+void BSChordProEventHandlerTxt::onLine(const wstring& line)
+{
+    m_textBuffer.append(line);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -140,6 +145,15 @@ void BSChordProParser::parseLine(const wstring& strBuffer, unsigned int lineFrom
 	}
 
     //wcout << L"Line to be parsed is: >" << line << L"< (" << line.length() << L")" << endl;
+
+	// use all line character when parser is in raw mode
+	if (m_rawMode)
+	{
+		m_eventHandler->onLineBegin();
+		m_eventHandler->onLine(line);
+		m_eventHandler->onLineEnd();
+		return;
+	}
 
 	// don't spend time parsing empty lines
 	if (line.length() == 0)
@@ -278,7 +292,15 @@ void BSChordProParser::parseCommand(const wstring& cmd)
     }
 
     if (cmdId.length() > 0)
+    {
+    	// switch on or off raw mode (no chords are parsed)
+		if (cmdId == bschordpro::CMD_TAB_START || cmdId == bschordpro::CMD_TAB_START_SHORT)
+			m_rawMode = true;
+		else if (cmdId == bschordpro::CMD_TAB_END || cmdId == bschordpro::CMD_TAB_END_SHORT)
+			m_rawMode = false;
+
         m_eventHandler->onCommand(cmdId, cmdVal);
+    }
 }
 
 void BSChordProParser::parseChord(const wstring& chord)

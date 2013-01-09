@@ -1,6 +1,8 @@
 #include "bschordsApp.h"
 #include "bschordsdcpainter.h"
 
+// TODO: use line spacing and chord spacing for drawing
+
 using namespace bschords;
 
 // ------- TSetBlock  --------------------------------------------------------
@@ -147,7 +149,7 @@ void TSetBlockTab::draw(wxPoint pos)
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
 	{
 		wxString *line = m_lines[lineIx];
-		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TAB]);
 		m_painter->m_dc.DrawText(*line, pos);
 		pos.y += m_painter->m_dc.GetCharHeight();
 	}
@@ -157,7 +159,7 @@ wxRect TSetBlockTab::getBoundingRect()
 {
 	wxRect result;
 
-	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TAB]);
 	wxCoord lineHeight = m_painter->m_dc.GetCharHeight();
 
 	wxCoord maxWidth = 0;
@@ -186,7 +188,7 @@ TSetDCPainter::TSetDCPainter(wxDC& dc, float scale)
 {
 	//m_dcPPI = dc.GetPPI();
 	//cout << "DC Painter PPI: (" << m_dcPPI.GetWidth() << "x" << m_dcPPI.GetHeight() << ")" << endl;
-	cout << "DC Painter Scale: " << scale << endl;
+	//cout << "DC Painter Scale: " << scale << endl;
 	m_ss = &wxGetApp().m_styleSheet;
 	m_drawTsetBlocks = wxGetApp().config->Read(_("/global/show-tset-blocks"), 0l) > 0;
 	m_drawTsetMargins = wxGetApp().config->Read(_("/global/show-tset-margins"), 0l) > 0;
@@ -216,14 +218,14 @@ wxCoord TSetDCPainter::getDeviceY(int numMM)
 
 void TSetDCPainter::onBegin()
 {
-	cout << "OnBegin" << endl;
+	//cout << "OnBegin" << endl;
 	// create page structure
 	m_curPage = new TSetPage();
 }
 
 void TSetDCPainter::onEnd()
 {
-	cout << "OnBegin" << endl;
+	//cout << "OnBegin" << endl;
 
 	wxPoint pos(getDeviceX(m_ss->m_marginLeft), getDeviceY(m_ss->m_marginTop));
 	wxRect pageRect (
@@ -260,10 +262,10 @@ void TSetDCPainter::onEnd()
 		// check if we have enough space to draw block
 		if (pos.y + blockHeight > pageRect.GetBottom())
 		{
-			cout << "not enough space for block, pos.y: " << pos.y << " block height: " << blockHeight << endl;
+			//cout << "not enough space for block, pos.y: " << pos.y << " block height: " << blockHeight << endl;
 			if (curColumn < m_ss->m_cols - 1)
 			{
-				cout << "starting new column" << endl;
+				//cout << "starting new column" << endl;
 				curColumn++;
 				colRect.SetLeft(colRect.GetLeft() + colRect.GetWidth());
 				m_dc.DestroyClippingRegion();
@@ -273,7 +275,7 @@ void TSetDCPainter::onEnd()
 			}
 			else
 			{
-				cout << "new page is required !!!" << endl;
+				std::cout << "new page is required !!!" << std::endl;
 				break;
 			}
 		}
@@ -287,7 +289,7 @@ void TSetDCPainter::onEnd()
 	}
 }
 
-void TSetDCPainter::onText(const wstring& text)
+void TSetDCPainter::onText(const std::wstring& text)
 {
 
 	// create new text line item
@@ -307,7 +309,7 @@ void TSetDCPainter::onText(const wstring& text)
 		m_posXChord = m_posX;
 }
 
-void TSetDCPainter::onChord(const wstring& chord)
+void TSetDCPainter::onChord(const std::wstring& chord)
 {
 	// check if we are not overlapping already typeset chord item
 	if (m_posXChord > m_posX)
@@ -328,7 +330,7 @@ void TSetDCPainter::onChord(const wstring& chord)
 	m_posXChord += item->m_bRect.GetWidth();
 }
 
-void TSetDCPainter::onCommand(const wstring& command, const wstring& value)
+void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::wstring& value)
 {
 	//m_dc.SetFont(*fontTitle_);
 	if (command == bschordpro::CMD_TITLE)
@@ -344,13 +346,13 @@ void TSetDCPainter::onCommand(const wstring& command, const wstring& value)
 		m_curPage->m_blocks.push_back(block);
 		m_curBlock = NULL;
 	}
-	else if (command == bschordpro::CMD_CHORUS_START || command == bschordpro::CMD_CHORUS_START_SHORT)
+	else if (command == bschordpro::CMD_CHORUS_START)
 	{
 		TSetBlockChorus *block = new TSetBlockChorus(this);
 		m_curPage->m_blocks.push_back(block);
 		m_curBlock = block;
 	}
-	else if (command == bschordpro::CMD_CHORUS_END || command == bschordpro::CMD_CHORUS_END_SHORT)
+	else if (command == bschordpro::CMD_CHORUS_END)
 	{
 		// if we are still in chorus block
 		if (m_curBlock->getType() == TSetBlock::BLTYPE_CHORUS)
@@ -360,13 +362,13 @@ void TSetDCPainter::onCommand(const wstring& command, const wstring& value)
 		}
 		// else igonre end of chorus command
 	}
-	else if (command == bschordpro::CMD_TAB_START || command == bschordpro::CMD_TAB_START_SHORT)
+	else if (command == bschordpro::CMD_TAB_START)
 	{
 		TSetBlockTab *block = new TSetBlockTab(this);
 		m_curPage->m_blocks.push_back(block);
 		m_curBlock = block;
 	}
-	else if (command == bschordpro::CMD_TAB_END || command == bschordpro::CMD_TAB_END_SHORT)
+	else if (command == bschordpro::CMD_TAB_END)
 	{
 		// if we are still in chorus block
 		if (m_curBlock->getType() == TSetBlock::BLTYPE_TAB)
@@ -378,7 +380,7 @@ void TSetDCPainter::onCommand(const wstring& command, const wstring& value)
 	}
 }
 
-void TSetDCPainter::onLine(const wstring& line)
+void TSetDCPainter::onLine(const std::wstring& line)
 {
 	// for tab, capture block directly
 	if (m_curBlock != NULL)

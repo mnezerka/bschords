@@ -55,7 +55,7 @@ void bschordsPreview::OnDraw(wxDC& dc)
 		}
 	// parse and draw
 	bschords::TSetDCPainter y(dc, m_screenPPI.GetWidth() / MM_PER_IN);
-	BSChordProParser p(&y);
+	bschordpro::Parser p(&y);
 	p.parse(std::wstring(text.wc_str()));
 }
 

@@ -86,8 +86,10 @@ enum
 	idMenuAbout,
 	idMenuPreferences,
 	ID_MENU_STYLESHEET,
+	idMenuViewFileBrowser,
 	idMenuViewEditor,
 	idMenuViewPreview,
+	idMenuViewTSetBlocks,
 	ID_MENU_FILE_EXPORT,
 	ID_COMBO,
 	ID_FSBROWSER,
@@ -139,6 +141,7 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(idMenuPreferences, bschordsFrame::OnPreferences)
 	EVT_MENU(ID_MENU_STYLESHEET, bschordsFrame::OnStyleSheet)
 	EVT_MENU(idMenuAbout, bschordsFrame::OnAbout)
+	EVT_MENU(idMenuViewFileBrowser, bschordsFrame::OnViewFileBrowser)
 	EVT_MENU(idMenuViewEditor, bschordsFrame::OnViewEditor)
 	EVT_MENU(idMenuViewPreview, bschordsFrame::OnViewPreview)
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
@@ -177,8 +180,10 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	mbar->Append(editMenu, _("&Edit"));
 
 	wxMenu* viewMenu = new wxMenu(_T(""));
+	viewMenu->Append(idMenuViewFileBrowser, _("&File browser"), _("View file broser"), true);
 	viewMenu->Append(idMenuViewEditor, _("&Editor"), _("Song editor"), true);
 	viewMenu->Append(idMenuViewPreview, _("&Preview"), _("Song preview"), true);
+	viewMenu->AppendSeparator();
 	mbar->Append(viewMenu, _("&View"));
 
 	wxMenu* helpMenu = new wxMenu(_T(""));
@@ -186,6 +191,7 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	mbar->Append(helpMenu, _("&Help"));
 
 	// these items should be initially checked
+	mbar->Check(idMenuViewFileBrowser, true);
 	mbar->Check(idMenuViewEditor, true);
 	mbar->Check(idMenuViewPreview, true);
 
@@ -209,27 +215,31 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	m_splitterMain = new wxSplitterWindow(this, -1, wxDefaultPosition,  wxDefaultSize, wxSP_BORDER);
 	m_splitterSong = new wxSplitterWindow(m_splitterMain, -1, wxDefaultPosition, wxDefaultSize, wxSP_BORDER);
 
+	// create song content window
 	m_songContent = new wxRichTextCtrl(m_splitterSong, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 	m_songContent->DiscardEdits();
 
+	// create prview window
 	m_preview = new bschordsPreview(m_splitterSong, m_songContent);
-	//m_preview->SetScrollbars(20, 20, 50, 50);
-	//m_preview->SetBackgroundColour(wxColour(255, 255, 255));
-	//m_preview->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 
+	// create file browser window
 	m_dirCtrl = new wxGenericDirCtrl(m_splitterMain, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
 	wxString path = wxGetApp().config->Read(_("/global/path"));
 	m_dirCtrl->SetPath(path);
 
-	m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong, 100);
-	m_splitterSong->SplitVertically(m_songContent, m_preview, 0);
+	// create main splitter
+	int splitMain = wxGetApp().config->Read(_("/global/split-main"), 100);
+	m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong, splitMain);
+
+	// create song splitter
+	int splitSong = wxGetApp().config->Read(_("/global/split-song"), 0l);
+	m_splitterSong->SplitVertically(m_songContent, m_preview, splitSong);
 }
 
 bschordsFrame::~bschordsFrame()
 {
 
 }
-
 
 void bschordsFrame::PopulateToolbar()
 {
@@ -447,6 +457,12 @@ void bschordsFrame::OnQuit(wxCommandEvent &event)
 	wxGetApp().config->Write(_("/global/left"), x);
 	wxGetApp().config->Write(_("/global/top"), y);
 
+	// store splitter positions
+	int splitMain = m_splitterMain->GetSashPosition();
+	wxGetApp().config->Write(_("/global/split-main"), splitMain);
+	int splitSong = m_splitterSong->GetSashPosition();
+	wxGetApp().config->Write(_("/global/split-song"), splitSong);
+
 	wxGetApp().config->Write(_("/global/path"), m_dirCtrl->GetPath());
 
 
@@ -489,6 +505,25 @@ void bschordsFrame::OnStyleSheet(wxCommandEvent &event)
     dlg->Destroy();
 }
 
+void bschordsFrame::OnViewFileBrowser(wxCommandEvent& event)
+{
+	wxMenuBar *mBar = GetMenuBar();
+	if (mBar->IsChecked(idMenuViewFileBrowser))
+	{
+		// hide editor window
+		m_dirCtrl->Show(true);
+		m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong);
+	}
+	else
+	{
+		// show editor window
+		m_dirCtrl->Show(false);
+		m_splitterSong->Unsplit(m_dirCtrl);
+	}
+}
+
+
+
 void bschordsFrame::OnViewEditor(wxCommandEvent& event)
 {
 	wxMenuBar *mBar = GetMenuBar();
@@ -511,7 +546,20 @@ void bschordsFrame::OnViewEditor(wxCommandEvent& event)
 
 void bschordsFrame::OnViewPreview(wxCommandEvent& event)
 {
-
+	wxMenuBar *mBar = GetMenuBar();
+	std::cout << "OnViewPreview" << mBar->IsChecked(idMenuViewPreview) << std::endl;
+	if (mBar->IsChecked(idMenuViewEditor))
+	{
+		// hide preview window
+		m_preview->Show(true);
+		m_splitterSong->SplitVertically(m_songContent, m_preview);
+	}
+	else
+	{
+		// show preview window
+		m_preview->Show(false);
+		m_splitterSong->Unsplit(m_preview);
+	}
 }
 
 void bschordsFrame::OnAbout(wxCommandEvent &event)
@@ -734,31 +782,31 @@ bool BSChordsPrintout::OnBeginDocument(int startPage, int endPage)
 	//GetDC()->G
 	int pageSizeXMM, pageSizeYMM;
 	GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
-	cout << "page size mm: " << pageSizeXMM << "x" << pageSizeYMM << endl;
+	//std::cout << "page size mm: " << pageSizeXMM << "x" << pageSizeYMM << std::endl;
 
 	int pageSizeXPx, pageSizeYPx;
 	GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
-	cout << "page size px: " << pageSizeXPx << "x" << pageSizeYPx << endl;
+	//cout << "page size px: " << pageSizeXPx << "x" << pageSizeYPx << endl;
 
-	wxSize dcSize = GetDC()->GetSize();
-	cout << "dc size in px: " << dcSize.GetWidth() << "x" << dcSize.GetHeight() << endl;
+	//wxSize dcSize = GetDC()->GetSize();
+	//cout << "dc size in px: " << dcSize.GetWidth() << "x" << dcSize.GetHeight() << endl;
 
-	wxRect paperRect = GetPaperRectPixels();
-	cout << "paper rect in px: " << paperRect.GetLeft() << "," << paperRect.GetTop() << " - " << paperRect.GetRight() << "," << paperRect.GetBottom() << " - " << paperRect.GetWidth() << "x" << paperRect.GetHeight() << endl;
+	//wxRect paperRect = GetPaperRectPixels();
+	//cout << "paper rect in px: " << paperRect.GetLeft() << "," << paperRect.GetTop() << " - " << paperRect.GetRight() << "," << paperRect.GetBottom() << " - " << paperRect.GetWidth() << "x" << paperRect.GetHeight() << endl;
 
     int ppiScreenX, ppiScreenY;
     GetPPIScreen(&ppiScreenX, &ppiScreenY);
-    cout << "screen ppi: " << ppiScreenX << "x" << ppiScreenY << endl;
+    //cout << "screen ppi: " << ppiScreenX << "x" << ppiScreenY << endl;
     int ppiPrinterX, ppiPrinterY;
     GetPPIPrinter(&ppiPrinterX, &ppiPrinterY);
-    cout << "printer ppi: " << ppiPrinterX << "x" << ppiPrinterY << endl;
+    //cout << "printer ppi: " << ppiPrinterX << "x" << ppiPrinterY << endl;
 
 	wxSize paperPixels;
 	if (IsPreview())
 	{
 		paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
 		paperPixels.SetHeight(ppiScreenY * 290 / MM_PER_IN);
-		cout << "fitting size to preview page " << paperPixels.GetWidth() << "x" << paperPixels.GetHeight() << endl;
+		//cout << "fitting size to preview page " << paperPixels.GetWidth() << "x" << paperPixels.GetHeight() << endl;
 	}
 	else
 	{
@@ -766,20 +814,19 @@ bool BSChordsPrintout::OnBeginDocument(int startPage, int endPage)
 		//paperPixels.SetHeight(ppiPrinterY * 290 / MM_PER_IN);
 		paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
 		paperPixels.SetHeight(ppiScreenY * 290 / MM_PER_IN);
-
-		cout << "fitting size to printer page " << paperPixels.GetWidth() << "x" << paperPixels.GetHeight() << endl;
+		//cout << "fitting size to printer page " << paperPixels.GetWidth() << "x" << paperPixels.GetHeight() << endl;
 	}
 	FitThisSizeToPaper(paperPixels);
 	double newScaleX, newScaleY;
 	GetDC()->GetUserScale(&newScaleX, &newScaleY);
-	cout << "new user scale: " << newScaleX << "x" << newScaleY << endl;
+	//cout << "new user scale: " << newScaleX << "x" << newScaleY << endl;
 
     return true;
 }
 
 void BSChordsPrintout::GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo)
 {
-	std::cout << "OnGetPageInfo" << std::endl;
+	//std::cout << "OnGetPageInfo" << std::endl;
     *minPage = 1;
     *maxPage = 2;
     *selPageFrom = 1;
@@ -797,7 +844,7 @@ void BSChordsPrintout::DrawPageOne()
 	std::cout << "DrawPageOne" << std::endl;
 	double newScaleX, newScaleY;
 	GetDC()->GetUserScale(&newScaleX, &newScaleY);
-	cout << "  user scale: " << newScaleX << "x" << newScaleY << endl;
+	//cout << "  user scale: " << newScaleX << "x" << newScaleY << endl;
 
 	GetDC()->SetBackground(*wxWHITE_BRUSH);
 
@@ -820,7 +867,7 @@ void BSChordsPrintout::DrawPageOne()
 	float scale = ppiScreenX / MM_PER_IN;
 
 	bschords::TSetDCPainter y(*GetDC(), scale);
-	BSChordProParser p(&y);
+	bschordpro::Parser p(&y);
 
 	//wcout << text.wc_str() << endl;
 	p.parse(std::wstring(text.wc_str()));
@@ -862,7 +909,7 @@ void BSChordsPrintout::DrawPageTwo()
     // If printer pageWidth == current DC width, then this doesn't change. But w
     // might be the preview bitmap width, so scale down.
     float overallScale = scale * (float)(w/(float)pageWidth);
-    cout << "second page overall scale: " << overallScale << endl;
+    //cout << "second page overall scale: " << overallScale << endl;
     dc->SetUserScale(overallScale, overallScale);
 
     // Calculate conversion factor for converting millimetres into logical

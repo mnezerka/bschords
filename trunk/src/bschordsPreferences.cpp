@@ -7,6 +7,8 @@
  * License:
  **************************************************************/
 
+// TODO: Editor font selection
+
 #ifdef WX_PRECOMP
 #include "wx_pch.h"
 #endif

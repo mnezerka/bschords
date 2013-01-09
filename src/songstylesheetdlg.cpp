@@ -137,6 +137,10 @@ wxPanel* SongStyleSheetDlg::CreatePageSetupPage(wxWindow* parent)
 
     linesSizer->Add(new wxStaticText(panel, wxID_ANY, _("Chord line spacing:")));
 	linesSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(60, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_lineChordSpacing)));
+
+    linesSizer->Add(new wxStaticText(panel, wxID_ANY, _("Chorus indent:")));
+	linesSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(60, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_indentChorus)));
+
     linesStaticBoxSizer->Add(linesSizer, 0, wxALL, 3);
 
 	// --------------------------------------------------------------------------------------
@@ -250,6 +254,7 @@ bool SongStyleSheetDlg::TransferDataToWindow()
 	m_cols << m_styleSheet->m_cols;
 	m_lineSpacing << m_styleSheet->m_lineSpacing;
 	m_lineChordSpacing << m_styleSheet->m_chordLineSpacing;
+	m_indentChorus << m_styleSheet->m_indentChorus;
 
     bool result = wxDialog::TransferDataToWindow();
 
@@ -276,7 +281,7 @@ bool SongStyleSheetDlg::TransferDataFromWindow()
 	m_styleSheet->m_cols = wxAtoi(m_cols);
 	m_styleSheet->m_lineSpacing = wxAtoi(m_lineSpacing);
 	m_styleSheet->m_chordLineSpacing = wxAtoi(m_lineChordSpacing);
-
+	m_styleSheet->m_indentChorus = wxAtoi(m_indentChorus);
 
 	return result;
 }

@@ -457,14 +457,15 @@ void bschordsFrame::OnPreferences(wxCommandEvent &event)
 {
 	bschordsPreferences* dlg = new bschordsPreferences(0L, _("wxWidgets Application Template"));
 
+	dlg->m_showTsetBlocks = wxGetApp().config->Read(_("/global/show-tset-blocks"), 0l) > 0;
+	dlg->m_showTsetMargins = wxGetApp().config->Read(_("/global/show-tset-margins"), 0l) > 0;
+
 	if (dlg->ShowModal() == wxID_OK)
     {
-        // copy font information from preferences to application
-        for (int i = 0; i < BS_FONT_LAST; i++)
-        {
-            std::cout << i << " native info: " << dlg->m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
-            wxGetApp().m_styleSheet.m_fonts[i] = dlg->m_fonts[i];
-        }
+		wxGetApp().config->Write(_("/global/show-tset-blocks"), dlg->m_showTsetBlocks ? 1 : 0);
+		wxGetApp().config->Write(_("/global/show-tset-margins"), dlg->m_showTsetMargins ? 1 : 0);
+		m_preview->Refresh();
+		m_preview->Update();
     }
     dlg->Destroy();
 }
@@ -715,7 +716,7 @@ bool BSChordsPrintout::OnPrintPage(int page)
         // screen size of text matches paper size.
         //MapScreenSizeToPage();
 
-        dc->DrawText(wxString::Format(wxT("PAGE %d"), page), 0, 0);
+        //TODO: draw page numbers dc->DrawText(wxString::Format(wxT("PAGE %d"), page), 0, 0);
 
         return true;
     }
@@ -823,8 +824,6 @@ void BSChordsPrintout::DrawPageOne()
 
 	//wcout << text.wc_str() << endl;
 	p.parse(std::wstring(text.wc_str()));
-
-	GetDC()->DrawLine(0, 0, 300, 300);
 }
 
 void BSChordsPrintout::DrawPageTwo()

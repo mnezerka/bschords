@@ -50,7 +50,9 @@ SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongS
 
 	wxPanel* pagePageSetup = CreatePageSetupPage(m_bookCtrl);
 	wxPanel* pageFonts = CreateFontsPage(m_bookCtrl);
+	wxPanel* pageContent = CreateContentPage(m_bookCtrl);
 	m_bookCtrl->AddPage(pagePageSetup, _("Page"), false);
+	m_bookCtrl->AddPage(pageContent, _("Content"), false);
 	m_bookCtrl->AddPage(pageFonts, _("Fonts"), false);
 	mainSizer->Add(m_bookCtrl, 0, wxALL | wxEXPAND, 5);
 
@@ -85,6 +87,7 @@ wxPanel* SongStyleSheetDlg::CreatePageSetupPage(wxWindow* parent)
     wxBoxSizer* pageStaticBoxSizer = new wxStaticBoxSizer(pageStaticBox, wxHORIZONTAL);
     item0->Add(pageStaticBoxSizer, 0, wxGROW|wxALL, 5);
 
+	// TODO: handling of paper sizes
 	wxComboBox *comboPageSize = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(100,-1));
 	comboPageSize->Append(_T("User defined"));
 	comboPageSize->Append(_T("A4 (210x219 mm)"));
@@ -206,9 +209,39 @@ wxPanel* SongStyleSheetDlg::CreateFontsPage(wxWindow* parent)
     return panel;
 }
 
-SongStyleSheetDlg::~SongStyleSheetDlg()
+wxPanel* SongStyleSheetDlg::CreateContentPage(wxWindow* parent)
 {
+    wxPanel* panel = new wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWS_EX_VALIDATE_RECURSIVELY);
+
+    //wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
+	wxBoxSizer *topSizer = new wxBoxSizer(wxVERTICAL);
+
+	// first column
+    wxBoxSizer *col0 = new wxBoxSizer( wxVERTICAL );
+
+	// --------------------------------------------------------------------------------------
+	// verses and choruses panel
+	wxStaticBox* vchStaticBox = new wxStaticBox(panel, wxID_ANY, _("Verses and Choruses"));
+    wxBoxSizer* vchStaticBoxSizer = new wxStaticBoxSizer(vchStaticBox, wxVERTICAL);
+    col0->Add(vchStaticBoxSizer, 0, wxGROW|wxALL, 5);
+
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show chords"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showChords)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show subtitles"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showSubtitles)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show tabs"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showTabs)), 1, wxEXPAND | wxALL, 5);
+
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Verse numbering"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_verseNumbering)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Equal line heights (text lines without chords have equal height as lines chords)"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_equalLineHeights)), 1, wxEXPAND | wxALL, 5);
+
+	// --------------------------------------------------------------------------------------
+   	// global stuff
+    topSizer->Add(col0, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );
+
+    panel->SetSizer(topSizer);
+    topSizer->Fit(panel);
+
+    return panel;
 }
+
 
 void SongStyleSheetDlg::OnClose(wxCloseEvent &event)
 {

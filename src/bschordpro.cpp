@@ -1,7 +1,5 @@
 #include "bschordpro.h"
 
-// TODO: Parsing of command should split line to two lines or ignore content around it (force user to write command on single lines)
-
 using namespace bschordpro;
 
 static const wchar_t *cmdTitle 				= L"title";
@@ -77,15 +75,6 @@ void EventHandlerTxt::onLine(const std::wstring& line)
 //////////////////////////////////////////////////////////////////////////////
 void Parser::parse(const std::wstring& s)
 {
-    /*wcout << L"size of wchar_t:"<< sizeof(wchar_t) << endl;
-    wcout << L"size of buffer: "<< sizeof(s) << endl;
-    wcout << L"len of buffer: "<< s.size() << endl;
-    wcout << static_cast<unsigned int>(static_cast<unsigned short>(L'\n')) << endl;
-    for (size_t i = 0; i < s.size(); i++)
-    {
-        wcout << i << ": "<< static_cast<unsigned int>(static_cast<unsigned short>(s[i])) << endl;
-    }*/
-
 	unsigned int lineFrom = 0;
 	unsigned int lineLen = 0;
 
@@ -126,13 +115,14 @@ void Parser::parse(const std::wstring& s)
 	m_eventHandler->onEnd();
 }
 
+// called for each text line of parsed buffer
 void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, unsigned int lineLen)
 {
 	bool lineHasCmd = false;
 	std::wstring curText = L"";
 	std::wstring line;
 
-	line.assign (strBuffer, lineFrom, lineLen);
+	line.assign(strBuffer, lineFrom, lineLen);
 
     //wcout << L"from: " << lineFrom << L", len:" << lineLen << L" >" << line << L"<" << endl;
 
@@ -154,6 +144,10 @@ void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, uns
 		line.erase(cmdBegin, cmdEnd - cmdBegin + 1);
 		lineHasCmd = true;
 	}
+
+	// if line has command, don't parse it for text, chords, etc...
+	if (lineHasCmd)
+		return;
 
     //wcout << L"Line to be parsed is: >" << line << L"< (" << line.length() << L")" << endl;
 
@@ -316,7 +310,7 @@ void Parser::parseCommand(const std::wstring& cmd)
 		else if (cmdId == ::cmdTabEnd || cmdId == ::cmdTabEndShort)
 		{
 			m_rawMode = false;
-			cmdType = CMD_TAB_START;
+			cmdType = CMD_TAB_END;
 		}
 		else if (cmdId == ::cmdChorusStart || cmdId == ::cmdChorusStartShort)
 			cmdType = CMD_CHORUS_START;

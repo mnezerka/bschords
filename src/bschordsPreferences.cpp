@@ -7,8 +7,6 @@
  * License:
  **************************************************************/
 
-// TODO: Editor font selection
-
 #ifdef WX_PRECOMP
 #include "wx_pch.h"
 #endif
@@ -28,8 +26,6 @@
 
 BEGIN_EVENT_TABLE(bschordsPreferences, wxDialog)
     EVT_CLOSE(bschordsPreferences::OnClose)
-    EVT_BUTTON(idBtnQuit, bschordsPreferences::OnQuit)
-    EVT_BUTTON(idBtnAbout, bschordsPreferences::OnAbout)
     EVT_BUTTON(idBtnSelFont, bschordsPreferences::OnSelFont)
 END_EVENT_TABLE()
 
@@ -47,8 +43,11 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
 
 	wxPanel* pageGeneral = CreateGeneralPage(m_bookCtrl);
 	wxPanel* pageView = CreateViewPage(m_bookCtrl);
-	m_bookCtrl->AddPage(pageGeneral, _("General"), false);
+	wxPanel* pageEditor = CreateEditorPage(m_bookCtrl);
+	m_bookCtrl->AddPage(pageGeneral, _("General"), true);
 	m_bookCtrl->AddPage(pageView, _("View"), false);
+	m_bookCtrl->AddPage(pageEditor, _("Editor"), false);
+
 	mainSizer->Add(m_bookCtrl, 0, wxALL | wxEXPAND, 5);
 
 	// static line
@@ -62,6 +61,8 @@ bschordsPreferences::bschordsPreferences(wxDialog *dlg, const wxString &title)
     this->Layout();
     mainSizer->Fit(this);
 }
+
+bschordsPreferences::~bschordsPreferences() { }
 
 wxPanel* bschordsPreferences::CreateGeneralPage(wxWindow* parent)
 {
@@ -117,8 +118,34 @@ wxPanel* bschordsPreferences::CreateViewPage(wxWindow* parent)
     return panel;
 }
 
-bschordsPreferences::~bschordsPreferences()
+wxPanel* bschordsPreferences::CreateEditorPage(wxWindow* parent)
 {
+    wxPanel* panel = new wxPanel(parent, wxID_ANY);
+
+    wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
+    wxBoxSizer *item0 = new wxBoxSizer( wxVERTICAL );
+
+	// --------------------------------------------------------------------------------------
+	// font panel
+	wxStaticBox* fontStaticBox = new wxStaticBox(panel, wxID_ANY, _("Font"));
+    wxBoxSizer* fontStaticBoxSizer = new wxStaticBoxSizer(fontStaticBox, wxVERTICAL );
+    item0->Add(fontStaticBoxSizer, 0, wxGROW|wxALL, 0);
+
+    fontStaticBoxSizer->Add(new wxButton(panel, idBtnSelFont, _("Font...")));
+	m_editorFontPreview = new wxStaticText(panel, wxID_ANY, wxT("This is editor font"), wxDefaultPosition, wxSize(300, wxDefaultCoord));
+	m_editorFontPreview->SetFont(wxGetApp().m_editorFont);
+    m_editorFontPreview->SetBackgroundColour(wxColour(255, 255, 255));
+	m_editorFontPreview->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+	fontStaticBoxSizer->Add(m_editorFontPreview, 1, wxALL | wxEXPAND, 5);
+
+	// global stuff
+    topSizer->Add(item0, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );
+    topSizer->AddSpacer(5);
+
+    panel->SetSizer(topSizer);
+    topSizer->Fit(panel);
+
+    return panel;
 }
 
 void bschordsPreferences::OnClose(wxCloseEvent &event)
@@ -126,34 +153,16 @@ void bschordsPreferences::OnClose(wxCloseEvent &event)
     Destroy();
 }
 
-void bschordsPreferences::OnQuit(wxCommandEvent &event)
-{
-    Destroy();
-}
-
-void bschordsPreferences::OnAbout(wxCommandEvent &event)
-{
-    //wxString msg = wxbuildinfo(long_f);
-    wxMessageBox(_("Text"), _("Welcome to..."));
-}
-
 void bschordsPreferences::OnSelFont(wxCommandEvent &event)
 {
-    int fontIx = fontSelType->GetSelection();
-    if (fontIx != wxNOT_FOUND && fontIx >= 0 && fontIx < BS_FONT_LAST)
-    {
-        std::cout << "selected item is " << fontIx << std::endl;
-
-        // fonts stuff
-        wxFontData fontData;
-        fontData.SetInitialFont(m_fonts[fontIx]);
-        //data.SetColour(canvasTextColour);
-        wxFontDialog dialog(this, &fontData);
-        if (dialog.ShowModal() == wxID_OK)
-        {
-            wxFontData retData = dialog.GetFontData();
-            m_fonts[fontIx] = retData.GetChosenFont();
-            fontTextTitles[fontIx]->SetFont(m_fonts[fontIx]);
-        }
-    }
+	// fonts stuff
+	wxFontData fontData;
+	fontData.SetInitialFont(wxGetApp().m_editorFont);
+	wxFontDialog dialog(this, &fontData);
+	if (dialog.ShowModal() == wxID_OK)
+	{
+		wxFontData retData = dialog.GetFontData();
+		wxGetApp().m_editorFont = retData.GetChosenFont();
+		//fontTextTitles[fontIx]->SetFont(m_fonts[fontIx]);
+	}
 }

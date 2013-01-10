@@ -19,11 +19,16 @@
 #include <wx/print.h>
 #include "songstylesheet.h"
 
+// TODO: add tool bar with chords for given key
+// TODO: implement chord transform utility
+// TODO: solve CR LF problem - one checkbox in preferences could be nice
+
 class bschordsApp : public wxApp
 {
     public:
 		wxConfig *config;
         //wxFont m_fonts[BS_FONT_LAST];
+		wxFont m_editorFont;
         // Global print data, to remember settings during the session
 		wxPrintData *m_printData;
 		// Global page setup data

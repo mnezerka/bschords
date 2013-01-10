@@ -15,11 +15,6 @@
 #pragma hdrstop
 #endif //__BORLANDC__
 
-/*
-#if !wxUSE_PRINTING_ARCHITECTURE
-    #error "You must set wxUSE_PRINTING_ARCHITECTURE to 1 in setup.h, and recompile the library."
-#endif
-*/
 #include <iostream>
 
 #include <wx/treectrl.h>
@@ -32,8 +27,6 @@
 #include <wx/textfile.h>
 #include <wx/filename.h>
 #include <wx/printdlg.h>
-//#include <wx/pdfdoc.h>
-//#include <wx/pdffontmanager.h>
 
 #include "bschordsMain.h"
 #include "bschordsPreferences.h"
@@ -88,7 +81,6 @@ enum
 	ID_MENU_STYLESHEET,
 	idMenuViewFileBrowser,
 	idMenuViewEditor,
-	idMenuViewPreview,
 	idMenuViewTSetBlocks,
 	ID_MENU_FILE_EXPORT,
 	ID_COMBO,
@@ -124,8 +116,6 @@ enum
 	IDM_TOOLBAR_OTHER_3,
 };
 
-static const double zoomFactors[] = {.1, .5, 1, 1.5, 2, 3 };
-
 BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_CLOSE(bschordsFrame::OnClose)
 	EVT_MENU(wxID_NEW, bschordsFrame::OnFileNewSong)
@@ -143,7 +133,6 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(idMenuAbout, bschordsFrame::OnAbout)
 	EVT_MENU(idMenuViewFileBrowser, bschordsFrame::OnViewFileBrowser)
 	EVT_MENU(idMenuViewEditor, bschordsFrame::OnViewEditor)
-	EVT_MENU(idMenuViewPreview, bschordsFrame::OnViewPreview)
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
 	EVT_TOOL(ID_TOOLBAR_CHORD, bschordsFrame::OnToolChord)
 	EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged )
@@ -151,7 +140,7 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 END_EVENT_TABLE()
 
 bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
-	: wxFrame(frame, -1, title), m_fileChanged(false)
+	: wxFrame(frame, -1, title)
 {
 	SetIcon(wxICON(bschordsicon));
 
@@ -182,7 +171,6 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	wxMenu* viewMenu = new wxMenu(_T(""));
 	viewMenu->Append(idMenuViewFileBrowser, _("&File browser"), _("View file broser"), true);
 	viewMenu->Append(idMenuViewEditor, _("&Editor"), _("Song editor"), true);
-	viewMenu->Append(idMenuViewPreview, _("&Preview"), _("Song preview"), true);
 	viewMenu->AppendSeparator();
 	mbar->Append(viewMenu, _("&View"));
 
@@ -193,7 +181,6 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	// these items should be initially checked
 	mbar->Check(idMenuViewFileBrowser, true);
 	mbar->Check(idMenuViewEditor, true);
-	mbar->Check(idMenuViewPreview, true);
 
 	SetMenuBar(mbar);
 
@@ -218,6 +205,7 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	// create song content window
 	m_songContent = new wxRichTextCtrl(m_splitterSong, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 	m_songContent->DiscardEdits();
+	m_songContent->SetFont(wxGetApp().m_editorFont);
 
 	// create prview window
 	m_preview = new bschordsPreview(m_splitterSong, m_songContent);
@@ -228,17 +216,12 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	m_dirCtrl->SetPath(path);
 
 	// create main splitter
-	int splitMain = wxGetApp().config->Read(_("/global/split-main"), 100);
-	m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong, splitMain);
+	int splitMainPos = wxGetApp().config->Read(_("/global/split-main"), 100);
+	m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong, splitMainPos);
 
 	// create song splitter
-	int splitSong = wxGetApp().config->Read(_("/global/split-song"), 0l);
-	m_splitterSong->SplitVertically(m_songContent, m_preview, splitSong);
-}
-
-bschordsFrame::~bschordsFrame()
-{
-
+	int splitSongPos = wxGetApp().config->Read(_("/global/split-song"), 0l);
+	m_splitterSong->SplitVertically(m_songContent, m_preview, splitSongPos);
 }
 
 void bschordsFrame::PopulateToolbar()
@@ -273,8 +256,8 @@ void bschordsFrame::PopulateToolbar()
 	INIT_TOOL_BMP(help);
 	INIT_TOOL_BMP(chord);
 
-	int w = toolBarBitmaps[Tool_new].GetWidth(),
-			h = toolBarBitmaps[Tool_new].GetHeight();
+	int w = toolBarBitmaps[Tool_new].GetWidth();
+	int h = toolBarBitmaps[Tool_new].GetHeight();
 
 	for ( size_t n = Tool_new; n < WXSIZEOF(toolBarBitmaps); n++ )
 	{
@@ -296,16 +279,38 @@ void bschordsFrame::PopulateToolbar()
 	m_toolBar->AddSeparator();
 	// adding a combo to a vertical toolbar is not very smart
 	m_zoomCtrl = new wxComboBox(m_toolBar, ID_COMBO, wxEmptyString, wxDefaultPosition, wxSize(100,-1), 0, NULL, wxCB_READONLY);
-	m_zoomCtrl->Append(_("10%"), (void*)&zoomFactors[0]);
-	m_zoomCtrl->Append(_("50%"), (void*)&zoomFactors[1]);
-	m_zoomCtrl->Append(_("100%"), (void*)&zoomFactors[2]);
-	m_zoomCtrl->Append(_("150%"), (void*)&zoomFactors[3]);
-	m_zoomCtrl->Append(_("200%"), (void*)&zoomFactors[4]);
-	m_zoomCtrl->Select(2);
+	m_zoomCtrl->Append(_("10%"));
+	m_zoomCtrl->Append(_("20%"));
+	m_zoomCtrl->Append(_("30%"));
+	m_zoomCtrl->Append(_("40%"));
+	m_zoomCtrl->Append(_("50%"));
+	m_zoomCtrl->Append(_("60%"));
+	m_zoomCtrl->Append(_("70%"));
+	m_zoomCtrl->Append(_("80%"));
+	m_zoomCtrl->Append(_("90%"));
+	int ix100 = m_zoomCtrl->Append(_("100%"));
+	m_zoomCtrl->Append(_("110%"));
+	m_zoomCtrl->Append(_("120%"));
+	m_zoomCtrl->Append(_("130%"));
+	m_zoomCtrl->Append(_("140%"));
+	m_zoomCtrl->Append(_("150%"));
+	m_zoomCtrl->Append(_("175%"));
+	m_zoomCtrl->Append(_("200%"));
+	m_zoomCtrl->Append(_("250%"));
+	m_zoomCtrl->Append(_("300%"));
+	m_zoomCtrl->Select(ix100);
 	m_toolBar->AddControl(m_zoomCtrl);
 
-	/*wxSpinCtrl *spin = new wxSpinCtrl( toolBar, ID_SPIN, wxT("0"), wxDefaultPosition, wxSize(80,wxDefaultCoord), 0, 0, 100 );
-	toolBar->AddControl( spin );*/
+	m_toolBar->AddSeparator();
+
+	/*
+	wxString chordLabels[7] = { _("C"), _("Dm"), _("Em"), _("F"), _("G"), _("Am"), _("Hm5b") };
+	for (int i = 0; i < 7; i++)
+	{
+		m_chordButtons[i] = new wxButton(m_toolBar, wxID_ANY, chordLabels[i], wxDefaultPosition, wxSize(40, 40));
+		m_toolBar->AddControl(m_chordButtons[i]);
+	}
+	*/
 
 	// after adding the buttons to the toolbar, must call Realize() to reflect
 	// the changes
@@ -350,9 +355,9 @@ void bschordsFrame::OnFileSaveAsSong(wxCommandEvent& event)
 	wxString dir;
 	wxString name;
 
-	if (m_filePath.Length() > 0)
+	if (m_file.m_path.Length() > 0)
 	{
-		wxFileName fileName(m_filePath);
+		wxFileName fileName(m_file.m_path);
 		dir = fileName.GetPath();
 		name = fileName.GetFullName();
 	}
@@ -367,7 +372,7 @@ void bschordsFrame::OnFileSaveAsSong(wxCommandEvent& event)
 
 	if (saveDlg->ShowModal() == wxID_OK )
 	{
-		m_filePath = saveDlg->GetPath();
+		m_file.m_path = saveDlg->GetPath();
 		SaveFile();
 	}
 }
@@ -382,11 +387,10 @@ void bschordsFrame::OnFileExportSong(wxCommandEvent& event)
 	wxString dir;
 	wxString name;
 
-	if (m_filePath.Length() == 0)
+	if (m_file.m_path.Length() == 0)
 		return;
 
-
-	wxFileName fileName(m_filePath);
+	wxFileName fileName(m_file.m_path);
 	fileName.SetExt(_("pdf"));
 	dir = fileName.GetPath();
 	name = fileName.GetFullName();
@@ -482,6 +486,8 @@ void bschordsFrame::OnPreferences(wxCommandEvent &event)
 		wxGetApp().config->Write(_("/global/show-tset-margins"), dlg->m_showTsetMargins ? 1 : 0);
 		m_preview->Refresh();
 		m_preview->Update();
+
+		m_songContent->SetFont(wxGetApp().m_editorFont);
     }
     dlg->Destroy();
 }
@@ -510,69 +516,50 @@ void bschordsFrame::OnViewFileBrowser(wxCommandEvent& event)
 	wxMenuBar *mBar = GetMenuBar();
 	if (mBar->IsChecked(idMenuViewFileBrowser))
 	{
-		// hide editor window
-		m_dirCtrl->Show(true);
-		m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong);
+		// show file browser window
+		m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong, 	wxGetApp().config->Read(_("/global/split-main"), 100));
 	}
 	else
 	{
-		// show editor window
-		m_dirCtrl->Show(false);
-		m_splitterSong->Unsplit(m_dirCtrl);
+		// hide file browser window
+		wxGetApp().config->Write(_("/global/split-main"), m_splitterMain->GetSashPosition());
+		m_splitterMain->Unsplit(m_dirCtrl);
 	}
 }
-
-
 
 void bschordsFrame::OnViewEditor(wxCommandEvent& event)
 {
 	wxMenuBar *mBar = GetMenuBar();
-	std::cout << "OnViewEditor" << mBar->IsChecked(idMenuViewEditor) << std::endl;
 	if (mBar->IsChecked(idMenuViewEditor))
 	{
-		// hide editor window
-		m_songContent->Show(true);
-		m_splitterSong->SplitVertically(m_songContent, m_preview);
+		//m_songContent->Show(true);
+		m_splitterSong->SplitVertically(m_songContent, m_preview, wxGetApp().config->Read(_("/global/split-song"), 100));
 		m_toolBar->EnableTool(ID_TOOLBAR_CHORD, true);
 	}
 	else
 	{
 		// show editor window
-		m_songContent->Show(false);
+		//m_songContent->Show(false);
+		wxGetApp().config->Write(_("/global/split-song"), m_splitterSong->GetSashPosition());
 		m_splitterSong->Unsplit(m_songContent);
 		m_toolBar->EnableTool(ID_TOOLBAR_CHORD, false);
-	}
-}
-
-void bschordsFrame::OnViewPreview(wxCommandEvent& event)
-{
-	wxMenuBar *mBar = GetMenuBar();
-	std::cout << "OnViewPreview" << mBar->IsChecked(idMenuViewPreview) << std::endl;
-	if (mBar->IsChecked(idMenuViewEditor))
-	{
-		// hide preview window
-		m_preview->Show(true);
-		m_splitterSong->SplitVertically(m_songContent, m_preview);
-	}
-	else
-	{
-		// show preview window
-		m_preview->Show(false);
-		m_splitterSong->Unsplit(m_preview);
 	}
 }
 
 void bschordsFrame::OnAbout(wxCommandEvent &event)
 {
 	wxString msg = wxbuildinfo(long_f);
-	msg.append(_("\n\nmichal.nezerka@gmail.com\n\nhttp://blue.pavoucek.cz"));
-	wxMessageBox(msg, _("BSChords application"));
+	msg.append(_("\n\nYet another application for typesetting song lyrics."));
+	msg.append(_("\n\nFor more information visit project web page at:\nhttps://code.google.com/p/bschords/"));
+	msg.append(_("\n\nAuthor: michal.nezerka@gmail.com"));
+	msg.append(_("\nhttp://blue.pavoucek.cz"));
+
+	wxMessageBox(msg, _("BSChords Application"));
 }
 
 void bschordsFrame::OnSongContentChange(wxCommandEvent& event)
 {
-	//wxMessageBox(_("This is content change event"), _("BSChords application"));
-	m_fileChanged = true;
+	m_file.m_changed = true;
 	UpdateTitle();
 	m_preview->Refresh();
 	m_preview->Update();
@@ -580,11 +567,6 @@ void bschordsFrame::OnSongContentChange(wxCommandEvent& event)
 
 void bschordsFrame::OnToolChord(wxCommandEvent& WXUNUSED(event))
 {
-	/*wxMessageBox(_("chord pressed"));
-	m_ textWindow->AppendText(
-	        wxString::Format(_T("Tool %d right clicked.\n"),
-	                         (int) event.GetInt()));*/
-
 	m_songContent->WriteText(_("[]"));
 }
 
@@ -620,7 +602,6 @@ void bschordsFrame::OpenFile(const wxString filePath)
 		return;
 	}
 
-
 	if (!fileName.FileExists())
 	{
 		wxMessageBox(_("File doesn't exist"), wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR);
@@ -629,11 +610,14 @@ void bschordsFrame::OpenFile(const wxString filePath)
 
 	std::wcout << L"loading file " << fileName.GetFullPath().wc_str() << std::endl;
 
+
 	//wxMessageBox(data->m_path);
 	wxTextFile fileIn;
 	wxString lines;
 	if (fileIn.Open(fileName.GetFullPath()))
 	{
+		m_file.m_type = fileIn.GuessType();
+
 		lines = fileIn.GetFirstLine();
 		// Read all the lines (one by one)
 		while(!fileIn.Eof())
@@ -648,8 +632,9 @@ void bschordsFrame::OpenFile(const wxString filePath)
 		m_songContent->AppendText(lines);
 		m_songContent->DiscardEdits();
 
-		m_filePath = fileName.GetFullPath();
-		m_fileChanged = false;
+		m_file.m_path = fileName.GetFullPath();
+		m_file.m_changed = false;
+
 
 		UpdateTitle();
 	}
@@ -665,15 +650,16 @@ void bschordsFrame::CloseFile()
 		}
 	}
 
-	m_filePath.Empty();
+	m_file.clear();
 	m_songContent->Clear();
+	UpdateTitle();
 }
 
 void bschordsFrame::SaveFile()
 {
 	std::cout << "SaveFile called" << std::endl;
 
-	if (m_filePath.Length() == 0)
+	if (m_file.m_path.Length() == 0)
 	{
 		wxFileName fileName(m_dirCtrl->GetPath());
 		wxString dir = fileName.GetPath();
@@ -681,12 +667,12 @@ void bschordsFrame::SaveFile()
 		wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.txt"), wxSAVE, wxDefaultPosition);
 
 		if (saveDlg->ShowModal() == wxID_OK )
-			m_filePath = saveDlg->GetPath();
+			m_file.m_path = saveDlg->GetPath();
 		else
 			return;
 	}
 
-	wxFileName fileName(m_filePath);
+	wxFileName fileName(m_file.m_path);
 
 	if (fileName.IsDir())
 	{
@@ -706,7 +692,12 @@ void bschordsFrame::SaveFile()
 		int lines = m_songContent->GetNumberOfLines();
 		for (int i = 0; i < lines; i++)
 			fileOut.AddLine(m_songContent->GetLineText(i));
-		fileOut.Write();
+
+		// preserve file eol encoding if available (remembered from file opening)
+		if (m_file.m_type != wxTextFileType_None)
+			fileOut.Write();
+		else
+			fileOut.Write(m_file.m_type);
 		fileOut.Close(); // Close the opened file
 		m_songContent->DiscardEdits();
 		UpdateTitle();
@@ -718,9 +709,9 @@ void bschordsFrame::UpdateTitle()
 {
 	wxString title;
 
-	if (m_filePath.Length() > 0)
+	if (m_file.m_path.Length() > 0)
 	{
-		wxFileName tmp(m_filePath);
+		wxFileName tmp(m_file.m_path);
 
 		if (m_songContent->IsModified())
 		//if (m_fileChanged)
@@ -732,10 +723,33 @@ void bschordsFrame::UpdateTitle()
 
 	title += _(" - BSChords");
 	SetTitle(title);
+
+	// update status bar
+	wxString t;
+	t += m_file.m_path;
+	switch (m_file.m_type)
+	{
+		case wxTextFileType_Unix: t += _(" (Unix)"); break;
+		case wxTextFileType_Dos: t += _(" (Dos)"); break;
+		case wxTextFileType_Mac: t += _(" (Mac)"); break;
+		case wxTextFileType_Os2: t += _(" (Os2)"); break;
+		case wxTextFileType_None:
+		default:
+			t += _(" (no type)");
+	}
+	SetStatusText(t, 1);
 }
 
 void bschordsFrame::OnZoomChanged(wxCommandEvent& event)
 {
+	int zoom = wxAtoi(m_zoomCtrl->GetValue());
+
+	if (zoom > 0 && zoom < 2000)
+	{
+		m_preview->setZoom((double)zoom / 100);
+	}
+
+	/*
 	int sel = m_zoomCtrl->GetSelection();
 	if (sel!= wxNOT_FOUND)
 	{
@@ -743,7 +757,7 @@ void bschordsFrame::OnZoomChanged(wxCommandEvent& event)
 		std::cout << "New zoom value is: " << newZoom << std::endl;
 		m_preview->setZoom(newZoom);
 	}
-
+	*/
 }
 
 // ----------------------------------------------------------------------------
@@ -764,7 +778,7 @@ bool BSChordsPrintout::OnPrintPage(int page)
         // screen size of text matches paper size.
         //MapScreenSizeToPage();
 
-        //TODO: draw page numbers dc->DrawText(wxString::Format(wxT("PAGE %d"), page), 0, 0);
+        //dc->DrawText(wxString::Format(wxT("PAGE %d"), page), 0, 0);
 
         return true;
     }

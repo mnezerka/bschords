@@ -1,7 +1,7 @@
 #include "bschordsApp.h"
 #include "bschordsdcpainter.h"
 
-// TODO: use line spacing and chord spacing for drawing
+// TODO: use line spacing, chord spacing, etc.. for drawing
 
 using namespace bschords;
 

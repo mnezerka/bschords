@@ -25,7 +25,6 @@ class SongStyleSheetDlg: public wxDialog
 {
     public:
         SongStyleSheetDlg(wxDialog *dlg, const wxString& title, SongStyleSheet *styleSheet);
-        ~SongStyleSheetDlg();
         bool TransferDataToWindow();
         bool TransferDataFromWindow();
         wxFont m_fonts[BS_FONT_LAST];
@@ -62,6 +61,7 @@ class SongStyleSheetDlg: public wxDialog
 
 		wxPanel* CreatePageSetupPage(wxWindow* parent);
         wxPanel* CreateFontsPage(wxWindow* parent);
+        wxPanel* CreateContentPage(wxWindow* parent);
 
 
         DECLARE_EVENT_TABLE()

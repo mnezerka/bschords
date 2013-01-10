@@ -24,13 +24,21 @@
 #include "bschordsApp.h"
 #include "bschordsPreview.h"
 
+struct SongFile
+{
+	wxString m_path;
+	bool m_changed;
+	wxTextFileType m_type;
+
+	SongFile() { clear(); };
+	void clear() { m_changed = false; m_path.Empty(); m_type = wxTextFileType_None; };
+};
 
 class bschordsFrame: public wxFrame
 {
     public:
         wxRichTextCtrl *m_songContent;
         bschordsFrame(wxFrame *frame, const wxString& title);
-        ~bschordsFrame();
     private:
 		bschordsPreview *m_preview;
 
@@ -40,11 +48,9 @@ class bschordsFrame: public wxFrame
 		wxSplitterWindow *m_splitterMain;
 		wxSplitterWindow *m_splitterSong;
 		wxToolBar *m_toolBar;
+		//wxButton *m_chordButtons[7];
 
-		wxString m_filePath;
-		bool m_fileChanged;
-
-        //wxAuiManager m_auiMgr;
+		SongFile m_file;
 
         void PopulateToolbar();
         void OpenFile(const wxString filePath);
@@ -67,7 +73,6 @@ class bschordsFrame: public wxFrame
         void OnStyleSheet(wxCommandEvent& event);
         void OnViewFileBrowser(wxCommandEvent& event);
         void OnViewEditor(wxCommandEvent& event);
-        void OnViewPreview(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSongContentChange(wxCommandEvent& event);
         void OnToolChord(wxCommandEvent& WXUNUSED(event));

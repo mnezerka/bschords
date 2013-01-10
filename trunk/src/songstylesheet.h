@@ -9,14 +9,6 @@
 #include <wx/config.h>
 #include <wx/font.h>
 
-/* TODO: new options:
-	auto verse numbering,
-	indent all verse lines
-	print chords (yes/no)
-	print chord lines even if no chord is present (same line spacing for whole verse/chorus)
-	title centering
-	user defined fields to be printed (see chorpro reference)*/
-
 enum {
     BS_FONT_TITLE,
     BS_FONT_TITLE_SUB,
@@ -35,12 +27,6 @@ static const wxString fontNames[] =
     _("Tab")
 };
 
-struct FontInfo
-{
-    wxFont *font;
-    FontInfo() : font(NULL) { font = new wxFont(*wxNORMAL_FONT); };
-};
-
 class SongStyleSheet
 {
 	public:
@@ -51,9 +37,23 @@ class SongStyleSheet
 		wxCoord m_marginBottom;
 		wxCoord m_marginRight;
 		wxCoord m_indentChorus;
+		// nember of columns
 		int m_cols;
+		// space between two adjacent lines in block
 		int m_lineSpacing;
+		// space between chord and text
 		int m_chordLineSpacing;
+		// automatic verse numbering
+		bool m_verseNumbering;
+		// show chords
+		bool m_showChords;
+		// show subtitles
+		bool m_showSubtitles;
+		// show tab sections
+		bool m_showTabs;
+		// print chord lines even if no chord is present (same line spacing for whole verse/chorus)
+		bool m_equalLineHeights;
+
 		SongStyleSheet();
 		virtual ~SongStyleSheet();
 		void LoadFromConfig(const wxConfig *config);

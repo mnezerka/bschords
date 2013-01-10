@@ -31,26 +31,22 @@ class bschordsPreferences: public wxDialog
     protected:
         enum
         {
-            idBtnQuit = 1000,
-            idBtnAbout,
-            idBtnSelFont
+            idBtnSelFont = 1000,
         };
 
-        wxStaticText* m_staticText1;
-        wxButton* BtnAbout;
+/*        wxStaticText* m_staticText1;
         wxStaticLine* m_staticline1;
-        wxButton* BtnQuit;
         wxStaticText *fontTestTitle;
         wxStaticText *fontTextTitles[BS_FONT_LAST];
-        wxComboBox *fontSelType;
+        wxComboBox *fontSelType; */
+		wxStaticText *m_editorFontPreview;
     private:
         void OnClose(wxCloseEvent& event);
-        void OnQuit(wxCommandEvent& event);
-        void OnAbout(wxCommandEvent& event);
         void OnSelFont(wxCommandEvent &event);
 
         wxPanel* CreateGeneralPage(wxWindow* parent);
         wxPanel* CreateViewPage(wxWindow* parent);
+        wxPanel* CreateEditorPage(wxWindow* parent);
 
         DECLARE_EVENT_TABLE()
 };

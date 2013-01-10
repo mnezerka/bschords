@@ -27,8 +27,16 @@ bool bschordsApp::OnInit()
 	// load and initialize configuration data
 	config = new wxConfig(_("BSChords"));
 
+	m_editorFont = wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT);
+
 	// load default stylesheet
 	m_styleSheet.LoadFromConfig(config);
+
+	// get editor font
+	wxString editorFontNativeInfo;
+	if (config->Read(_("global/editor-font"), &editorFontNativeInfo))
+		m_editorFont.SetNativeFontInfo(editorFontNativeInfo);
+
 
 	//-----------------------------------------------------------------
 	// initialize printing
@@ -51,6 +59,8 @@ bool bschordsApp::OnInit()
 int bschordsApp::OnExit()
 {
 	m_styleSheet.SaveToConfig(config);
+
+	config->Write(_("global/editor-font"), m_editorFont.GetNativeFontInfoDesc());
 
 	//-----------------------------------------------------------------
     // save configuration data

@@ -27,6 +27,7 @@
 #include <wx/textfile.h>
 #include <wx/filename.h>
 #include <wx/printdlg.h>
+#include <wx/artprov.h>
 
 #include "bschordsMain.h"
 #include "bschordsPreferences.h"
@@ -83,7 +84,6 @@ enum
 	idMenuViewEditor,
 	idMenuViewTSetBlocks,
 	ID_MENU_FILE_EXPORT,
-	ID_COMBO,
 	ID_FSBROWSER,
 	ID_SPIN,
 	ID_TOOLBAR_CHORD,
@@ -118,6 +118,8 @@ enum
 
 BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_CLOSE(bschordsFrame::OnClose)
+	EVT_ERASE_BACKGROUND(bschordsFrame::OnEraseBackground)
+	EVT_SIZE(bschordsFrame::OnSize)
 	EVT_MENU(wxID_NEW, bschordsFrame::OnFileNewSong)
 	EVT_MENU(wxID_OPEN, bschordsFrame::OnFileOpenSong)
 	EVT_MENU(wxID_SAVE, bschordsFrame::OnFileSaveSong)
@@ -136,12 +138,17 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
 	EVT_TOOL(ID_TOOLBAR_CHORD, bschordsFrame::OnToolChord)
 	EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged )
-	EVT_COMBOBOX(ID_COMBO, bschordsFrame::OnZoomChanged)
+	EVT_AUI_PANE_CLOSE(bschordsFrame::OnPaneClose)
+
 END_EVENT_TABLE()
 
 bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	: wxFrame(frame, -1, title)
 {
+	// tell wxAuiManager to manage this frame
+    m_auiMgr.SetManagedWindow(this);
+
+
 	SetIcon(wxICON(bschordsicon));
 
 	// create a menu bar
@@ -184,9 +191,24 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 
 	SetMenuBar(mbar);
 
-	// Create the toolbar
-	m_toolBar = CreateToolBar(wxTB_TOP, ID_TOOLBAR);
-	PopulateToolbar();
+	// -------------------- Create the toolbar
+	// create some toolbars
+    wxAuiToolBar* tb1 = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_OVERFLOW);
+    tb1->SetToolBitmapSize(wxSize(16, 16));
+    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(16, 16)));
+    tb1->AddSeparator();
+    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_QUESTION, wxART_OTHER, wxSize(16, 16)));
+    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_INFORMATION, wxART_OTHER, wxSize(16, 16)));
+    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_WARNING, wxART_OTHER, wxSize(16, 16)));
+    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_MISSING_IMAGE, wxART_OTHER, wxSize(16, 16)));
+    //tb1->SetCustomOverflowItems(prepend_items, append_items);
+    tb1->Realize();
+
+	// add the toolbars to the manager
+    m_auiMgr.AddPane(tb1, wxAuiPaneInfo().Name(wxT("tb1")).Caption(wxT("Main Toolbar")).ToolbarPane().Top().LeftDockable(false).RightDockable(false));
+
+	//m_toolBar = CreateToolBar(wxTB_TOP, ID_TOOLBAR);
+	//PopulateToolbar();
 
 	// create a status bar with some information about the used wxWidgets version
 	CreateStatusBar(2);
@@ -199,30 +221,37 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	int height = wxGetApp().config->Read(_("/global/height"), 500);
 	SetSize(left, top, width, height, 0);
 
-	m_splitterMain = new wxSplitterWindow(this, -1, wxDefaultPosition,  wxDefaultSize, wxSP_BORDER);
-	m_splitterSong = new wxSplitterWindow(m_splitterMain, -1, wxDefaultPosition, wxDefaultSize, wxSP_BORDER);
-
 	// create song content window
-	m_songContent = new wxRichTextCtrl(m_splitterSong, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
+	m_songContent = new wxRichTextCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 	m_songContent->DiscardEdits();
 	m_songContent->SetFont(wxGetApp().m_editorFont);
+    m_auiMgr.AddPane(m_songContent, wxAuiPaneInfo().Name(_("song-editor")).Caption(wxT("Song Editor")).Center().MinSize(wxSize(100, 100)));
 
 	// create prview window
-	m_preview = new bschordsPreview(m_splitterSong, m_songContent);
+	m_preview = new BSChordsPreview(this, m_songContent);
+    m_auiMgr.AddPane(m_preview, wxAuiPaneInfo().Name(_("song-preview")).Caption(wxT("Song Preview")).Right().MinSize(wxSize(100, 100)));
 
 	// create file browser window
-	m_dirCtrl = new wxGenericDirCtrl(m_splitterMain, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
+	m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
 	wxString path = wxGetApp().config->Read(_("/global/path"));
 	m_dirCtrl->SetPath(path);
+	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left());
 
-	// create main splitter
-	int splitMainPos = wxGetApp().config->Read(_("/global/split-main"), 100);
-	m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong, splitMainPos);
+	// load perspective
+	wxString perspective;
+	if (wxGetApp().config->Read(_("/global/perspective"), &perspective))
+		m_auiMgr.LoadPerspective(perspective);
 
-	// create song splitter
-	int splitSongPos = wxGetApp().config->Read(_("/global/split-song"), 0l);
-	m_splitterSong->SplitVertically(m_songContent, m_preview, splitSongPos);
+	m_auiMgr.Update();
 }
+
+bschordsFrame::~bschordsFrame()
+{
+	// save perspective
+	wxGetApp().config->Write(_("/global/perspective"), m_auiMgr.SavePerspective());
+
+	m_auiMgr.UnInit();
+};
 
 void bschordsFrame::PopulateToolbar()
 {
@@ -275,31 +304,6 @@ void bschordsFrame::PopulateToolbar()
 
 	m_toolBar->AddSeparator();
 	m_toolBar->AddTool(ID_TOOLBAR_CHORD, _T("Chord"), toolBarBitmaps[Tool_chord], _T("Chord"));
-
-	m_toolBar->AddSeparator();
-	// adding a combo to a vertical toolbar is not very smart
-	m_zoomCtrl = new wxComboBox(m_toolBar, ID_COMBO, wxEmptyString, wxDefaultPosition, wxSize(100,-1), 0, NULL, wxCB_READONLY);
-	m_zoomCtrl->Append(_("10%"));
-	m_zoomCtrl->Append(_("20%"));
-	m_zoomCtrl->Append(_("30%"));
-	m_zoomCtrl->Append(_("40%"));
-	m_zoomCtrl->Append(_("50%"));
-	m_zoomCtrl->Append(_("60%"));
-	m_zoomCtrl->Append(_("70%"));
-	m_zoomCtrl->Append(_("80%"));
-	m_zoomCtrl->Append(_("90%"));
-	int ix100 = m_zoomCtrl->Append(_("100%"));
-	m_zoomCtrl->Append(_("110%"));
-	m_zoomCtrl->Append(_("120%"));
-	m_zoomCtrl->Append(_("130%"));
-	m_zoomCtrl->Append(_("140%"));
-	m_zoomCtrl->Append(_("150%"));
-	m_zoomCtrl->Append(_("175%"));
-	m_zoomCtrl->Append(_("200%"));
-	m_zoomCtrl->Append(_("250%"));
-	m_zoomCtrl->Append(_("300%"));
-	m_zoomCtrl->Select(ix100);
-	m_toolBar->AddControl(m_zoomCtrl);
 
 	m_toolBar->AddSeparator();
 
@@ -462,10 +466,10 @@ void bschordsFrame::OnQuit(wxCommandEvent &event)
 	wxGetApp().config->Write(_("/global/top"), y);
 
 	// store splitter positions
-	int splitMain = m_splitterMain->GetSashPosition();
-	wxGetApp().config->Write(_("/global/split-main"), splitMain);
-	int splitSong = m_splitterSong->GetSashPosition();
-	wxGetApp().config->Write(_("/global/split-song"), splitSong);
+	//int splitMain = m_splitterMain->GetSashPosition();
+	//wxGetApp().config->Write(_("/global/split-main"), splitMain);
+	//int splitSong = m_splitterSong->GetSashPosition();
+	//wxGetApp().config->Write(_("/global/split-song"), splitSong);
 
 	wxGetApp().config->Write(_("/global/path"), m_dirCtrl->GetPath());
 
@@ -515,16 +519,10 @@ void bschordsFrame::OnViewFileBrowser(wxCommandEvent& event)
 {
 	wxMenuBar *mBar = GetMenuBar();
 	if (mBar->IsChecked(idMenuViewFileBrowser))
-	{
-		// show file browser window
-		m_splitterMain->SplitVertically(m_dirCtrl, m_splitterSong, 	wxGetApp().config->Read(_("/global/split-main"), 100));
-	}
+		m_auiMgr.GetPane(_("file-browser")).Show();
 	else
-	{
-		// hide file browser window
-		wxGetApp().config->Write(_("/global/split-main"), m_splitterMain->GetSashPosition());
-		m_splitterMain->Unsplit(m_dirCtrl);
-	}
+		m_auiMgr.GetPane(_("file-browser")).Hide();
+	m_auiMgr.Update();
 }
 
 void bschordsFrame::OnViewEditor(wxCommandEvent& event)
@@ -532,18 +530,19 @@ void bschordsFrame::OnViewEditor(wxCommandEvent& event)
 	wxMenuBar *mBar = GetMenuBar();
 	if (mBar->IsChecked(idMenuViewEditor))
 	{
-		//m_songContent->Show(true);
-		m_splitterSong->SplitVertically(m_songContent, m_preview, wxGetApp().config->Read(_("/global/split-song"), 100));
-		m_toolBar->EnableTool(ID_TOOLBAR_CHORD, true);
+		m_auiMgr.GetPane(_("song-editor")).Show();
+		//m_splitterSong->SplitVertically(m_songContent, m_preview, wxGetApp().config->Read(_("/global/split-song"), 100));
+		//m_toolBar->EnableTool(ID_TOOLBAR_CHORD, true);
 	}
 	else
 	{
 		// show editor window
-		//m_songContent->Show(false);
-		wxGetApp().config->Write(_("/global/split-song"), m_splitterSong->GetSashPosition());
-		m_splitterSong->Unsplit(m_songContent);
-		m_toolBar->EnableTool(ID_TOOLBAR_CHORD, false);
+		//wxGetApp().config->Write(_("/global/split-song"), m_splitterSong->GetSashPosition());
+		//m_splitterSong->Unsplit(m_songContent);
+		m_auiMgr.GetPane(_("song-editor")).Hide();
+		//m_toolBar->EnableTool(ID_TOOLBAR_CHORD, false);
 	}
+	m_auiMgr.Update();
 }
 
 void bschordsFrame::OnAbout(wxCommandEvent &event)
@@ -740,25 +739,14 @@ void bschordsFrame::UpdateTitle()
 	SetStatusText(t, 1);
 }
 
-void bschordsFrame::OnZoomChanged(wxCommandEvent& event)
+void bschordsFrame::OnPaneClose(wxAuiManagerEvent& evt)
 {
-	int zoom = wxAtoi(m_zoomCtrl->GetValue());
-
-	if (zoom > 0 && zoom < 2000)
-	{
-		m_preview->setZoom((double)zoom / 100);
-	}
-
-	/*
-	int sel = m_zoomCtrl->GetSelection();
-	if (sel!= wxNOT_FOUND)
-	{
-		double newZoom = *(double*)m_zoomCtrl->GetClientData(sel);
-		std::cout << "New zoom value is: " << newZoom << std::endl;
-		m_preview->setZoom(newZoom);
-	}
-	*/
+    if (evt.pane->name == _("file-browser"))
+		GetMenuBar()->Check(idMenuViewFileBrowser, false);
+    else if (evt.pane->name == _("song-editor"))
+		GetMenuBar()->Check(idMenuViewEditor, false);
 }
+
 
 // ----------------------------------------------------------------------------
 // BSChordsPrintout

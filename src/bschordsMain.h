@@ -14,11 +14,10 @@
     #include <wx/wx.h>
 #endif
 
-#include <wx/splitter.h>
 #include <wx/textctrl.h>
 #include <wx/richtext/richtextctrl.h>
 #include <wx/stc/stc.h>
-//#include <wx/aui/aui.h>
+#include <wx/aui/aui.h>
 #include <wx/dirctrl.h>
 
 #include "bschordsApp.h"
@@ -39,16 +38,17 @@ class bschordsFrame: public wxFrame
     public:
         wxRichTextCtrl *m_songContent;
         bschordsFrame(wxFrame *frame, const wxString& title);
+		~bschordsFrame();
+
     private:
-		bschordsPreview *m_preview;
+		BSChordsPreview *m_preview;
 
 		//wxStyledTextCtrl *m_songContent;
 		wxGenericDirCtrl* m_dirCtrl;
 		wxComboBox *m_zoomCtrl;
-		wxSplitterWindow *m_splitterMain;
-		wxSplitterWindow *m_splitterSong;
 		wxToolBar *m_toolBar;
 		//wxButton *m_chordButtons[7];
+		wxAuiManager m_auiMgr;
 
 		SongFile m_file;
 
@@ -77,7 +77,12 @@ class bschordsFrame: public wxFrame
         void OnSongContentChange(wxCommandEvent& event);
         void OnToolChord(wxCommandEvent& WXUNUSED(event));
         void OnFSBrowserSelChanged(wxTreeEvent& event);
-		void OnZoomChanged(wxCommandEvent& event);
+
+		wxAuiDockArt* GetDockArt() { return m_auiMgr.GetArtProvider(); };
+		void DoUpdate() { m_auiMgr.Update(); };
+		void OnEraseBackground(wxEraseEvent& event) { event.Skip(); };
+		void OnSize(wxSizeEvent& event) { event.Skip(); };
+		void OnPaneClose(wxAuiManagerEvent& evt);
 
         DECLARE_EVENT_TABLE()
 };

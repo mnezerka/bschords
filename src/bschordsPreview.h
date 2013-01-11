@@ -5,12 +5,11 @@
 #include <wx/richtext/richtextctrl.h>
 #include <wx/stc/stc.h>
 
-class bschordsPreview : public wxScrolledWindow
+class BSChordsPreviewCanvas : public wxScrolledWindow
 {
 	public:
-		bschordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl);
-		//bschordsPreview(wxWindow *parent, wxStyledTextCtrl *sourceCtrl);
-		virtual ~bschordsPreview();
+		BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl);
+		virtual ~BSChordsPreviewCanvas();
 		virtual void OnDraw(wxDC& dc);
 		void setZoom(float zoom);
 		wxCoord getDeviceX(int numMM);
@@ -22,5 +21,23 @@ class bschordsPreview : public wxScrolledWindow
 		float m_zoom;
 		wxSize m_screenPPI;
 };
+
+class BSChordsPreview : public wxWindow
+{
+	public:
+		BSChordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl);
+		virtual ~BSChordsPreview();
+		void setZoom(float zoom);
+
+	private:
+		BSChordsPreviewCanvas *m_canvas;
+		wxComboBox *m_zoomCtrl;
+
+		void OnSize(wxSizeEvent& event);
+		void OnZoomChanged(wxCommandEvent& event);
+
+	DECLARE_EVENT_TABLE()
+};
+
 
 #endif // BSCHORDSPREVIEW_H

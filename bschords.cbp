@@ -23,6 +23,7 @@
 					<Add option="-D__GNUWIN32__" />
 					<Add option="-D__WXMSW__" />
 					<Add option="-DwxUSE_UNICODE" />
+					<Add option="-DHAVE_W32API_H" />
 					<Add directory="$(#wx)\lib\gcc_dll_unicode_debug\mswud" />
 				</Compiler>
 				<ResourceCompiler>
@@ -65,7 +66,10 @@
 					<Add option="-D__GNUWIN32__" />
 					<Add option="-D__WXMSW__" />
 					<Add option="-DwxUSE_UNICODE" />
-					<Add directory="D:\wxwidgets\lib\gcc_lib\mswu" />
+					<Add option="-DHAVE_W32API_H" />
+					<Add option="-DNDEBUG" />
+					<Add option="-DNOPCH" />
+					<Add directory="$(#wx)\lib\gcc_lib\mswu" />
 				</Compiler>
 				<ResourceCompiler>
 					<Add directory="D:\wxwidgets\lib\gcc_lib\mswu" />
@@ -73,24 +77,34 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-mthreads" />
-					<Add library="libwxmsw28u.a" />
-					<Add library="libwxpng.a" />
-					<Add library="libwxjpeg.a" />
-					<Add library="libwxtiff.a" />
-					<Add library="libwxzlib.a" />
-					<Add library="libkernel32.a" />
-					<Add library="libuser32.a" />
-					<Add library="libgdi32.a" />
-					<Add library="libwinspool.a" />
-					<Add library="libcomdlg32.a" />
-					<Add library="libadvapi32.a" />
-					<Add library="libshell32.a" />
-					<Add library="libole32.a" />
-					<Add library="liboleaut32.a" />
-					<Add library="libuuid.a" />
-					<Add library="libcomctl32.a" />
-					<Add library="libwsock32.a" />
-					<Add library="libodbc32.a" />
+					<Add option="-Wl,--subsystem,windows -mwindows" />
+					<Add option="-static-libgcc" />
+					<Add library="wxmsw28u_richtext" />
+					<Add library="wxmsw28u_adv" />
+					<Add library="wxmsw28u_html" />
+					<Add library="wxmsw28u_core" />
+					<Add library="wxbase28u" />
+					<Add library="wxtiff" />
+					<Add library="wxjpeg" />
+					<Add library="wxpng" />
+					<Add library="wxzlib" />
+					<Add library="wxregexu" />
+					<Add library="wxexpat" />
+					<Add library="kernel32" />
+					<Add library="user32" />
+					<Add library="gdi32" />
+					<Add library="comdlg32" />
+					<Add library="winspool" />
+					<Add library="winmm" />
+					<Add library="shell32" />
+					<Add library="comctl32" />
+					<Add library="ole32" />
+					<Add library="oleaut32" />
+					<Add library="uuid" />
+					<Add library="rpcrt4" />
+					<Add library="advapi32" />
+					<Add library="wsock32" />
+					<Add library="odbc32" />
 					<Add directory="D:\wxwidgets\lib\gcc_lib" />
 				</Linker>
 			</Target>

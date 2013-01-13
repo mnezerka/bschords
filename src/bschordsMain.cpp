@@ -80,9 +80,24 @@ enum
 	idMenuAbout,
 	idMenuPreferences,
 	ID_MENU_STYLESHEET,
+
+	idMenuFileNewSongBook,
+	idMenuFileOpenSongBook,
+	idMenuFileSaveSongBook,
+	idMenuFileSaveAsSongBook,
+	idMenuFileCloseSongBook,
+
 	idMenuViewFileBrowser,
 	idMenuViewEditor,
+	idMenuViewSongPreview,
+	idMenuViewSongBook,
+	idMenuViewTbMain,
+	idMenuViewTbChords,
 	idMenuViewTSetBlocks,
+
+	ID_COMBO_CHORD,
+	ID_COMBO_CMD,
+	//idMenuViewTSetBook,
 	ID_MENU_FILE_EXPORT,
 	ID_FSBROWSER,
 	ID_SPIN,
@@ -114,6 +129,8 @@ enum
 	IDM_TOOLBAR_OTHER_1,
 	IDM_TOOLBAR_OTHER_2,
 	IDM_TOOLBAR_OTHER_3,
+
+	ID_SAMPLE_ITEM,
 };
 
 BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
@@ -125,6 +142,11 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(wxID_SAVE, bschordsFrame::OnFileSaveSong)
 	EVT_MENU(wxID_SAVEAS, bschordsFrame::OnFileSaveAsSong)
 	EVT_MENU(wxID_CLOSE, bschordsFrame::OnFileCloseSong)
+	EVT_MENU(idMenuFileNewSongBook, bschordsFrame::OnFileNewSongBook)
+	EVT_MENU(idMenuFileOpenSongBook, bschordsFrame::OnFileOpenSongBook)
+	EVT_MENU(idMenuFileSaveSongBook, bschordsFrame::OnFileSaveSongBook)
+	EVT_MENU(idMenuFileSaveAsSongBook, bschordsFrame::OnFileSaveAsSongBook)
+	EVT_MENU(idMenuFileCloseSongBook, bschordsFrame::OnFileCloseSongBook)
 	EVT_MENU(ID_MENU_FILE_EXPORT, bschordsFrame::OnFileExportSong)
 	EVT_MENU(wxID_PRINT, bschordsFrame::OnFilePrint)
 	EVT_MENU(wxID_PREVIEW, bschordsFrame::OnFilePrintPreview)
@@ -133,13 +155,18 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(idMenuPreferences, bschordsFrame::OnPreferences)
 	EVT_MENU(ID_MENU_STYLESHEET, bschordsFrame::OnStyleSheet)
 	EVT_MENU(idMenuAbout, bschordsFrame::OnAbout)
-	EVT_MENU(idMenuViewFileBrowser, bschordsFrame::OnViewFileBrowser)
-	EVT_MENU(idMenuViewEditor, bschordsFrame::OnViewEditor)
+	EVT_MENU(idMenuViewFileBrowser, bschordsFrame::OnViewPane)
+	EVT_MENU(idMenuViewEditor, bschordsFrame::OnViewPane)
+	EVT_MENU(idMenuViewSongPreview, bschordsFrame::OnViewPane)
+	EVT_MENU(idMenuViewSongBook, bschordsFrame::OnViewPane)
+	EVT_MENU(idMenuViewTbMain, bschordsFrame::OnViewToolbar)
+	EVT_MENU(idMenuViewTbChords, bschordsFrame::OnViewPane)
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
 	EVT_TOOL(ID_TOOLBAR_CHORD, bschordsFrame::OnToolChord)
 	EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged )
 	EVT_AUI_PANE_CLOSE(bschordsFrame::OnPaneClose)
-
+	EVT_COMBOBOX(ID_COMBO_CHORD, bschordsFrame::OnChordProToken)
+	EVT_COMBOBOX(ID_COMBO_CMD, bschordsFrame::OnChordProToken)
 END_EVENT_TABLE()
 
 bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
@@ -160,6 +187,14 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	fileMenu->Append(wxID_SAVEAS, _("Save song &as..."), _("Save the active song under different a name"));
 	fileMenu->Append(wxID_CLOSE, _("&Close song"), _("Close song file"));
 	fileMenu->AppendSeparator();
+
+	fileMenu->Append(idMenuFileNewSongBook, _("New songbook"), _("Create a new songbook file"));
+	fileMenu->Append(idMenuFileOpenSongBook, _("Open songbook ..."), _("Open a songbook file"));
+	fileMenu->Append(idMenuFileSaveSongBook, _("Save songbook"), _("Save the active songbook file"));
+	fileMenu->Append(idMenuFileSaveAsSongBook, _("Save songbook as..."), _("Save the active songbook under different a name"));
+	fileMenu->Append(idMenuFileCloseSongBook, _("Close songbook"), _("Close songbook file"));
+	fileMenu->AppendSeparator();
+
 	fileMenu->Append(ID_MENU_FILE_EXPORT, _("&Export to PDF ..."), _("Export song file to PDF"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(wxID_PRINT_SETUP, _("Page setup..."), _("Page setup for printing"));
@@ -178,8 +213,16 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	wxMenu* viewMenu = new wxMenu(_T(""));
 	viewMenu->Append(idMenuViewFileBrowser, _("&File browser"), _("View file broser"), true);
 	viewMenu->Append(idMenuViewEditor, _("&Editor"), _("Song editor"), true);
+	viewMenu->Append(idMenuViewSongPreview, _("Song &Preview"), _("View preview of the song"), true);
+	viewMenu->Append(idMenuViewSongBook, _("Song &Book"), _("View song book"), true);
 	viewMenu->AppendSeparator();
+	viewMenu->Append(idMenuViewTbMain, _("Main toolbar"), _("View main toolbar"), true);
+	viewMenu->Append(idMenuViewTbChords, _("Chords toolbar"), _("View chords toolbar"), true);
 	mbar->Append(viewMenu, _("&View"));
+
+	wxMenu* songbookMenu = new wxMenu(_T(""));
+	songbookMenu->Append(wxID_ANY, _("&Songbook properties..."), _("Song book properties"));
+	mbar->Append(songbookMenu, _("&Songbook"));
 
 	wxMenu* helpMenu = new wxMenu(_T(""));
 	helpMenu->Append(idMenuAbout, _("&About\tF1"), _("Show info about this application"));
@@ -188,6 +231,11 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	// these items should be initially checked
 	mbar->Check(idMenuViewFileBrowser, true);
 	mbar->Check(idMenuViewEditor, true);
+	mbar->Check(idMenuViewSongPreview, true);
+	mbar->Check(idMenuViewSongBook, true);
+
+	mbar->Check(idMenuViewTbMain, true);
+	mbar->Check(idMenuViewTbChords, true);
 
 	SetMenuBar(mbar);
 
@@ -195,26 +243,49 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	// create some toolbars
     wxAuiToolBar* tb1 = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_OVERFLOW);
     tb1->SetToolBitmapSize(wxSize(16, 16));
-    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_ERROR, wxART_OTHER, wxSize(16, 16)));
-    tb1->AddSeparator();
-    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_QUESTION, wxART_OTHER, wxSize(16, 16)));
-    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_INFORMATION, wxART_OTHER, wxSize(16, 16)));
-    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_WARNING, wxART_OTHER, wxSize(16, 16)));
-    tb1->AddTool(wxID_ANY, _("Test"), wxArtProvider::GetBitmap(wxART_MISSING_IMAGE, wxART_OTHER, wxSize(16, 16)));
-    //tb1->SetCustomOverflowItems(prepend_items, append_items);
+    tb1->AddTool(wxID_NEW, _("New song file"), wxArtProvider::GetBitmap(wxART_NEW, wxART_OTHER, wxSize(16, 16)));
+    tb1->AddTool(wxID_OPEN, _("Open song file"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_OTHER, wxSize(16, 16)));
+    tb1->AddTool(wxID_SAVE, _("Save song file"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_OTHER, wxSize(16, 16)));
     tb1->Realize();
+    m_auiMgr.AddPane(tb1, wxAuiPaneInfo().Name(wxT("toolbar-main")).Caption(wxT("Mainx Toolbar")).ToolbarPane().Top().Row(0).LeftDockable(false).RightDockable(false));
 
-	// add the toolbars to the manager
-    m_auiMgr.AddPane(tb1, wxAuiPaneInfo().Name(wxT("tb1")).Caption(wxT("Main Toolbar")).ToolbarPane().Top().LeftDockable(false).RightDockable(false));
+	tb2 = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_HORZ_TEXT);
+    tb2->SetToolBitmapSize(wxSize(16,16));
+    wxBitmap tb2_bmp1 = wxArtProvider::GetBitmap(wxART_QUESTION, wxART_OTHER, wxSize(16,16));
 
-	//m_toolBar = CreateToolBar(wxTB_TOP, ID_TOOLBAR);
-	//PopulateToolbar();
+	m_chordCtrl = new wxComboBox(tb2, ID_COMBO_CHORD);
+	m_chordCtrl->Append(_("Chord"));
+	m_chordCtrl->Append(_("[]"));
+	m_chordCtrl->Append(_("[C]"));
+	m_chordCtrl->Append(_("[Dm]"));
+	m_chordCtrl->Append(_("[Em]"));
+	m_chordCtrl->Append(_("[F]"));
+	m_chordCtrl->Append(_("[G]"));
+	m_chordCtrl->Append(_("[Am]"));
+	m_chordCtrl->Append(_("[Hm5b]"));
+	m_chordCtrl->SetSelection(0);
+	tb2->AddControl(m_chordCtrl);
 
+	m_cmdCtrl = new wxComboBox(tb2, ID_COMBO_CMD);
+	m_cmdCtrl->Append(_("Command"));
+	m_cmdCtrl->Append(_("{title: }"));
+	m_cmdCtrl->Append(_("{subtitle: }"));
+	m_cmdCtrl->Append(_("{start_of_chorus}"));
+	m_cmdCtrl->Append(_("{end_of_chorus}"));
+	m_cmdCtrl->Append(_("{start_of_tab}"));
+	m_cmdCtrl->Append(_("{end_of_tab}"));
+	m_cmdCtrl->SetSelection(0);
+	tb2->AddControl(m_cmdCtrl);
+    tb2->Realize();
+	m_auiMgr.AddPane(tb2, wxAuiPaneInfo().Name(wxT("toolbar-chords")).Caption(wxT("Chords Toolbar)")).ToolbarPane().Top().Row(1).LeftDockable(false).RightDockable(false));
+
+	// -------------------- create the status bar
 	// create a status bar with some information about the used wxWidgets version
 	CreateStatusBar(2);
-	SetStatusText(_("This is BSChords application!"),0);
+	SetStatusText(_("This is BSChords application"),0);
 	SetStatusText(wxbuildinfo(short_f), 1);
 
+	// -------------------- window size
 	int top = wxGetApp().config->Read(_("/global/top"), 100);
 	int left = wxGetApp().config->Read(_("/global/left"), 100);
 	int width = wxGetApp().config->Read(_("/global/width"), 500);
@@ -225,22 +296,28 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	m_songContent = new wxRichTextCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 	m_songContent->DiscardEdits();
 	m_songContent->SetFont(wxGetApp().m_editorFont);
-    m_auiMgr.AddPane(m_songContent, wxAuiPaneInfo().Name(_("song-editor")).Caption(wxT("Song Editor")).Center().MinSize(wxSize(100, 100)));
+    m_auiMgr.AddPane(m_songContent, wxAuiPaneInfo().Name(_("song-editor")).Caption(wxT("Song Editor")).Center());
 
 	// create prview window
 	m_preview = new BSChordsPreview(this, m_songContent);
-    m_auiMgr.AddPane(m_preview, wxAuiPaneInfo().Name(_("song-preview")).Caption(wxT("Song Preview")).Right().MinSize(wxSize(100, 100)));
+    m_auiMgr.AddPane(m_preview, wxAuiPaneInfo().Name(_("song-preview")).Caption(wxT("Song Preview")).Right().MinSize(200, wxDefaultCoord));
 
 	// create file browser window
 	m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
 	wxString path = wxGetApp().config->Read(_("/global/path"));
 	m_dirCtrl->SetPath(path);
-	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left());
+	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().MinSize(200, wxDefaultCoord));
+
+	// create song book window
+	m_songBook = new SongBookWnd(this);
+    m_auiMgr.AddPane(m_songBook, wxAuiPaneInfo().Name(_("song-book")).Caption(wxT("Song Book")).Left().MinSize(200, wxDefaultCoord));
 
 	// load perspective
 	wxString perspective;
 	if (wxGetApp().config->Read(_("/global/perspective"), &perspective))
+	{
 		m_auiMgr.LoadPerspective(perspective);
+	}
 
 	m_auiMgr.Update();
 }
@@ -386,6 +463,70 @@ void bschordsFrame::OnFileCloseSong(wxCommandEvent& event)
 	CloseFile();
 }
 
+void bschordsFrame::OnFileNewSongBook(wxCommandEvent& event)
+{
+	/*
+	CloseFile();
+	*/
+}
+
+void bschordsFrame::OnFileOpenSongBook(wxCommandEvent& event)
+{
+	/*
+	wxFileName fileName(m_dirCtrl->GetPath());
+	wxString dir(fileName.GetPath());
+
+	wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.txt"), wxOPEN, wxDefaultPosition);
+
+	if (openFileDialog->ShowModal() == wxID_OK )
+	{
+		OpenFile(openFileDialog->GetPath());
+	}
+	*/
+}
+
+void bschordsFrame::OnFileSaveSongBook(wxCommandEvent& event)
+{
+	/*
+	SaveFile();
+	*/
+}
+
+void bschordsFrame::OnFileSaveAsSongBook(wxCommandEvent& event)
+{
+	/*
+	wxString dir;
+	wxString name;
+
+	if (m_file.m_path.Length() > 0)
+	{
+		wxFileName fileName(m_file.m_path);
+		dir = fileName.GetPath();
+		name = fileName.GetFullName();
+	}
+	else
+	{
+		wxFileName fileName(m_dirCtrl->GetPath());
+		dir = fileName.GetPath();
+		name = _("untitled.txt");
+	}
+
+	wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.txt"), wxSAVE, wxDefaultPosition);
+
+	if (saveDlg->ShowModal() == wxID_OK )
+	{
+		m_file.m_path = saveDlg->GetPath();
+		SaveFile();
+	}
+	*/
+}
+
+void bschordsFrame::OnFileCloseSongBook(wxCommandEvent& event)
+{
+
+}
+
+
 void bschordsFrame::OnFileExportSong(wxCommandEvent& event)
 {
 	wxString dir;
@@ -515,33 +656,56 @@ void bschordsFrame::OnStyleSheet(wxCommandEvent &event)
     dlg->Destroy();
 }
 
-void bschordsFrame::OnViewFileBrowser(wxCommandEvent& event)
+void bschordsFrame::OnViewPane(wxCommandEvent& event)
 {
 	wxMenuBar *mBar = GetMenuBar();
-	if (mBar->IsChecked(idMenuViewFileBrowser))
-		m_auiMgr.GetPane(_("file-browser")).Show();
+
+	wxWindow *paneWindow = NULL;
+
+	switch (event.GetId())
+	{
+		case idMenuViewFileBrowser: paneWindow = m_dirCtrl; break;
+		case idMenuViewEditor: paneWindow = m_songContent; break;
+		case idMenuViewSongPreview:	paneWindow = m_preview; break;
+		case idMenuViewSongBook: paneWindow = m_songBook; break;
+		case idMenuViewTbChords: paneWindow = m_chordsPanel; break;
+	}
+
+	// no window for menu id from event
+	if (!paneWindow)
+		return;
+
+	// show or hide appropriate pane
+	if (mBar->IsChecked(event.GetId()))
+		m_auiMgr.GetPane(paneWindow).Show();
 	else
-		m_auiMgr.GetPane(_("file-browser")).Hide();
+		m_auiMgr.GetPane(paneWindow).Hide();
+
 	m_auiMgr.Update();
 }
 
-void bschordsFrame::OnViewEditor(wxCommandEvent& event)
+void bschordsFrame::OnViewToolbar(wxCommandEvent& event)
 {
 	wxMenuBar *mBar = GetMenuBar();
-	if (mBar->IsChecked(idMenuViewEditor))
+
+	wxString toolBarId;
+
+	switch (event.GetId())
 	{
-		m_auiMgr.GetPane(_("song-editor")).Show();
-		//m_splitterSong->SplitVertically(m_songContent, m_preview, wxGetApp().config->Read(_("/global/split-song"), 100));
-		//m_toolBar->EnableTool(ID_TOOLBAR_CHORD, true);
+		case idMenuViewTbMain: toolBarId = _("toolbar-main"); break;
+		case idMenuViewTbChords: toolBarId = _("toolbar-chords"); break;
 	}
+
+	// no window for menu id from event
+	if (toolBarId.Length() == 0)
+		return;
+
+	// show or hide appropriate pane
+	if (mBar->IsChecked(event.GetId()))
+		m_auiMgr.GetPane(toolBarId).Show();
 	else
-	{
-		// show editor window
-		//wxGetApp().config->Write(_("/global/split-song"), m_splitterSong->GetSashPosition());
-		//m_splitterSong->Unsplit(m_songContent);
-		m_auiMgr.GetPane(_("song-editor")).Hide();
-		//m_toolBar->EnableTool(ID_TOOLBAR_CHORD, false);
-	}
+		m_auiMgr.GetPane(toolBarId).Hide();
+
 	m_auiMgr.Update();
 }
 
@@ -567,6 +731,23 @@ void bschordsFrame::OnSongContentChange(wxCommandEvent& event)
 void bschordsFrame::OnToolChord(wxCommandEvent& WXUNUSED(event))
 {
 	m_songContent->WriteText(_("[]"));
+}
+
+void bschordsFrame::OnChordProToken(wxCommandEvent& event)
+{
+	if (!m_auiMgr.GetPane(m_songContent).IsShown())
+		return;
+
+	if (event.GetId() == ID_COMBO_CHORD && m_chordCtrl->GetSelection() != 0)
+	{
+		m_songContent->WriteText(m_chordCtrl->GetValue());
+		m_chordCtrl->SetSelection(0);
+	}
+	else if	(event.GetId() == ID_COMBO_CMD && m_cmdCtrl->GetSelection() != 0)
+	{
+		m_songContent->WriteText(m_cmdCtrl->GetValue());
+		m_cmdCtrl->SetSelection(0);
+	}
 }
 
 void bschordsFrame::OnFSBrowserSelChanged(wxTreeEvent& event)

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+// TODO: Implement document tree structure as addition to event based interface
+
 // definition of chord pro format tokens
 namespace bschordpro
 {

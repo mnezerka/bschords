@@ -18,6 +18,7 @@
 #include <wx/font.h>
 #include <wx/print.h>
 #include "songstylesheet.h"
+#include "songbook.h"
 
 // TODO: add tool bar with chords for given key
 // TODO: implement chord transform utility
@@ -36,6 +37,9 @@ class bschordsApp : public wxApp
 		wxPageSetupDialogData* m_pageSetupData;
 
 		SongStyleSheet m_styleSheet;
+
+		// current songbook
+		SongBook m_songBook;
 
         virtual bool OnInit();
         virtual int OnExit();

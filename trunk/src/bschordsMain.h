@@ -22,6 +22,7 @@
 
 #include "bschordsApp.h"
 #include "bschordsPreview.h"
+#include "songbookwnd.h"
 
 struct SongFile
 {
@@ -42,12 +43,16 @@ class bschordsFrame: public wxFrame
 
     private:
 		BSChordsPreview *m_preview;
-
 		//wxStyledTextCtrl *m_songContent;
 		wxGenericDirCtrl* m_dirCtrl;
+		SongBookWnd *m_songBook;
 		wxComboBox *m_zoomCtrl;
 		wxToolBar *m_toolBar;
+		wxPanel *m_chordsPanel;
+		wxAuiToolBar* tb2;
 		//wxButton *m_chordButtons[7];
+		wxComboBox *m_chordCtrl;
+		wxComboBox *m_cmdCtrl;
 		wxAuiManager m_auiMgr;
 
 		SongFile m_file;
@@ -64,6 +69,13 @@ class bschordsFrame: public wxFrame
 		void OnFileSaveAsSong(wxCommandEvent& event);
 		void OnFileCloseSong(wxCommandEvent& event);
 		void OnFileExportSong(wxCommandEvent& event);
+
+		void OnFileNewSongBook(wxCommandEvent& event);
+		void OnFileOpenSongBook(wxCommandEvent& event);
+		void OnFileSaveSongBook(wxCommandEvent& event);
+		void OnFileSaveAsSongBook(wxCommandEvent& event);
+		void OnFileCloseSongBook(wxCommandEvent& event);
+
 		void OnFilePrint(wxCommandEvent& event);
 		void OnFilePrintPreview(wxCommandEvent& event);
 		void OnFilePageSetup(wxCommandEvent& event);
@@ -71,12 +83,13 @@ class bschordsFrame: public wxFrame
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
         void OnStyleSheet(wxCommandEvent& event);
-        void OnViewFileBrowser(wxCommandEvent& event);
-        void OnViewEditor(wxCommandEvent& event);
+        void OnViewPane(wxCommandEvent& event);
+        void OnViewToolbar(wxCommandEvent& event);
         void OnAbout(wxCommandEvent& event);
         void OnSongContentChange(wxCommandEvent& event);
         void OnToolChord(wxCommandEvent& WXUNUSED(event));
         void OnFSBrowserSelChanged(wxTreeEvent& event);
+		void OnChordProToken(wxCommandEvent& event);
 
 		wxAuiDockArt* GetDockArt() { return m_auiMgr.GetArtProvider(); };
 		void DoUpdate() { m_auiMgr.Update(); };

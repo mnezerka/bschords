@@ -75,6 +75,7 @@ namespace bschords
 		virtual void draw(wxPoint pos);
 		virtual TBlockType getType() { return BLTYPE_TEXT; };
 		virtual wxRect getBoundingRect();
+		bool hasChords();
 	};
 
 	struct TSetBlockChorus : public TSetBlockText

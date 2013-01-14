@@ -46,6 +46,12 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 		m_chordLineSpacing = config->Read(_("stylesheet/page/chord-line-spacing"), m_chordLineSpacing);
 		m_indentChorus = config->Read(_("stylesheet/page/indent-chorus"), m_indentChorus);
 
+		m_verseNumbering = config->Read(_("stylesheet/content/verse-numbering"), m_verseNumbering);
+		m_showChords = config->Read(_("stylesheet/content/show-chords"), m_showChords);
+		m_showSubtitles = config->Read(_("stylesheet/content/show-subtitles"), m_showSubtitles);
+		m_showTabs = config->Read(_("stylesheet/content/show-tabs"), m_showTabs);
+		m_equalLineHeights = config->Read(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
+
 		// read fonts
 		for (int i = 0; i < BS_FONT_LAST; i++)
 		{
@@ -79,6 +85,13 @@ void SongStyleSheet::SaveToConfig(wxConfig *config)
 	config->Write(_("stylesheet/page/line-spacing"), m_lineSpacing);
 	config->Write(_("stylesheet/page/chord-line-spacing"), m_chordLineSpacing);
 	config->Write(_("stylesheet/page/indent-chorus"), m_indentChorus);
+
+	config->Write(_("stylesheet/content/verse-numbering"), m_verseNumbering);
+	config->Write(_("stylesheet/content/show-chords"), m_showChords);
+	config->Write(_("stylesheet/content/show-subtitles"), m_showSubtitles);
+	config->Write(_("stylesheet/content/show-tabs"), m_showTabs);
+	config->Write(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
+
 
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)

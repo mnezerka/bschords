@@ -44,6 +44,14 @@ wxRect TSetBlockHSpace::getBoundingRect()
 }
 
 // ------- TSetBlockText  ----------------------------------------------------------
+bool TSetBlockText::hasChords()
+{
+	// check if there are at least one line with chord item
+	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
+		if (m_lines[lineIx]->m_chordItems.size() > 0)
+			return true;
+	return false;
+}
 
 void TSetBlockText::draw(wxPoint pos)
 {
@@ -62,7 +70,7 @@ void TSetBlockText::draw(wxPoint pos)
 		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_CHORDS]);
 		for (size_t i = 0; i < line->m_chordItems.size(); i++)
 			m_painter->m_dc.DrawText(*line->m_chordItems[i]->txt, pos.x + line->m_chordItems[i]->m_bRect.GetLeft(), posY);
-		if (line->m_chordItems.size() > 0)
+		if ((hasChords() && m_painter->m_ss->m_equalLineHeights) || (line->m_chordItems.size() > 0))
 			posY += m_painter->m_dc.GetCharHeight();
 
 		// typeset text line (text items)
@@ -85,6 +93,7 @@ wxRect TSetBlockText::getBoundingRect()
 
 	wxCoord maxWidth = 0;
 	wxCoord height = 0;
+
 
 	// loop through block lines
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
@@ -109,8 +118,10 @@ wxRect TSetBlockText::getBoundingRect()
 		}
 
 		// -------- compute height
-		if (line->m_chordItems.size() > 0)
+		// height of chord line
+		if ((hasChords() && m_painter->m_ss->m_equalLineHeights) || (line->m_chordItems.size() > 0))
 			height += lineHeightChord;
+		// height of text line
 		if (line->m_textItems.size() > 0)
 			height += lineHeightText;
 	}

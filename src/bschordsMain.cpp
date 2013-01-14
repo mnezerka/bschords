@@ -64,6 +64,7 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 	return wxbuild;
 }
 
+/*
 #include "res/new.xpm"
 #include "res/open.xpm"
 #include "res/save.xpm"
@@ -73,6 +74,7 @@ wxString wxbuildinfo(wxbuildinfoformat format)
 #include "res/print.xpm"
 #include "res/help.xpm"
 #include "res/chord.xpm"
+*/
 
 enum
 {
@@ -228,7 +230,9 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 
 	wxMenu* songMenu = new wxMenu(_T(""));
 	songMenu->Append(idMenuSongInsertChorus, _("&Insert chorus"), _("Insert chorus section"));
-	songMenu->Append(idMenuSongInsertTab, _("&Insert tab"), _("Insert tab section"));
+	songMenu->Append(idMenuSongInsertTab, _("Insert &tab"), _("Insert tab section"));
+	songMenu->AppendSeparator();
+	songMenu->Append(wxID_ANY, _("Trans&pose.."), _("Transpose song chords to different key"));
 	mbar->Append(songMenu, _("&Song"));
 
 	wxMenu* songbookMenu = new wxMenu(_T(""));
@@ -264,8 +268,8 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
     tb2->SetToolBitmapSize(wxSize(16,16));
     wxBitmap tb2_bmp1 = wxArtProvider::GetBitmap(wxART_QUESTION, wxART_OTHER, wxSize(16,16));
 
-	m_chordCtrl = new wxComboBox(tb2, ID_COMBO_CHORD);
-	m_chordCtrl->Append(_("Chord"));
+	m_chordCtrl = new wxComboBox(tb2, ID_COMBO_CHORD, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY);
+	m_chordCtrl->Append(_("Chords"));
 	m_chordCtrl->Append(_("[]"));
 	m_chordCtrl->Append(_("[C]"));
 	m_chordCtrl->Append(_("[Dm]"));
@@ -277,8 +281,8 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	m_chordCtrl->SetSelection(0);
 	tb2->AddControl(m_chordCtrl);
 
-	m_cmdCtrl = new wxComboBox(tb2, ID_COMBO_CMD);
-	m_cmdCtrl->Append(_("Command"));
+	m_cmdCtrl = new wxComboBox(tb2, ID_COMBO_CMD, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY);
+	m_cmdCtrl->Append(_("Commands"));
 	m_cmdCtrl->Append(_("{title: }"));
 	m_cmdCtrl->Append(_("{subtitle: }"));
 	m_cmdCtrl->Append(_("{start_of_chorus}"));
@@ -572,14 +576,7 @@ void bschordsFrame::OnQuit(wxCommandEvent &event)
 	wxGetApp().config->Write(_("/global/left"), x);
 	wxGetApp().config->Write(_("/global/top"), y);
 
-	// store splitter positions
-	//int splitMain = m_splitterMain->GetSashPosition();
-	//wxGetApp().config->Write(_("/global/split-main"), splitMain);
-	//int splitSong = m_splitterSong->GetSashPosition();
-	//wxGetApp().config->Write(_("/global/split-song"), splitSong);
-
 	wxGetApp().config->Write(_("/global/path"), m_dirCtrl->GetPath());
-
 
 	Destroy();
 }
@@ -797,7 +794,6 @@ void bschordsFrame::OpenFile(const wxString filePath)
 
 		m_file.m_path = fileName.GetFullPath();
 		m_file.m_changed = false;
-
 
 		UpdateTitle();
 	}

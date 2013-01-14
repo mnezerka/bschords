@@ -17,7 +17,7 @@ SongBookWnd::SongBookWnd(wxWindow *parent)
 
 	// create control bar
 	wxPanel *panel = new wxPanel(this);
-	wxStaticText *text = new wxStaticText(panel, wxID_ANY, _("This is list of songs"));
+	new wxStaticText(panel, wxID_ANY, _("This is list of songs"));
 
 	sizer->Add(panel, 0, wxALL | wxEXPAND, 1);
 

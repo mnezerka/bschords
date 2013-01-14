@@ -39,19 +39,21 @@ namespace bschords
 	struct TSetBlock
 	{
 		TSetDCPainter *m_painter;
-		enum TBlockType { BLTYPE_NONE, BLTYPE_TEXT, BLTYPE_CHORUS, BLTYPE_HSPACE, BLTYPE_TITLE, BLTYPE_TAB };
+		unsigned int m_pos;
+		enum TBlockType { BLTYPE_NONE, BLTYPE_TEXT, BLTYPE_CHORUS, BLTYPE_HSPACE, BLTYPE_TITLE, BLTYPE_TAB, BLTYPE_VERSE };
 
-		TSetBlock(TSetDCPainter *painter) : m_painter(painter) { };
+		TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos) { };
 		virtual ~TSetBlock() { }
 		virtual void draw(wxPoint pos) {};
 		virtual void drawBoundingRect(const wxPoint pos);
 		virtual wxRect getBoundingRect() { return wxRect(0, 0, 0, 0); };
 		virtual TBlockType getType() { return BLTYPE_NONE; };
+		virtual bool isVisible() { return true; };
 	};
 
 	struct TSetBlockHSpace : public TSetBlock
 	{
-		TSetBlockHSpace(TSetDCPainter *painter) : TSetBlock(painter) { };
+		TSetBlockHSpace(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos) { };
 		virtual ~TSetBlockHSpace() { }
 		virtual TBlockType getType() { return BLTYPE_HSPACE; };
 		virtual wxRect getBoundingRect();
@@ -60,7 +62,7 @@ namespace bschords
 	struct TSetBlockTitle : public TSetBlock
 	{
 		TSetLineItem* m_title;
-		TSetBlockTitle(TSetDCPainter *painter) : TSetBlock(painter), m_title(NULL) { };
+		TSetBlockTitle(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos), m_title(NULL) { };
 		virtual ~TSetBlockTitle() { delete m_title; }
 		virtual void draw(wxPoint pos);
 		virtual TBlockType getType() { return BLTYPE_TITLE; };
@@ -70,28 +72,39 @@ namespace bschords
 	struct TSetBlockText : public TSetBlock
 	{
 		std::vector<TSetLine*> m_lines;
-		TSetBlockText(TSetDCPainter *painter) : TSetBlock(painter) { };
+		TSetBlockText(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos) { };
 		virtual ~TSetBlockText() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
 		virtual void draw(wxPoint pos);
 		virtual TBlockType getType() { return BLTYPE_TEXT; };
 		virtual wxRect getBoundingRect();
-		bool hasChords();
+		virtual bool hasChords();
+		virtual bool hasNumbering() { return false; };
+		virtual unsigned int getPos() { return m_pos; };
+	};
+
+	struct TSetBlockVerse : public TSetBlockText
+	{
+		unsigned int m_counter;
+		TSetBlockVerse(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlockText(painter, pos), m_counter(0) { };
+		virtual TBlockType getType() { return BLTYPE_VERSE; };
+		virtual bool hasNumbering();
 	};
 
 	struct TSetBlockChorus : public TSetBlockText
 	{
-		TSetBlockChorus(TSetDCPainter *painter) : TSetBlockText(painter) { };
+		TSetBlockChorus(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlockText(painter, pos) { };
 		virtual TBlockType getType() { return BLTYPE_CHORUS; };
 	};
 
 	struct TSetBlockTab : public TSetBlock
 	{
 		std::vector<wxString*> m_lines;
-		TSetBlockTab(TSetDCPainter *painter) : TSetBlock(painter) { };
+		TSetBlockTab(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos) { };
 		virtual ~TSetBlockTab() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
 		virtual TBlockType getType() { return BLTYPE_TAB; };
 		virtual void draw(wxPoint pos);
 		virtual wxRect getBoundingRect();
+		virtual bool isVisible();
 	};
 
 	struct TSetPage
@@ -126,10 +139,10 @@ namespace bschords
 			int m_posXChord;
 			int m_eMHeight;
 			bool m_hasChords;
+			unsigned int m_verseCounter;
 			//std::vector<TSetLineItem*> m_chordLine;
 			//std::vector<TSetLineItem*> m_textLine;
 			enum { SECTION_NONE, SECTION_VERSE, SECTION_CHORUS } m_section;
-			int m_verseCounter;
 			bool m_isLineEmpty;
 			float m_scale;
 			std::vector<TSetPage*> m_pages;

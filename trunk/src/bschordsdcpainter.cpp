@@ -1,8 +1,6 @@
 #include "bschordsApp.h"
 #include "bschordsdcpainter.h"
 
-// TODO: use line spacing, chord spacing, etc.. for drawing
-
 using namespace bschords;
 
 // ------- TSetBlock  --------------------------------------------------------
@@ -16,7 +14,7 @@ void TSetBlock::drawBoundingRect(const wxPoint pos)
 		case TSetBlock::BLTYPE_TITLE: rectColor.Set(0, 255, 0); break;
 		case TSetBlock::BLTYPE_HSPACE: rectColor.Set(255, 100, 100); break;
 		case TSetBlock::BLTYPE_CHORUS: rectColor.Set(255, 128, 0); break;
-		case TSetBlock::BLTYPE_TEXT: rectColor.Set(50, 50, 255); break;
+		case TSetBlock::BLTYPE_VERSE: rectColor.Set(50, 50, 255); break;
 		default:
 			rectColor.Set(128, 128, 128);
 	}
@@ -59,24 +57,51 @@ void TSetBlockText::draw(wxPoint pos)
 
 	// add block indent for chorus
 	if (getType() == TSetBlock::BLTYPE_CHORUS)
-		pos.x = pos.x + m_painter->getDeviceX(m_painter->m_ss->m_indentChorus);
+		pos.x += m_painter->getDeviceX(m_painter->m_ss->m_indentChorus);
+
+	// verse numbering shifts line right a little
+	if (hasNumbering())
+	{
+		wxSize s = m_painter->m_dc.GetTextExtent(wxT("0. "));
+		pos.x += s.GetWidth();
+	}
 
 	// loop through block lines
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
 	{
 		TSetLine *line = m_lines[lineIx];
+		size_t lineOffset = 0;
+
+		// line spacing (computed for all lines except for first one)
+		if (lineIx > 0)
+			posY += m_painter->getDeviceY(m_painter->m_ss->m_lineSpacing);
 
 		// typeset chord line (chord items)
-		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_CHORDS]);
-		for (size_t i = 0; i < line->m_chordItems.size(); i++)
-			m_painter->m_dc.DrawText(*line->m_chordItems[i]->txt, pos.x + line->m_chordItems[i]->m_bRect.GetLeft(), posY);
-		if ((hasChords() && m_painter->m_ss->m_equalLineHeights) || (line->m_chordItems.size() > 0))
-			posY += m_painter->m_dc.GetCharHeight();
+		if (m_painter->m_ss->m_showChords)
+		{
+			m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_CHORDS]);
+			for (size_t i = 0; i < line->m_chordItems.size(); i++)
+				m_painter->m_dc.DrawText(*line->m_chordItems[i]->txt, pos.x + lineOffset + line->m_chordItems[i]->m_bRect.GetLeft(), posY);
+			if ((hasChords() && m_painter->m_ss->m_equalLineHeights) || (line->m_chordItems.size() > 0))
+			{
+				posY += m_painter->m_dc.GetCharHeight();
+				posY += m_painter->getDeviceY(m_painter->m_ss->m_chordLineSpacing);
+			}
+		}
+
+		// verse numbering shifts line right a little
+		if (hasNumbering() && lineIx == 0)
+		{
+			m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+			wxString strNum = wxString::Format(wxT("%d. "), getPos() + 1);
+			wxSize s = m_painter->m_dc.GetTextExtent(strNum);
+			m_painter->m_dc.DrawText(strNum, pos.x - s.GetWidth(), posY);
+		}
 
 		// typeset text line (text items)
 		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
 		for (size_t i = 0; i < line->m_textItems.size(); i++)
-			m_painter->m_dc.DrawText(*line->m_textItems[i]->txt, pos.x + line->m_textItems[i]->m_bRect.GetLeft(), posY);
+			m_painter->m_dc.DrawText(*line->m_textItems[i]->txt, pos.x + lineOffset + line->m_textItems[i]->m_bRect.GetLeft(), posY);
 		if (line->m_textItems.size() > 0)
 			posY += m_painter->m_dc.GetCharHeight();
 	}
@@ -94,7 +119,6 @@ wxRect TSetBlockText::getBoundingRect()
 	wxCoord maxWidth = 0;
 	wxCoord height = 0;
 
-
 	// loop through block lines
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
 	{
@@ -102,11 +126,14 @@ wxRect TSetBlockText::getBoundingRect()
 
 		// -------- compute width
 		// get last chord from chord line
-		if (line->m_chordItems.size() > 0)
+		if (m_painter->m_ss->m_showChords)
 		{
-			TSetLineItem *lineItem = line->m_chordItems.back();
-			if (lineItem->m_bRect.GetRight() > maxWidth)
-				maxWidth = lineItem->m_bRect.GetRight();
+			if (line->m_chordItems.size() > 0)
+			{
+				TSetLineItem *lineItem = line->m_chordItems.back();
+				if (lineItem->m_bRect.GetRight() > maxWidth)
+					maxWidth = lineItem->m_bRect.GetRight();
+			}
 		}
 
 		// get last text item from text line
@@ -118,9 +145,19 @@ wxRect TSetBlockText::getBoundingRect()
 		}
 
 		// -------- compute height
+		// line spacing (computed for all lines except for first one)
+		if (lineIx > 0)
+			height += m_painter->getDeviceY(m_painter->m_ss->m_lineSpacing);
+
 		// height of chord line
-		if ((hasChords() && m_painter->m_ss->m_equalLineHeights) || (line->m_chordItems.size() > 0))
-			height += lineHeightChord;
+		if (m_painter->m_ss->m_showChords)
+		{
+			if ((hasChords() && m_painter->m_ss->m_equalLineHeights) || (line->m_chordItems.size() > 0))
+			{
+				height += lineHeightChord;
+				height += m_painter->getDeviceY(m_painter->m_ss->m_chordLineSpacing);
+			}
+		}
 		// height of text line
 		if (line->m_textItems.size() > 0)
 			height += lineHeightText;
@@ -131,11 +168,24 @@ wxRect TSetBlockText::getBoundingRect()
 	{
 		maxWidth += m_painter->getDeviceX(m_painter->m_ss->m_indentChorus);
 	}
+	// verse numbering shifts line right a little
+	if (TSetBlock::BLTYPE_VERSE && m_painter->m_ss->m_verseNumbering)
+	{
+		wxSize s = m_painter->m_dc.GetTextExtent(wxT("0."));
+		maxWidth += s.GetWidth();
+	}
 
 	result.SetWidth(maxWidth);
 	result.SetHeight(height);
 
 	return result;
+}
+
+// ------- TSetBlockVerse  ----------------------------------------------------------
+
+bool TSetBlockVerse::hasNumbering()
+{
+	return m_painter->m_ss->m_verseNumbering;
 }
 
 // ------- TSetBlockTitle  ----------------------------------------------------------
@@ -154,8 +204,14 @@ wxRect TSetBlockTitle::getBoundingRect()
 
 // ------- TSetBlockTab  ----------------------------------------------------------
 
+bool TSetBlockTab::isVisible()
+{
+	return m_painter->m_ss->m_showTabs;
+}
+
 void TSetBlockTab::draw(wxPoint pos)
 {
+
 	// loop through block lines
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
 	{
@@ -194,8 +250,8 @@ wxRect TSetBlockTab::getBoundingRect()
 // ------- TSetDCPainter -------------------------------------------------------------
 
 TSetDCPainter::TSetDCPainter(wxDC& dc, float scale)
-	: m_drawTsetBlocks(false), m_drawTsetMargins(false), m_ss(NULL), m_dc(dc), m_posX(0), m_posXChord(0), m_eMHeight(0), m_section(SECTION_NONE),
-	m_verseCounter(1), m_isLineEmpty(true), m_scale(scale), m_curBlock(NULL)
+	: m_drawTsetBlocks(false), m_drawTsetMargins(false), m_ss(NULL), m_dc(dc), m_posX(0), m_posXChord(0),
+	m_eMHeight(0),m_verseCounter(0), m_section(SECTION_NONE), m_isLineEmpty(true), m_scale(scale), m_curBlock(NULL)
 {
 	//m_dcPPI = dc.GetPPI();
 	//cout << "DC Painter PPI: (" << m_dcPPI.GetWidth() << "x" << m_dcPPI.GetHeight() << ")" << endl;
@@ -267,6 +323,9 @@ void TSetDCPainter::onEnd()
 	for (size_t blockIx = 0; blockIx < m_curPage->m_blocks.size(); blockIx++)
 	{
 		TSetBlock *block = m_curPage->m_blocks[blockIx];
+
+		if (!block->isVisible())
+			continue;
 
 		wxCoord blockHeight = block->getBoundingRect().GetHeight();
 
@@ -427,10 +486,11 @@ void TSetDCPainter::onLineEnd()
 		else
 		{
 			// create new text block and add current line
-			TSetBlockText *block = new TSetBlockText(this);
+			TSetBlockVerse *block = new TSetBlockVerse(this, m_verseCounter);
 			block->m_lines.push_back(m_curLine);
 			m_curPage->m_blocks.push_back(block);
 			m_curBlock = block;
+			m_verseCounter++;
 		}
 	}
 	// else we are inside some block
@@ -439,7 +499,7 @@ void TSetDCPainter::onLineEnd()
 		// we are inside some block
 		switch (m_curBlock->getType())
 		{
-			case TSetBlock::BLTYPE_TEXT:
+			case TSetBlock::BLTYPE_VERSE:
 				// close block if line is empty
 				if (m_isLineEmpty)
 				{
@@ -448,7 +508,7 @@ void TSetDCPainter::onLineEnd()
 				}
 				// line is not empty -> add it to the block contents
 				else
-					static_cast<TSetBlockText*>(m_curBlock)->m_lines.push_back(m_curLine);
+					static_cast<TSetBlockVerse*>(m_curBlock)->m_lines.push_back(m_curLine);
 				break;
 
 			case TSetBlock::BLTYPE_CHORUS:
@@ -460,7 +520,8 @@ void TSetDCPainter::onLineEnd()
 			case TSetBlock::BLTYPE_TITLE:
 			case TSetBlock::BLTYPE_HSPACE:
 			case TSetBlock::BLTYPE_NONE:
-				break;
+			default:
+				;
 		}
 	}
 }

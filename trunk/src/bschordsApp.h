@@ -20,7 +20,6 @@
 #include "songstylesheet.h"
 #include "songbook.h"
 
-// TODO: add tool bar with chords for given key
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice
 // TODO: warning widnow with typesetting problems - clipping, page full, etc.

@@ -12,6 +12,7 @@ struct Song
 {
 	wxString m_name;
 	wxString m_filePath;
+	int m_transposition;
 };
 
 // songbook representation
@@ -22,6 +23,9 @@ class SongBook
 
 		SongBook();
 		virtual ~SongBook();
+		void LoadFromFile();
+		void SaveToFile();
+
 	protected:
 	private:
 		std::list<Song> m_songs;

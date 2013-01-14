@@ -93,7 +93,9 @@ enum
 	idMenuViewSongBook,
 	idMenuViewTbMain,
 	idMenuViewTbChords,
-	idMenuViewTSetBlocks,
+
+	idMenuSongInsertChorus,
+	idMenuSongInsertTab,
 
 	ID_COMBO_CHORD,
 	ID_COMBO_CMD,
@@ -131,6 +133,7 @@ enum
 	IDM_TOOLBAR_OTHER_3,
 
 	ID_SAMPLE_ITEM,
+	ID_LAST_USER_ITEM
 };
 
 BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
@@ -161,6 +164,8 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(idMenuViewSongBook, bschordsFrame::OnViewPane)
 	EVT_MENU(idMenuViewTbMain, bschordsFrame::OnViewToolbar)
 	EVT_MENU(idMenuViewTbChords, bschordsFrame::OnViewPane)
+	EVT_MENU(idMenuSongInsertChorus, bschordsFrame::OnSongInsert)
+	EVT_MENU(idMenuSongInsertTab, bschordsFrame::OnSongInsert)
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
 	EVT_TOOL(ID_TOOLBAR_CHORD, bschordsFrame::OnToolChord)
 	EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged )
@@ -170,10 +175,11 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 END_EVENT_TABLE()
 
 bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
-	: wxFrame(frame, -1, title)
+	: wxFrame(frame, -1, title), m_isInEditMode(false)
 {
 	// tell wxAuiManager to manage this frame
     m_auiMgr.SetManagedWindow(this);
+
 
 
 	SetIcon(wxICON(bschordsicon));
@@ -220,9 +226,14 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	viewMenu->Append(idMenuViewTbChords, _("Chords toolbar"), _("View chords toolbar"), true);
 	mbar->Append(viewMenu, _("&View"));
 
+	wxMenu* songMenu = new wxMenu(_T(""));
+	songMenu->Append(idMenuSongInsertChorus, _("&Insert chorus"), _("Insert chorus section"));
+	songMenu->Append(idMenuSongInsertTab, _("&Insert tab"), _("Insert tab section"));
+	mbar->Append(songMenu, _("&Song"));
+
 	wxMenu* songbookMenu = new wxMenu(_T(""));
 	songbookMenu->Append(wxID_ANY, _("&Songbook properties..."), _("Song book properties"));
-	mbar->Append(songbookMenu, _("&Songbook"));
+	mbar->Append(songbookMenu, _("Song&book"));
 
 	wxMenu* helpMenu = new wxMenu(_T(""));
 	helpMenu->Append(idMenuAbout, _("&About\tF1"), _("Show info about this application"));
@@ -296,30 +307,41 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	m_songContent = new wxRichTextCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 	m_songContent->DiscardEdits();
 	m_songContent->SetFont(wxGetApp().m_editorFont);
-    m_auiMgr.AddPane(m_songContent, wxAuiPaneInfo().Name(_("song-editor")).Caption(wxT("Song Editor")).Center());
+    m_auiMgr.AddPane(m_songContent, wxAuiPaneInfo().Name(_("song-editor")).Caption(wxT("Song Editor")).Center().CloseButton(false));
 
 	// create prview window
 	m_preview = new BSChordsPreview(this, m_songContent);
-    m_auiMgr.AddPane(m_preview, wxAuiPaneInfo().Name(_("song-preview")).Caption(wxT("Song Preview")).Right().MinSize(200, wxDefaultCoord));
+    m_auiMgr.AddPane(m_preview, wxAuiPaneInfo().Name(_("song-preview")).Caption(wxT("Song Preview")).Right().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// create file browser window
 	m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
 	wxString path = wxGetApp().config->Read(_("/global/path"));
 	m_dirCtrl->SetPath(path);
-	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().MinSize(200, wxDefaultCoord));
+	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// create song book window
 	m_songBook = new SongBookWnd(this);
-    m_auiMgr.AddPane(m_songBook, wxAuiPaneInfo().Name(_("song-book")).Caption(wxT("Song Book")).Left().MinSize(200, wxDefaultCoord));
+    m_auiMgr.AddPane(m_songBook, wxAuiPaneInfo().Name(_("song-book")).Caption(wxT("Song Book")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// load perspective
 	wxString perspective;
 	if (wxGetApp().config->Read(_("/global/perspective"), &perspective))
 	{
 		m_auiMgr.LoadPerspective(perspective);
+
+		GetMenuBar()->Check(idMenuViewFileBrowser, m_auiMgr.GetPane(m_dirCtrl).IsShown());
+		GetMenuBar()->Check(idMenuViewEditor, m_auiMgr.GetPane(m_songContent).IsShown());
+		GetMenuBar()->Check(idMenuViewSongPreview, m_auiMgr.GetPane(m_preview).IsShown());
+		GetMenuBar()->Check(idMenuViewSongBook, m_auiMgr.GetPane(m_songBook).IsShown());
+		GetMenuBar()->Check(idMenuViewTbMain, m_auiMgr.GetPane(wxT("toolbar-main")).IsShown());
+		GetMenuBar()->Check(idMenuViewTbChords, m_auiMgr.GetPane(wxT("toolbar-chords")).IsShown());
+		//m_isInEditMode = m_auiMgr.GetPane(m_songContent).IsShown();
+		SetEditMode(m_auiMgr.GetPane(m_songContent).IsShown());
 	}
 
 	m_auiMgr.Update();
+
+	UpdateUI();
 }
 
 bschordsFrame::~bschordsFrame()
@@ -330,82 +352,26 @@ bschordsFrame::~bschordsFrame()
 	m_auiMgr.UnInit();
 };
 
-void bschordsFrame::PopulateToolbar()
-{
-	// Set up toolbar
-	enum
-	{
-		Tool_new,
-		Tool_open,
-		Tool_save,
-		Tool_copy,
-		Tool_cut,
-		Tool_paste,
-		Tool_print,
-		Tool_help,
-		Tool_chord,
-		Tool_Max
-	};
-
-	wxBitmap toolBarBitmaps[Tool_Max];
-
-#define INIT_TOOL_BMP(bmp) \
-	toolBarBitmaps[Tool_##bmp] = wxBitmap(bmp##_xpm)
-
-	INIT_TOOL_BMP(new);
-	INIT_TOOL_BMP(open);
-	INIT_TOOL_BMP(save);
-	INIT_TOOL_BMP(copy);
-	INIT_TOOL_BMP(cut);
-	INIT_TOOL_BMP(paste);
-	INIT_TOOL_BMP(print);
-	INIT_TOOL_BMP(help);
-	INIT_TOOL_BMP(chord);
-
-	int w = toolBarBitmaps[Tool_new].GetWidth();
-	int h = toolBarBitmaps[Tool_new].GetHeight();
-
-	for ( size_t n = Tool_new; n < WXSIZEOF(toolBarBitmaps); n++ )
-	{
-		toolBarBitmaps[n] = wxBitmap(toolBarBitmaps[n].ConvertToImage().Scale(w, h));
-	}
-
-	m_toolBar->SetToolBitmapSize(wxSize(w, h));
-
-	m_toolBar->AddTool(wxID_NEW, _T("New"), toolBarBitmaps[Tool_new], wxNullBitmap, wxITEM_NORMAL, _T("New file"), _T("This is help for new file tool"));
-	m_toolBar->AddTool(wxID_OPEN, _T("Open"), toolBarBitmaps[Tool_open], wxNullBitmap, wxITEM_NORMAL, _T("Open file"), _T("This is help for open file tool"));
-	m_toolBar->AddTool(wxID_SAVE, _T("Save"), toolBarBitmaps[Tool_save], _T("Save file"), wxITEM_NORMAL);
-	//m_toolBar->AddTool(wxID_COPY, _T("Copy"), toolBarBitmaps[Tool_copy], _T("Toggle button 2"), wxITEM_CHECK);
-	//m_toolBar->AddTool(wxID_CUT, _T("Cut"), toolBarBitmaps[Tool_cut], _T("Toggle/Untoggle help button"));
-	//m_toolBar->AddTool(wxID_PASTE, _T("Paste"), toolBarBitmaps[Tool_paste], _T("Paste"));
-
-	m_toolBar->AddSeparator();
-	m_toolBar->AddTool(ID_TOOLBAR_CHORD, _T("Chord"), toolBarBitmaps[Tool_chord], _T("Chord"));
-
-	m_toolBar->AddSeparator();
-
-	/*
-	wxString chordLabels[7] = { _("C"), _("Dm"), _("Em"), _("F"), _("G"), _("Am"), _("Hm5b") };
-	for (int i = 0; i < 7; i++)
-	{
-		m_chordButtons[i] = new wxButton(m_toolBar, wxID_ANY, chordLabels[i], wxDefaultPosition, wxSize(40, 40));
-		m_toolBar->AddControl(m_chordButtons[i]);
-	}
-	*/
-
-	// after adding the buttons to the toolbar, must call Realize() to reflect
-	// the changes
-	m_toolBar->Realize();
-
-	m_toolBar->SetRows(1);
-}
-
 void bschordsFrame::OnClose(wxCloseEvent &event)
 {
 	// close open file (if any)
 	CloseFile();
 
 	Destroy();
+}
+
+void bschordsFrame::SetEditMode(bool newEditMode)
+{
+	m_isInEditMode = newEditMode;
+
+	// controls
+	m_chordCtrl->Enable(m_isInEditMode);
+	m_cmdCtrl->Enable(m_isInEditMode);
+
+	// menu items
+	GetMenuBar()->Enable(idMenuSongInsertChorus, m_isInEditMode);
+	GetMenuBar()->Enable(idMenuSongInsertTab, m_isInEditMode);
+
 }
 
 void bschordsFrame::OnFileNewSong(wxCommandEvent& event)
@@ -660,28 +626,31 @@ void bschordsFrame::OnViewPane(wxCommandEvent& event)
 {
 	wxMenuBar *mBar = GetMenuBar();
 
-	wxWindow *paneWindow = NULL;
-
 	switch (event.GetId())
 	{
-		case idMenuViewFileBrowser: paneWindow = m_dirCtrl; break;
-		case idMenuViewEditor: paneWindow = m_songContent; break;
-		case idMenuViewSongPreview:	paneWindow = m_preview; break;
-		case idMenuViewSongBook: paneWindow = m_songBook; break;
-		case idMenuViewTbChords: paneWindow = m_chordsPanel; break;
+		case idMenuViewEditor:;
+			m_auiMgr.GetPane(m_songContent).Show(mBar->IsChecked(event.GetId()));
+			SetEditMode(mBar->IsChecked(event.GetId()));
+			break;
+		case idMenuViewFileBrowser:
+			m_auiMgr.GetPane(m_dirCtrl).Show(mBar->IsChecked(event.GetId()));
+			break;
+
+		case idMenuViewSongPreview:
+			m_auiMgr.GetPane(m_preview).Show(mBar->IsChecked(event.GetId()));
+			break;
+
+		case idMenuViewSongBook:
+			m_auiMgr.GetPane(m_songBook).Show(mBar->IsChecked(event.GetId()));
+			break;
+
+		case idMenuViewTbChords:
+			m_auiMgr.GetPane(m_chordsPanel).Show(mBar->IsChecked(event.GetId()));
+			break;
 	}
 
-	// no window for menu id from event
-	if (!paneWindow)
-		return;
-
-	// show or hide appropriate pane
-	if (mBar->IsChecked(event.GetId()))
-		m_auiMgr.GetPane(paneWindow).Show();
-	else
-		m_auiMgr.GetPane(paneWindow).Hide();
-
 	m_auiMgr.Update();
+	UpdateUI();
 }
 
 void bschordsFrame::OnViewToolbar(wxCommandEvent& event)
@@ -707,6 +676,20 @@ void bschordsFrame::OnViewToolbar(wxCommandEvent& event)
 		m_auiMgr.GetPane(toolBarId).Hide();
 
 	m_auiMgr.Update();
+	UpdateUI();
+}
+
+void bschordsFrame::OnSongInsert(wxCommandEvent& event)
+{
+	switch (event.GetId())
+	{
+		case idMenuSongInsertChorus:
+			m_songContent->WriteText(_("{start_of_chorus}\n{end_of_chorus}"));
+			break;
+		case idMenuSongInsertTab:
+			m_songContent->WriteText(_("{start_of_tab}\n{end_of_tab}"));
+			break;
+	}
 }
 
 void bschordsFrame::OnAbout(wxCommandEvent &event)
@@ -922,12 +905,41 @@ void bschordsFrame::UpdateTitle()
 
 void bschordsFrame::OnPaneClose(wxAuiManagerEvent& evt)
 {
+	std::wcout << L"OnPaneClose for " << evt.pane->name.wc_str() << std::endl;
+
     if (evt.pane->name == _("file-browser"))
+    {
 		GetMenuBar()->Check(idMenuViewFileBrowser, false);
+    }
     else if (evt.pane->name == _("song-editor"))
-		GetMenuBar()->Check(idMenuViewEditor, false);
+    {
+		SetEditMode(false);
+    }
+
+	m_auiMgr.Update();
+	UpdateUI();
 }
 
+void bschordsFrame::UpdateUI()
+{
+	bool editingActive = m_isInEditMode;
+
+	std::cout << "UpdateUI" << editingActive << std::endl;
+
+	// update menu items
+
+
+	// enable all items related to editing (buttons, menu items, etc.)
+	//m_ctrlChords.Enable(editingActive);
+	if (editingActive)
+	{
+
+		//GetMenuBar()->Check(idMenuViewTbChords, m_auiMgr.GetPane(wxT("toolbar-chords")).IsShown());
+
+	}
+
+
+}
 
 // ----------------------------------------------------------------------------
 // BSChordsPrintout

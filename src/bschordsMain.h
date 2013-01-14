@@ -54,10 +54,12 @@ class bschordsFrame: public wxFrame
 		wxComboBox *m_chordCtrl;
 		wxComboBox *m_cmdCtrl;
 		wxAuiManager m_auiMgr;
+		bool m_isInEditMode;
 
 		SongFile m_file;
 
-        void PopulateToolbar();
+		void UpdateUI();
+		void SetEditMode(bool newEditMode);
         void OpenFile(const wxString filePath);
 		void SaveFile();
         void CloseFile();
@@ -69,16 +71,17 @@ class bschordsFrame: public wxFrame
 		void OnFileSaveAsSong(wxCommandEvent& event);
 		void OnFileCloseSong(wxCommandEvent& event);
 		void OnFileExportSong(wxCommandEvent& event);
-
 		void OnFileNewSongBook(wxCommandEvent& event);
 		void OnFileOpenSongBook(wxCommandEvent& event);
 		void OnFileSaveSongBook(wxCommandEvent& event);
 		void OnFileSaveAsSongBook(wxCommandEvent& event);
 		void OnFileCloseSongBook(wxCommandEvent& event);
-
 		void OnFilePrint(wxCommandEvent& event);
 		void OnFilePrintPreview(wxCommandEvent& event);
 		void OnFilePageSetup(wxCommandEvent& event);
+
+		void OnSongInsert(wxCommandEvent& event);
+
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnPreferences(wxCommandEvent& event);
@@ -121,7 +124,6 @@ class BSChordsPrintout: public wxPrintout
 private:
     bschordsFrame *m_frame;
 };
-
 
 
 #endif // BSCHORDSMAIN_H

@@ -45,7 +45,7 @@ class bschordsFrame: public wxFrame
 		BSChordsPreview *m_preview;
 		//wxStyledTextCtrl *m_songContent;
 		wxGenericDirCtrl* m_dirCtrl;
-		SongBookWnd *m_songBook;
+		SongBookWnd *m_songBookWnd;
 		wxComboBox *m_zoomCtrl;
 		wxToolBar *m_toolBar;
 		wxPanel *m_chordsPanel;
@@ -58,7 +58,6 @@ class bschordsFrame: public wxFrame
 
 		SongFile m_file;
 
-		void UpdateUI();
 		void SetEditMode(bool newEditMode);
         void OpenFile(const wxString filePath);
 		void SaveFile();
@@ -81,6 +80,7 @@ class bschordsFrame: public wxFrame
 		void OnFilePageSetup(wxCommandEvent& event);
 
 		void OnSongInsert(wxCommandEvent& event);
+		void OnSongAddToSongbook(wxCommandEvent& event);
 
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
@@ -92,6 +92,8 @@ class bschordsFrame: public wxFrame
         void OnSongContentChange(wxCommandEvent& event);
         void OnToolChord(wxCommandEvent& WXUNUSED(event));
         void OnFSBrowserSelChanged(wxTreeEvent& event);
+        void OnFSBrowserItemMenu(wxTreeEvent& event);
+        void OnFSBrowserItemAddToSongbook(wxCommandEvent& event);
 		void OnChordProToken(wxCommandEvent& event);
 
 		wxAuiDockArt* GetDockArt() { return m_auiMgr.GetArtProvider(); };

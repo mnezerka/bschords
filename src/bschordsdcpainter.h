@@ -113,6 +113,16 @@ namespace bschords
 		virtual ~TSetPage() { while (!m_blocks.empty()) { delete m_blocks.back(); m_blocks.pop_back(); } }
 	};
 
+	struct TSetStat
+	{
+		// number of clippings found during typesetting
+		unsigned int m_clippings;
+		// number of pages needed during typesetting
+		unsigned int m_pages;
+
+		TSetStat() : m_clippings(0), m_pages(0) { };
+	};
+
 	class TSetDCPainter : public bschordpro::EventHandler
 	{
 		public:
@@ -128,6 +138,7 @@ namespace bschords
 			virtual void onLine(const std::wstring& line);
 			wxCoord getDeviceX(int numMM);
 			wxCoord getDeviceY(int numMM);
+			TSetStat getTSetStat() { return m_stat; };
 
 			bool m_drawTsetBlocks;
 			bool m_drawTsetMargins;
@@ -149,6 +160,8 @@ namespace bschords
 			TSetBlock *m_curBlock;
 			TSetPage *m_curPage;
 			TSetLine *m_curLine;
+		private:
+			TSetStat m_stat;
 	};
 }
 

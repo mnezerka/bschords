@@ -30,12 +30,19 @@ static const wxString fontNames[] =
 class SongStyleSheet
 {
 	public:
+		// songs for block types
 		wxFont m_fonts[BS_FONT_LAST];
+		// page size in milimeters
 		wxSize m_pageSize;
+		// top margin
 		wxCoord m_marginTop;
+		// left margin
 		wxCoord m_marginLeft;
+		// bottom margin
 		wxCoord m_marginBottom;
+		// right margin
 		wxCoord m_marginRight;
+		// indentation of chorus blocks
 		wxCoord m_indentChorus;
 		// nember of columns
 		int m_cols;

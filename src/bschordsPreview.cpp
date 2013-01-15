@@ -15,17 +15,15 @@
 
 // ------- BSChordsPreviewCanvas --------------------------------------------------------
 
-BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl)
-	: wxScrolledWindow(parent), m_zoom(1)
+BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
+	: wxScrolledWindow(parent), m_sourceCtrl(sourceCtrl), m_infoCtrl(infoCtrl), m_zoom(1)
 {
-	m_sourceCtrl = sourceCtrl;
-
 	wxClientDC dc(this);
 	//DoPrepareDC(dc);
 
 	m_screenPPI = dc.GetPPI();
 
-	setZoom(1);
+	setZoom(m_zoom);
 }
 
 BSChordsPreviewCanvas::~BSChordsPreviewCanvas()
@@ -56,9 +54,31 @@ void BSChordsPreviewCanvas::OnDraw(wxDC& dc)
 			text.Append(m_sourceCtrl->GetLineText(i));
 		}
 	// parse and draw
-	bschords::TSetDCPainter y(dc, m_screenPPI.GetWidth() / MM_PER_IN);
-	bschordpro::Parser p(&y);
+	bschords::TSetDCPainter painter(dc, m_screenPPI.GetWidth() / MM_PER_IN);
+	bschordpro::Parser p(&painter);
 	p.parse(std::wstring(text.wc_str()));
+
+	wxString infoText;
+	bool infoIsWarning = false;
+	bschords::TSetStat stat = painter.getTSetStat();
+
+	infoText << _("pages: ") << stat.m_pages;
+	if (stat.m_clippings > 0)
+	{
+		infoText << _(" clippings: ") << stat.m_clippings;
+		infoIsWarning = true;
+	}
+	if (m_infoCtrl)
+	{
+		if (infoIsWarning)
+			m_infoCtrl->SetBackgroundColour(wxColour(255, 200, 200));
+		else
+			m_infoCtrl->SetBackgroundColour(wxNullColour);
+
+		m_infoCtrl->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+
+		m_infoCtrl->SetLabel(infoText);
+	}
 }
 
 void BSChordsPreviewCanvas::setZoom(float zoom)
@@ -99,6 +119,8 @@ BSChordsPreview::BSChordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl)
 	wxPanel *panel = new wxPanel(this);
 	//wxStaticText *text = new wxStaticText(panel, wxID_ANY, _("ahoj"));
 
+	wxBoxSizer *panelSizer = new wxBoxSizer(wxHORIZONTAL);
+	panel->SetSizer(panelSizer);
 	// adding a combo with zoom level
 	m_zoomCtrl = new wxComboBox(panel, ID_COMBO_ZOOM, wxEmptyString, wxDefaultPosition, wxSize(100, wxDefaultCoord), 0, NULL, wxCB_READONLY);
 	m_zoomCtrl->Append(_("10%"));
@@ -121,10 +143,16 @@ BSChordsPreview::BSChordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl)
 	m_zoomCtrl->Append(_("250%"));
 	m_zoomCtrl->Append(_("300%"));
 	m_zoomCtrl->Select(ix100);
+	panelSizer->Add(m_zoomCtrl, 0, wxALL | wxCENTER, 2);
+
+	panelSizer->AddSpacer(5);
+
+	m_info = new wxStaticText(panel, wxID_ANY, wxT("Ok"));
+	panelSizer->Add(m_info, 1, wxALL | wxCENTER, 2);
 
 	sizer->Add(panel, 0, wxALL | wxEXPAND, 3);
 
-	m_canvas = new BSChordsPreviewCanvas(this, sourceCtrl);
+	m_canvas = new BSChordsPreviewCanvas(this, sourceCtrl, m_info);
 	sizer->Add(m_canvas, 1, wxALL | wxEXPAND);
 
 	//Resize();

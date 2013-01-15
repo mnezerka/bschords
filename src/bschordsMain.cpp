@@ -98,44 +98,16 @@ enum
 
 	idMenuSongInsertChorus,
 	idMenuSongInsertTab,
+	idMenuSongAddToSongbook,
+
+	idFSBrowserAddToSongbook,
 
 	ID_COMBO_CHORD,
 	ID_COMBO_CMD,
 	//idMenuViewTSetBook,
 	ID_MENU_FILE_EXPORT,
 	ID_FSBROWSER,
-	ID_SPIN,
 	ID_TOOLBAR_CHORD,
-	ID_TOOLBAR ,
-	IDM_TOOLBAR_TOGGLETOOLBARSIZE,
-	IDM_TOOLBAR_TOGGLETOOLBARROWS,
-	IDM_TOOLBAR_TOGGLETOOLTIPS,
-	IDM_TOOLBAR_TOGGLECUSTOMDISABLED,
-	IDM_TOOLBAR_ENABLEPRINT,
-	IDM_TOOLBAR_DELETEPRINT,
-	IDM_TOOLBAR_INSERTPRINT,
-	IDM_TOOLBAR_TOGGLEHELP,
-	IDM_TOOLBAR_TOGGLERADIOBTN1,
-	IDM_TOOLBAR_TOGGLERADIOBTN2,
-	IDM_TOOLBAR_TOGGLERADIOBTN3,
-	IDM_TOOLBAR_TOGGLE_TOOLBAR,
-	IDM_TOOLBAR_TOGGLE_HORIZONTAL_TEXT,
-	IDM_TOOLBAR_TOGGLE_ANOTHER_TOOLBAR,
-	IDM_TOOLBAR_CHANGE_TOOLTIP,
-	IDM_TOOLBAR_SHOW_TEXT,
-	IDM_TOOLBAR_SHOW_ICONS,
-	IDM_TOOLBAR_SHOW_BOTH,
-	IDM_TOOLBAR_CUSTOM_PATH,
-	IDM_TOOLBAR_TOP_ORIENTATION,
-	IDM_TOOLBAR_LEFT_ORIENTATION,
-	IDM_TOOLBAR_BOTTOM_ORIENTATION,
-	IDM_TOOLBAR_RIGHT_ORIENTATION,
-	IDM_TOOLBAR_OTHER_1,
-	IDM_TOOLBAR_OTHER_2,
-	IDM_TOOLBAR_OTHER_3,
-
-	ID_SAMPLE_ITEM,
-	ID_LAST_USER_ITEM
 };
 
 BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
@@ -168,9 +140,16 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(idMenuViewTbChords, bschordsFrame::OnViewPane)
 	EVT_MENU(idMenuSongInsertChorus, bschordsFrame::OnSongInsert)
 	EVT_MENU(idMenuSongInsertTab, bschordsFrame::OnSongInsert)
+	EVT_MENU(idMenuSongAddToSongbook, bschordsFrame::OnSongAddToSongbook)
+
+
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
 	EVT_TOOL(ID_TOOLBAR_CHORD, bschordsFrame::OnToolChord)
-	EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged )
+	/*EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged)*/
+	EVT_TREE_ITEM_ACTIVATED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged)
+	EVT_TREE_ITEM_MENU(wxID_TREECTRL, bschordsFrame::OnFSBrowserItemMenu)
+	EVT_MENU(idFSBrowserAddToSongbook, bschordsFrame::OnFSBrowserItemAddToSongbook)
+
 	EVT_AUI_PANE_CLOSE(bschordsFrame::OnPaneClose)
 	EVT_COMBOBOX(ID_COMBO_CHORD, bschordsFrame::OnChordProToken)
 	EVT_COMBOBOX(ID_COMBO_CMD, bschordsFrame::OnChordProToken)
@@ -179,12 +158,10 @@ END_EVENT_TABLE()
 bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	: wxFrame(frame, -1, title), m_isInEditMode(false)
 {
+	SetIcon(wxICON(bschordsicon));
+
 	// tell wxAuiManager to manage this frame
     m_auiMgr.SetManagedWindow(this);
-
-
-
-	SetIcon(wxICON(bschordsicon));
 
 	// create a menu bar
 	wxMenuBar* mbar = new wxMenuBar();
@@ -232,6 +209,8 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	songMenu->Append(idMenuSongInsertChorus, _("&Insert chorus"), _("Insert chorus section"));
 	songMenu->Append(idMenuSongInsertTab, _("Insert &tab"), _("Insert tab section"));
 	songMenu->AppendSeparator();
+	songMenu->Append(idMenuSongAddToSongbook, _("Add to songbook"), _("Add item to current songbook"));
+
 	songMenu->Append(wxID_ANY, _("Trans&pose.."), _("Transpose song chords to different key"));
 	mbar->Append(songMenu, _("&Song"));
 
@@ -324,8 +303,8 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// create song book window
-	m_songBook = new SongBookWnd(this);
-    m_auiMgr.AddPane(m_songBook, wxAuiPaneInfo().Name(_("song-book")).Caption(wxT("Song Book")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
+	m_songBookWnd = new SongBookWnd(this);
+    m_auiMgr.AddPane(m_songBookWnd, wxAuiPaneInfo().Name(_("song-book")).Caption(wxT("Song Book")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// load perspective
 	wxString perspective;
@@ -336,7 +315,7 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 		GetMenuBar()->Check(idMenuViewFileBrowser, m_auiMgr.GetPane(m_dirCtrl).IsShown());
 		GetMenuBar()->Check(idMenuViewEditor, m_auiMgr.GetPane(m_songContent).IsShown());
 		GetMenuBar()->Check(idMenuViewSongPreview, m_auiMgr.GetPane(m_preview).IsShown());
-		GetMenuBar()->Check(idMenuViewSongBook, m_auiMgr.GetPane(m_songBook).IsShown());
+		GetMenuBar()->Check(idMenuViewSongBook, m_auiMgr.GetPane(m_songBookWnd).IsShown());
 		GetMenuBar()->Check(idMenuViewTbMain, m_auiMgr.GetPane(wxT("toolbar-main")).IsShown());
 		GetMenuBar()->Check(idMenuViewTbChords, m_auiMgr.GetPane(wxT("toolbar-chords")).IsShown());
 		//m_isInEditMode = m_auiMgr.GetPane(m_songContent).IsShown();
@@ -344,8 +323,6 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	}
 
 	m_auiMgr.Update();
-
-	UpdateUI();
 }
 
 bschordsFrame::~bschordsFrame()
@@ -638,7 +615,7 @@ void bschordsFrame::OnViewPane(wxCommandEvent& event)
 			break;
 
 		case idMenuViewSongBook:
-			m_auiMgr.GetPane(m_songBook).Show(mBar->IsChecked(event.GetId()));
+			m_auiMgr.GetPane(m_songBookWnd).Show(mBar->IsChecked(event.GetId()));
 			break;
 
 		case idMenuViewTbChords:
@@ -647,7 +624,6 @@ void bschordsFrame::OnViewPane(wxCommandEvent& event)
 	}
 
 	m_auiMgr.Update();
-	UpdateUI();
 }
 
 void bschordsFrame::OnViewToolbar(wxCommandEvent& event)
@@ -673,7 +649,6 @@ void bschordsFrame::OnViewToolbar(wxCommandEvent& event)
 		m_auiMgr.GetPane(toolBarId).Hide();
 
 	m_auiMgr.Update();
-	UpdateUI();
 }
 
 void bschordsFrame::OnSongInsert(wxCommandEvent& event)
@@ -687,6 +662,11 @@ void bschordsFrame::OnSongInsert(wxCommandEvent& event)
 			m_songContent->WriteText(_("{start_of_tab}\n{end_of_tab}"));
 			break;
 	}
+}
+
+void bschordsFrame::OnSongAddToSongbook(wxCommandEvent& event)
+{
+	std::cout << "Adding from menu" << std::endl;
 }
 
 void bschordsFrame::OnAbout(wxCommandEvent &event)
@@ -733,7 +713,7 @@ void bschordsFrame::OnChordProToken(wxCommandEvent& event)
 void bschordsFrame::OnFSBrowserSelChanged(wxTreeEvent& event)
 {
 	wxTreeItemId id = event.GetItem();
-	if (!id)
+	if (!id.IsOk())
 		return;
 
 	if (!m_dirCtrl)
@@ -748,6 +728,45 @@ void bschordsFrame::OnFSBrowserSelChanged(wxTreeEvent& event)
 			OpenFile(data->m_path);
 		}
 	}
+}
+
+void bschordsFrame::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
+{
+	std::cout << "Adding from fs browser" << std::endl;
+
+	wxTreeCtrl *treeCtrl = m_dirCtrl->GetTreeCtrl();
+
+	wxTreeItemId id = treeCtrl->GetSelection();
+	if (!id.IsOk())
+		return;
+
+	wxDirItemData* data = (wxDirItemData*) treeCtrl->GetItemData(id);
+	if (data)
+	{
+		if (!data->m_isDir)
+		{
+			std::cout << "  adding file: " << data->m_path.wc_str() << std::endl;
+			wxGetApp().m_songBook.add(data->m_path);
+			m_songBookWnd->UpdateContent();
+		}
+	}
+}
+
+void bschordsFrame::OnFSBrowserItemMenu(wxTreeEvent& event)
+{
+    wxTreeItemId itemId = event.GetItem();
+    //MyTreeItemData *item = itemId.IsOk() ? (MyTreeItemData *)GetItemData(itemId) : NULL;
+    wxPoint clientpt = event.GetPoint();
+    //wxPoint screenpt = m_dirCtrl->ClientToScreen(clientpt);
+    //wxLogMessage(wxT("OnItemMenu for item \"%s\" at screen coords (%i, %i)"),
+    //             item ? item->GetDesc() : _T(""), screenpt.x, screenpt.y);
+
+#if wxUSE_MENUS
+    wxMenu menu(_("menu title"));
+    menu.Append(idFSBrowserAddToSongbook, wxT("&Add to songbook"));
+    m_dirCtrl->PopupMenu(&menu, clientpt);
+#endif // wxUSE_MENUS
+    event.Skip();
 }
 
 void bschordsFrame::OpenFile(const wxString filePath)
@@ -787,7 +806,6 @@ void bschordsFrame::OpenFile(const wxString filePath)
 			lines += fileIn.GetNextLine();
 		}
 		fileIn.Close(); // Close the opened file
-		//wxLogMessage(lines);
 		m_songContent->Clear();
 		m_songContent->AppendText(lines);
 		m_songContent->DiscardEdits();
@@ -913,28 +931,6 @@ void bschordsFrame::OnPaneClose(wxAuiManagerEvent& evt)
     }
 
 	m_auiMgr.Update();
-	UpdateUI();
-}
-
-void bschordsFrame::UpdateUI()
-{
-	bool editingActive = m_isInEditMode;
-
-	std::cout << "UpdateUI" << editingActive << std::endl;
-
-	// update menu items
-
-
-	// enable all items related to editing (buttons, menu items, etc.)
-	//m_ctrlChords.Enable(editingActive);
-	if (editingActive)
-	{
-
-		//GetMenuBar()->Check(idMenuViewTbChords, m_auiMgr.GetPane(wxT("toolbar-chords")).IsShown());
-
-	}
-
-
 }
 
 // ----------------------------------------------------------------------------

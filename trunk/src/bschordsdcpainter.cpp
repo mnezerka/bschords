@@ -288,12 +288,17 @@ void TSetDCPainter::onBegin()
 	//cout << "OnBegin" << endl;
 	// create page structure
 	m_curPage = new TSetPage();
+	m_stat.m_pages++;
 }
 
+// all drawing is done here after parsing whole content and computing dimensions
+// of each block
 void TSetDCPainter::onEnd()
 {
 	//cout << "OnBegin" << endl;
 
+
+	// prepare rectangle representation of "drawable" page space (paper - margins)
 	wxPoint pos(getDeviceX(m_ss->m_marginLeft), getDeviceY(m_ss->m_marginTop));
 	wxRect pageRect (
 		getDeviceX(m_ss->m_marginLeft),
@@ -323,11 +328,22 @@ void TSetDCPainter::onEnd()
 	for (size_t blockIx = 0; blockIx < m_curPage->m_blocks.size(); blockIx++)
 	{
 		TSetBlock *block = m_curPage->m_blocks[blockIx];
+		bool clippingDetected = false;
 
 		if (!block->isVisible())
 			continue;
 
-		wxCoord blockHeight = block->getBoundingRect().GetHeight();
+		wxRect blockRect = block->getBoundingRect();
+
+		// check if there is enough horizontal space for block to be drawn
+		// in current column
+		if (blockRect.GetWidth() > colRect.GetWidth())
+		{
+			clippingDetected = true;
+			std::cout << "problem with horizontal clipping found" << std::endl;
+		}
+
+		wxCoord blockHeight = blockRect.GetHeight();
 
 		// check if we have enough space to draw block
 		if (pos.y + blockHeight > pageRect.GetBottom())
@@ -345,6 +361,7 @@ void TSetDCPainter::onEnd()
 			}
 			else
 			{
+				m_stat.m_pages++;
 				std::cout << "new page is required !!!" << std::endl;
 				break;
 			}
@@ -354,6 +371,17 @@ void TSetDCPainter::onEnd()
 		if (m_drawTsetBlocks)
 			block->drawBoundingRect(pos);
 		block->draw(pos);
+
+		// draw warning
+		if (clippingDetected)
+		{
+			// draw bounding rect
+			wxPen pen(wxColor(255, 0, 0), 5);
+			m_dc.SetPen(pen);
+			m_dc.DrawLine(colRect.GetRight(), pos.y, colRect.GetRight(), pos.y + blockRect.GetHeight());
+			m_stat.m_clippings++;
+		}
+
 		pos.y += block->getBoundingRect().GetHeight();
 		//cout << "block height: " << block->getBoundingRect().GetHeight() << ", new pos.y: " << pos.y << endl;
 	}

@@ -10,11 +10,12 @@ class SongBookWnd : public wxWindow
 	public:
 		SongBookWnd(wxWindow *parent);
 		virtual ~SongBookWnd();
+		void UpdateContent();
 
-	protected:
 	private:
 		wxListBox *m_listBox;
 		void OnSize(wxSizeEvent& event);
+
 	DECLARE_EVENT_TABLE()
 };
 

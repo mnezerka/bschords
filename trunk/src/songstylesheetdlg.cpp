@@ -97,12 +97,12 @@ wxPanel* SongStyleSheetDlg::CreatePageSetupPage(wxWindow* parent)
 	comboPageSize->Append(_T("User defined"));
 	comboPageSize->Append(_T("A4 (210x219 mm)"));
 	comboPageSize->Select(0);
-	pageStaticBoxSizer->Add(comboPageSize, 0, wxALL, CTRL_BORDER);
+	pageStaticBoxSizer->Add(comboPageSize, 0, wxALL | wxCENTER, CTRL_BORDER);
 
-	pageStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, _("=")), 0, wxALL, CTRL_BORDER);
-	pageStaticBoxSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageWidth)), 0, wxALL, CTRL_BORDER);
-	pageStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, _(" x ")), 0, wxALL, CTRL_BORDER);
-	pageStaticBoxSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageHeight)), 0, wxALL, CTRL_BORDER);
+	pageStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, _("=")), 0, wxALL | wxCENTER, CTRL_BORDER);
+	pageStaticBoxSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageWidth)), 0, wxALL | wxCENTER, CTRL_BORDER);
+	pageStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, _(" x ")), 0, wxALL | wxCENTER, CTRL_BORDER);
+	pageStaticBoxSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageHeight)), 0, wxALL | wxCENTER, CTRL_BORDER);
 
 	// --------------------------------------------------------------------------------------
 	// margins panel

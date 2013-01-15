@@ -5,30 +5,33 @@
     #include <wx/wx.h>
 #endif
 
-#include <list>
+#include <vector>
 
-// represantion of one song of songbook
-struct Song
+namespace bschords
 {
-	wxString m_name;
-	wxString m_filePath;
-	int m_transposition;
-};
-
-// songbook representation
-class SongBook
-{
-	public:
+	// represantion of one song of songbook
+	struct Song
+	{
 		wxString m_name;
+		wxString m_filePath;
+		int m_transposition;
+	};
 
-		SongBook();
-		virtual ~SongBook();
-		void LoadFromFile();
-		void SaveToFile();
+	// songbook representation
+	class SongBook
+	{
+		public:
+			wxString m_name;
+			std::vector<Song*> m_songs;
 
-	protected:
-	private:
-		std::list<Song> m_songs;
-};
+			SongBook();
+			virtual ~SongBook();
+			void empty();
+			void loadFromFile();
+			void saveToFile();
+			void add(wxString path);
+		protected:
+	};
+}
 
 #endif // SONGBOOK_H

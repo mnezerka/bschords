@@ -1,4 +1,9 @@
- #include "songbookwnd.h"
+
+#include "bschordsApp.h"
+#include "songbook.h"
+#include "songbookwnd.h"
+
+using namespace bschords;
 
 enum
 {
@@ -22,8 +27,8 @@ SongBookWnd::SongBookWnd(wxWindow *parent)
 	sizer->Add(panel, 0, wxALL | wxEXPAND, 1);
 
 	m_listBox = new wxListBox(this, wxID_ANY);
-	m_listBox->Append(_("first item"));
-	m_listBox->Append(_("second item"));
+	//m_listBox->Append(_("first item"));
+	//m_listBox->Append(_("second item"));
 	sizer->Add(m_listBox, 1, wxALL | wxEXPAND, 1);
 }
 
@@ -36,4 +41,19 @@ void SongBookWnd::OnSize(wxSizeEvent& event)
 {
 	if (GetAutoLayout())
 		Layout();
+}
+
+void SongBookWnd::UpdateContent()
+{
+	m_listBox->Clear();
+
+	SongBook &sb = wxGetApp().m_songBook;
+
+	for (size_t i = 0; i < sb.m_songs.size(); i++)
+	{
+		Song *s = sb.m_songs[i];
+
+		m_listBox->Append(s->m_name);
+	}
+
 }

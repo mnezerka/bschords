@@ -8,7 +8,7 @@
 class BSChordsPreviewCanvas : public wxScrolledWindow
 {
 	public:
-		BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl);
+		BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl = NULL);
 		virtual ~BSChordsPreviewCanvas();
 		virtual void OnDraw(wxDC& dc);
 		void setZoom(float zoom);
@@ -17,6 +17,7 @@ class BSChordsPreviewCanvas : public wxScrolledWindow
 	protected:
 	private:
 		wxRichTextCtrl *m_sourceCtrl;
+		wxStaticText *m_infoCtrl;
 		//wxStyledTextCtrl *m_sourceCtrl;
 		float m_zoom;
 		wxSize m_screenPPI;
@@ -32,6 +33,7 @@ class BSChordsPreview : public wxWindow
 	private:
 		BSChordsPreviewCanvas *m_canvas;
 		wxComboBox *m_zoomCtrl;
+		wxStaticText *m_info;
 
 		void OnSize(wxSizeEvent& event);
 		void OnZoomChanged(wxCommandEvent& event);

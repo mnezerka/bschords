@@ -22,23 +22,27 @@
 
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice
-// TODO: warning widnow with typesetting problems - clipping, page full, etc.
 
 class bschordsApp : public wxApp
 {
     public:
+		// current application configuration
 		wxConfig *config;
-        //wxFont m_fonts[BS_FONT_LAST];
+
+		// font for song editor
 		wxFont m_editorFont;
-        // Global print data, to remember settings during the session
+
+        // global print data, to remember settings during the session
 		wxPrintData *m_printData;
-		// Global page setup data
+
+		// global page setup data
 		wxPageSetupDialogData* m_pageSetupData;
 
+		// current stylesheet
 		SongStyleSheet m_styleSheet;
 
 		// current songbook
-		SongBook m_songBook;
+		bschords::SongBook m_songBook;
 
         virtual bool OnInit();
         virtual int OnExit();

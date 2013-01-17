@@ -15,7 +15,8 @@
 
 // ------- BSChordsPreviewCanvas --------------------------------------------------------
 
-BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
+//BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
+BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxStyledTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
 	: wxScrolledWindow(parent), m_sourceCtrl(sourceCtrl), m_infoCtrl(infoCtrl), m_zoom(1)
 {
 	wxClientDC dc(this);
@@ -45,14 +46,8 @@ void BSChordsPreviewCanvas::OnDraw(wxDC& dc)
 	//cout << "Virtual size: " << cx << "x" << cy << " px" << endl;
 
 	// get lines from song book control
-	int lines = m_sourceCtrl->GetNumberOfLines();
-	wxString text;
-	for (int i = 0; i < lines; i++)
-		{
-			if (text.size() > 0)
-				text.Append(wxT("\n"));
-			text.Append(m_sourceCtrl->GetLineText(i));
-		}
+	wxString text = m_sourceCtrl->GetText();
+
 	// parse and draw
 	bschords::TSetDCPainter painter(dc, m_screenPPI.GetWidth() / MM_PER_IN);
 	bschordpro::Parser p(&painter);
@@ -109,7 +104,7 @@ BEGIN_EVENT_TABLE(BSChordsPreview, wxWindow)
 END_EVENT_TABLE()
 
 
-BSChordsPreview::BSChordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl)
+BSChordsPreview::BSChordsPreview(wxWindow *parent, wxStyledTextCtrl *sourceCtrl)
 	: wxWindow(parent, wxID_ANY), m_canvas(NULL), m_zoomCtrl(NULL)
 {
 	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);

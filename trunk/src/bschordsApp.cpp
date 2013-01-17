@@ -20,6 +20,8 @@
 #include "bschordsApp.h"
 #include "bschordsMain.h"
 
+using namespace bschords;
+
 IMPLEMENT_APP(bschordsApp);
 
 bool bschordsApp::OnInit()

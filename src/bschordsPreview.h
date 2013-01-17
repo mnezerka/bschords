@@ -8,7 +8,8 @@
 class BSChordsPreviewCanvas : public wxScrolledWindow
 {
 	public:
-		BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl = NULL);
+		//BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl = NULL);
+		BSChordsPreviewCanvas(wxWindow *parent, wxStyledTextCtrl *sourceCtrl, wxStaticText *infoCtrl = NULL);
 		virtual ~BSChordsPreviewCanvas();
 		virtual void OnDraw(wxDC& dc);
 		void setZoom(float zoom);
@@ -16,7 +17,8 @@ class BSChordsPreviewCanvas : public wxScrolledWindow
 		wxCoord getDeviceY(int numMM);
 	protected:
 	private:
-		wxRichTextCtrl *m_sourceCtrl;
+		//wxRichTextCtrl *m_sourceCtrl;
+		wxStyledTextCtrl *m_sourceCtrl;
 		wxStaticText *m_infoCtrl;
 		//wxStyledTextCtrl *m_sourceCtrl;
 		float m_zoom;
@@ -26,7 +28,8 @@ class BSChordsPreviewCanvas : public wxScrolledWindow
 class BSChordsPreview : public wxWindow
 {
 	public:
-		BSChordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl);
+		//BSChordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl);
+		BSChordsPreview(wxWindow *parent, wxStyledTextCtrl *sourceCtrl);
 		virtual ~BSChordsPreview();
 		void setZoom(float zoom);
 

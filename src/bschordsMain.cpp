@@ -35,6 +35,8 @@
 #include "bschordsicon.xpm"
 #include "bschordsdcpainter.h"
 
+using namespace bschords;
+
 //helper functions
 enum wxbuildinfoformat {
 	short_f, long_f
@@ -108,6 +110,7 @@ enum
 	ID_MENU_FILE_EXPORT,
 	ID_FSBROWSER,
 	ID_TOOLBAR_CHORD,
+	ID_SONG_EDITOR,
 };
 
 BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
@@ -144,6 +147,7 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 
 
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
+	EVT_STC_MODIFIED(ID_SONG_EDITOR, bschordsFrame::OnSongEditorChange)
 	EVT_TOOL(ID_TOOLBAR_CHORD, bschordsFrame::OnToolChord)
 	/*EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged)*/
 	EVT_TREE_ITEM_ACTIVATED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged)
@@ -287,9 +291,30 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	SetSize(left, top, width, height, 0);
 
 	// create song content window
-	m_songContent = new wxRichTextCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
-	m_songContent->DiscardEdits();
-	m_songContent->SetFont(wxGetApp().m_editorFont);
+	//m_songContent = new wxRichTextCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
+	m_songContent = new wxStyledTextCtrl(this, ID_SONG_EDITOR);
+	m_songContent->SetMarginWidth (0, 50);
+    m_songContent->StyleSetForeground (wxSTC_STYLE_LINENUMBER, wxColour (75, 75, 75) );
+    m_songContent->StyleSetBackground (wxSTC_STYLE_LINENUMBER, wxColour (220, 220, 220));
+    m_songContent->SetMarginType (0, wxSTC_MARGIN_NUMBER);
+
+    m_songContent->SetWrapMode (wxSTC_WRAP_WORD);
+
+    //m_songContent->SetText(source);
+
+    m_songContent->StyleClearAll();
+    m_songContent->SetLexer(wxSTC_LEX_HTML);
+    m_songContent->StyleSetForeground (wxSTC_H_DOUBLESTRING,     wxColour(255,0,0));
+    m_songContent->StyleSetForeground (wxSTC_H_SINGLESTRING,     wxColour(255,0,0));
+    m_songContent->StyleSetForeground (wxSTC_H_ENTITY,           wxColour(255,0,0));
+    m_songContent->StyleSetForeground (wxSTC_H_TAG,              wxColour(0,150,0));
+    m_songContent->StyleSetForeground (wxSTC_H_TAGUNKNOWN,       wxColour(0,150,0));
+    m_songContent->StyleSetForeground (wxSTC_H_ATTRIBUTE,        wxColour(0,0,150));
+    m_songContent->StyleSetForeground (wxSTC_H_ATTRIBUTEUNKNOWN, wxColour(0,0,150));
+    m_songContent->StyleSetForeground (wxSTC_H_COMMENT,          wxColour(150,150,150));
+
+	//m_songContent->DiscardEdits();
+	//m_songContent->SetFont(wxGetApp().m_editorFont);
     m_auiMgr.AddPane(m_songContent, wxAuiPaneInfo().Name(_("song-editor")).Caption(wxT("Song Editor")).Center().CloseButton(false));
 
 	// create prview window
@@ -656,10 +681,10 @@ void bschordsFrame::OnSongInsert(wxCommandEvent& event)
 	switch (event.GetId())
 	{
 		case idMenuSongInsertChorus:
-			m_songContent->WriteText(_("{start_of_chorus}\n{end_of_chorus}"));
+			//TODO m_songContent->WriteText(_("{start_of_chorus}\n{end_of_chorus}"));
 			break;
 		case idMenuSongInsertTab:
-			m_songContent->WriteText(_("{start_of_tab}\n{end_of_tab}"));
+			//TODO m_songContent->WriteText(_("{start_of_tab}\n{end_of_tab}"));
 			break;
 	}
 }
@@ -688,9 +713,17 @@ void bschordsFrame::OnSongContentChange(wxCommandEvent& event)
 	m_preview->Update();
 }
 
+void bschordsFrame::OnSongEditorChange(wxStyledTextEvent& event)
+{
+	m_file.m_changed = true;
+	UpdateTitle();
+	m_preview->Refresh();
+	m_preview->Update();
+}
+
 void bschordsFrame::OnToolChord(wxCommandEvent& WXUNUSED(event))
 {
-	m_songContent->WriteText(_("[]"));
+	//TODO m_songContent->WriteText(_("[]"));
 }
 
 void bschordsFrame::OnChordProToken(wxCommandEvent& event)
@@ -700,12 +733,12 @@ void bschordsFrame::OnChordProToken(wxCommandEvent& event)
 
 	if (event.GetId() == ID_COMBO_CHORD && m_chordCtrl->GetSelection() != 0)
 	{
-		m_songContent->WriteText(m_chordCtrl->GetValue());
+		//TODO m_songContent->WriteText(m_chordCtrl->GetValue());
 		m_chordCtrl->SetSelection(0);
 	}
 	else if	(event.GetId() == ID_COMBO_CMD && m_cmdCtrl->GetSelection() != 0)
 	{
-		m_songContent->WriteText(m_cmdCtrl->GetValue());
+		//TODO m_songContent->WriteText(m_cmdCtrl->GetValue());
 		m_cmdCtrl->SetSelection(0);
 	}
 }
@@ -808,7 +841,7 @@ void bschordsFrame::OpenFile(const wxString filePath)
 		fileIn.Close(); // Close the opened file
 		m_songContent->Clear();
 		m_songContent->AppendText(lines);
-		m_songContent->DiscardEdits();
+		//TODO m_songContent->DiscardEdits();
 
 		m_file.m_path = fileName.GetFullPath();
 		m_file.m_changed = false;
@@ -819,6 +852,7 @@ void bschordsFrame::OpenFile(const wxString filePath)
 
 void bschordsFrame::CloseFile()
 {
+	/* TODO track modifications
 	if (m_songContent->IsModified())
 	{
 		if (wxMessageBox(_("Do you want to save changes?"), wxMessageBoxCaptionStr, wxYES_NO | wxCENTRE | wxICON_ASTERISK) == wxYES)
@@ -826,7 +860,7 @@ void bschordsFrame::CloseFile()
 			SaveFile();
 		}
 	}
-
+	*/
 	m_file.clear();
 	m_songContent->Clear();
 	UpdateTitle();
@@ -866,6 +900,7 @@ void bschordsFrame::SaveFile()
 	if (fileIsOk)
 	{
 		fileOut.Clear();
+		/* TODO uncomment
 		int lines = m_songContent->GetNumberOfLines();
 		for (int i = 0; i < lines; i++)
 			fileOut.AddLine(m_songContent->GetLineText(i));
@@ -877,6 +912,7 @@ void bschordsFrame::SaveFile()
 			fileOut.Write(m_file.m_type);
 		fileOut.Close(); // Close the opened file
 		m_songContent->DiscardEdits();
+		*/
 		UpdateTitle();
 	}
 
@@ -890,9 +926,9 @@ void bschordsFrame::UpdateTitle()
 	{
 		wxFileName tmp(m_file.m_path);
 
-		if (m_songContent->IsModified())
+		//TODO uncomment if (m_songContent->IsModified())
 		//if (m_fileChanged)
-			title += _("*");
+		//TODO uncomment 	title += _("*");
 		title += tmp.GetFullName();
 	}
 	else
@@ -1036,6 +1072,7 @@ void BSChordsPrintout::DrawPageOne()
 	GetDC()->SetBackground(*wxWHITE_BRUSH);
 
     // get lines from song book control
+	/*
 	int lines = m_frame->m_songContent->GetNumberOfLines();
 	wxString text;
 	for (int i = 0; i < lines; i++)
@@ -1044,7 +1081,7 @@ void BSChordsPrintout::DrawPageOne()
 			text.Append(wxT("\n"));
 		text.Append(m_frame->m_songContent->GetLineText(i));
 	}
-
+	*/
     int ppiScreenX, ppiScreenY;
     GetPPIScreen(&ppiScreenX, &ppiScreenY);
     int ppiPrinterX, ppiPrinterY;
@@ -1057,7 +1094,7 @@ void BSChordsPrintout::DrawPageOne()
 	bschordpro::Parser p(&y);
 
 	//wcout << text.wc_str() << endl;
-	p.parse(std::wstring(text.wc_str()));
+	//p.parse(std::wstring(text.wc_str()));
 }
 
 void BSChordsPrintout::DrawPageTwo()

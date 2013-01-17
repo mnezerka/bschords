@@ -95,7 +95,6 @@ namespace bschords
 			void OnAbout(wxCommandEvent& event);
 			void OnSongContentChange(wxCommandEvent& event);
 			void OnSongEditorChange(wxStyledTextEvent& event);
-			void OnToolChord(wxCommandEvent& WXUNUSED(event));
 			void OnFSBrowserSelChanged(wxTreeEvent& event);
 			void OnFSBrowserItemMenu(wxTreeEvent& event);
 			void OnFSBrowserItemAddToSongbook(wxCommandEvent& event);

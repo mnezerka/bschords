@@ -144,16 +144,12 @@ BEGIN_EVENT_TABLE(bschordsFrame, wxFrame)
 	EVT_MENU(idMenuSongInsertChorus, bschordsFrame::OnSongInsert)
 	EVT_MENU(idMenuSongInsertTab, bschordsFrame::OnSongInsert)
 	EVT_MENU(idMenuSongAddToSongbook, bschordsFrame::OnSongAddToSongbook)
-
-
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, bschordsFrame::OnSongContentChange)
 	EVT_STC_MODIFIED(ID_SONG_EDITOR, bschordsFrame::OnSongEditorChange)
-	EVT_TOOL(ID_TOOLBAR_CHORD, bschordsFrame::OnToolChord)
 	/*EVT_TREE_SEL_CHANGED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged)*/
 	EVT_TREE_ITEM_ACTIVATED(wxID_TREECTRL, bschordsFrame::OnFSBrowserSelChanged)
 	EVT_TREE_ITEM_MENU(wxID_TREECTRL, bschordsFrame::OnFSBrowserItemMenu)
 	EVT_MENU(idFSBrowserAddToSongbook, bschordsFrame::OnFSBrowserItemAddToSongbook)
-
 	EVT_AUI_PANE_CLOSE(bschordsFrame::OnPaneClose)
 	EVT_COMBOBOX(ID_COMBO_CHORD, bschordsFrame::OnChordProToken)
 	EVT_COMBOBOX(ID_COMBO_CMD, bschordsFrame::OnChordProToken)
@@ -293,12 +289,12 @@ bschordsFrame::bschordsFrame(wxFrame *frame, const wxString& title)
 	// create song content window
 	//m_songContent = new wxRichTextCtrl(this, -1, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxNO_BORDER|wxWANTS_CHARS);
 	m_songContent = new wxStyledTextCtrl(this, ID_SONG_EDITOR);
-	m_songContent->SetMarginWidth (0, 50);
-    m_songContent->StyleSetForeground (wxSTC_STYLE_LINENUMBER, wxColour (75, 75, 75) );
-    m_songContent->StyleSetBackground (wxSTC_STYLE_LINENUMBER, wxColour (220, 220, 220));
-    m_songContent->SetMarginType (0, wxSTC_MARGIN_NUMBER);
+	m_songContent->SetMarginWidth(0, 15);
+    m_songContent->StyleSetForeground(wxSTC_STYLE_LINENUMBER, wxColour (75, 75, 75) );
+    m_songContent->StyleSetBackground(wxSTC_STYLE_LINENUMBER, wxColour (220, 220, 220));
+    m_songContent->SetMarginType(0, wxSTC_MARGIN_NUMBER);
 
-    m_songContent->SetWrapMode (wxSTC_WRAP_WORD);
+    m_songContent->SetWrapMode (wxSTC_WRAP_NONE);
 
     //m_songContent->SetText(source);
 
@@ -681,10 +677,10 @@ void bschordsFrame::OnSongInsert(wxCommandEvent& event)
 	switch (event.GetId())
 	{
 		case idMenuSongInsertChorus:
-			//TODO m_songContent->WriteText(_("{start_of_chorus}\n{end_of_chorus}"));
+			m_songContent->AddText(_("{start_of_chorus}\n{end_of_chorus}"));
 			break;
 		case idMenuSongInsertTab:
-			//TODO m_songContent->WriteText(_("{start_of_tab}\n{end_of_tab}"));
+			m_songContent->AddText(_("{start_of_tab}\n{end_of_tab}"));
 			break;
 	}
 }
@@ -721,11 +717,6 @@ void bschordsFrame::OnSongEditorChange(wxStyledTextEvent& event)
 	m_preview->Update();
 }
 
-void bschordsFrame::OnToolChord(wxCommandEvent& WXUNUSED(event))
-{
-	//TODO m_songContent->WriteText(_("[]"));
-}
-
 void bschordsFrame::OnChordProToken(wxCommandEvent& event)
 {
 	if (!m_auiMgr.GetPane(m_songContent).IsShown())
@@ -733,12 +724,12 @@ void bschordsFrame::OnChordProToken(wxCommandEvent& event)
 
 	if (event.GetId() == ID_COMBO_CHORD && m_chordCtrl->GetSelection() != 0)
 	{
-		//TODO m_songContent->WriteText(m_chordCtrl->GetValue());
+		m_songContent->AddText(m_chordCtrl->GetValue());
 		m_chordCtrl->SetSelection(0);
 	}
 	else if	(event.GetId() == ID_COMBO_CMD && m_cmdCtrl->GetSelection() != 0)
 	{
-		//TODO m_songContent->WriteText(m_cmdCtrl->GetValue());
+		m_songContent->AddText(m_cmdCtrl->GetValue());
 		m_cmdCtrl->SetSelection(0);
 	}
 }
@@ -900,10 +891,7 @@ void bschordsFrame::SaveFile()
 	if (fileIsOk)
 	{
 		fileOut.Clear();
-		/* TODO uncomment
-		int lines = m_songContent->GetNumberOfLines();
-		for (int i = 0; i < lines; i++)
-			fileOut.AddLine(m_songContent->GetLineText(i));
+		fileOut.AddLine(m_songContent->GetText());
 
 		// preserve file eol encoding if available (remembered from file opening)
 		if (m_file.m_type != wxTextFileType_None)
@@ -911,8 +899,8 @@ void bschordsFrame::SaveFile()
 		else
 			fileOut.Write(m_file.m_type);
 		fileOut.Close(); // Close the opened file
-		m_songContent->DiscardEdits();
-		*/
+		//m_songContent->DiscardEdits();
+
 		UpdateTitle();
 	}
 

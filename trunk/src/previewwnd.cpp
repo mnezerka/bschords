@@ -4,19 +4,19 @@
 #include <wx/pen.h>
 #include <vector>
 
-#include "bschordsApp.h"
-#include "bschordsPreview.h"
+#include "app.h"
+#include "previewwnd.h"
 #include "bschordpro.h"
-#include "bschordsdcpainter.h"
-
+#include "dcpainter.h"
 
 // http://wiki.wxwidgets.org/Converting_everything_to_and_from_wxString#std::string_to_wxString
 
+using namespace bschords;
 
-// ------- BSChordsPreviewCanvas --------------------------------------------------------
+// ------- PreviewWndCanvas --------------------------------------------------------
 
-//BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
-BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxStyledTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
+//PreviewWndCanvas::PreviewWndCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
+PreviewWndCanvas::PreviewWndCanvas(wxWindow *parent, wxStyledTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
 	: wxScrolledWindow(parent), m_sourceCtrl(sourceCtrl), m_infoCtrl(infoCtrl), m_zoom(1)
 {
 	wxClientDC dc(this);
@@ -27,12 +27,12 @@ BSChordsPreviewCanvas::BSChordsPreviewCanvas(wxWindow *parent, wxStyledTextCtrl 
 	setZoom(m_zoom);
 }
 
-BSChordsPreviewCanvas::~BSChordsPreviewCanvas()
+PreviewWndCanvas::~PreviewWndCanvas()
 {
 	//dtor
 }
 
-void BSChordsPreviewCanvas::OnDraw(wxDC& dc)
+void PreviewWndCanvas::OnDraw(wxDC& dc)
 {
 	//std::wcout << L"OnDraw" << endl;
 
@@ -76,7 +76,7 @@ void BSChordsPreviewCanvas::OnDraw(wxDC& dc)
 	}
 }
 
-void BSChordsPreviewCanvas::setZoom(float zoom)
+void PreviewWndCanvas::setZoom(float zoom)
 {
 	m_zoom = zoom;
 
@@ -91,20 +91,20 @@ void BSChordsPreviewCanvas::setZoom(float zoom)
 }
 
 
-// ------- BSChordsPreview -------------------------------------------------------------
+// ------- PreviewWnd -------------------------------------------------------------
 
 enum
 {
 	ID_COMBO_ZOOM = 1000
 };
 
-BEGIN_EVENT_TABLE(BSChordsPreview, wxWindow)
-	EVT_SIZE(BSChordsPreview::OnSize)
-	EVT_COMBOBOX(ID_COMBO_ZOOM, BSChordsPreview::OnZoomChanged)
+BEGIN_EVENT_TABLE(PreviewWnd, wxWindow)
+	EVT_SIZE(PreviewWnd::OnSize)
+	EVT_COMBOBOX(ID_COMBO_ZOOM, PreviewWnd::OnZoomChanged)
 END_EVENT_TABLE()
 
 
-BSChordsPreview::BSChordsPreview(wxWindow *parent, wxStyledTextCtrl *sourceCtrl)
+PreviewWnd::PreviewWnd(wxWindow *parent, wxStyledTextCtrl *sourceCtrl)
 	: wxWindow(parent, wxID_ANY), m_canvas(NULL), m_zoomCtrl(NULL)
 {
 	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
@@ -147,19 +147,19 @@ BSChordsPreview::BSChordsPreview(wxWindow *parent, wxStyledTextCtrl *sourceCtrl)
 
 	sizer->Add(panel, 0, wxALL | wxEXPAND, 3);
 
-	m_canvas = new BSChordsPreviewCanvas(this, sourceCtrl, m_info);
+	m_canvas = new PreviewWndCanvas(this, sourceCtrl, m_info);
 	sizer->Add(m_canvas, 1, wxALL | wxEXPAND);
 
 	//Resize();
 	setZoom(1);
 }
 
-BSChordsPreview::~BSChordsPreview()
+PreviewWnd::~PreviewWnd()
 {
 	//dtor
 }
 
-void BSChordsPreview::setZoom(float zoom)
+void PreviewWnd::setZoom(float zoom)
 {
 	if (m_canvas)
 	{
@@ -170,13 +170,13 @@ void BSChordsPreview::setZoom(float zoom)
 	}
 }
 
-void BSChordsPreview::OnSize(wxSizeEvent& event)
+void PreviewWnd::OnSize(wxSizeEvent& event)
 {
 	if (GetAutoLayout())
 		Layout();
 }
 
-void BSChordsPreview::OnZoomChanged(wxCommandEvent& event)
+void PreviewWnd::OnZoomChanged(wxCommandEvent& event)
 {
 	int zoom = wxAtoi(m_zoomCtrl->GetValue());
 

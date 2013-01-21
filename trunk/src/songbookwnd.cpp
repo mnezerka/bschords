@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "bschordsApp.h"
+#include "app.h"
 #include "songbook.h"
 #include "songbookwnd.h"
 

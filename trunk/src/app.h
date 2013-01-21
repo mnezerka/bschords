@@ -31,7 +31,7 @@ http://en.wikipedia.org/wiki/Chord_%28software%29
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice
 
-class bschordsApp : public wxApp
+class App : public wxApp
 {
     public:
 		// current application configuration
@@ -39,6 +39,11 @@ class bschordsApp : public wxApp
 
 		// font for song editor
 		wxFont m_editorFont;
+
+		// colors for song editor
+		wxColor m_editorColorText;
+		wxColor m_editorColorChords;
+		wxColor m_editorColorCommands;
 
         // global print data, to remember settings during the session
 		wxPrintData *m_printData;
@@ -60,6 +65,6 @@ class bschordsApp : public wxApp
 
 };
 
-DECLARE_APP(bschordsApp);
+DECLARE_APP(App);
 
 #endif // BSCHORDSAPP_H

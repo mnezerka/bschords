@@ -17,14 +17,14 @@
 
 #include <iostream>
 
-#include "bschordsApp.h"
-#include "bschordsMain.h"
+#include "app.h"
+#include "mainwnd.h"
 
 using namespace bschords;
 
-IMPLEMENT_APP(bschordsApp);
+IMPLEMENT_APP(App);
 
-bool bschordsApp::OnInit()
+bool App::OnInit()
 {
 	// load and initialize configuration data
 	config = new wxConfig(_("BSChords"));
@@ -39,6 +39,14 @@ bool bschordsApp::OnInit()
 	if (config->Read(_("global/editor-font"), &editorFontNativeInfo))
 		m_editorFont.SetNativeFontInfo(editorFontNativeInfo);
 
+	// get editor colors
+	wxString c;
+	if (config->Read(_("global/editor-color-text"), &c))
+		m_editorColorText.Set(c);
+	if (config->Read(_("global/editor-color-chords"), &c))
+		m_editorColorChords.Set(c);
+	if (config->Read(_("global/editor-color-commands"), &c))
+		m_editorColorCommands.Set(c);
 
 	//-----------------------------------------------------------------
 	// initialize printing
@@ -51,18 +59,21 @@ bool bschordsApp::OnInit()
 
 	//-----------------------------------------------------------------
 	// open main window (frame)
-    bschordsFrame* frame = new bschordsFrame(0L, _("BSChords"));
+    MainWnd* frame = new MainWnd(0L, _("BSChords"));
 
     frame->Show();
 
     return true;
 }
 
-int bschordsApp::OnExit()
+int App::OnExit()
 {
 	m_styleSheet.SaveToConfig(config);
 
 	config->Write(_("global/editor-font"), m_editorFont.GetNativeFontInfoDesc());
+	config->Write(_("global/editor-color-text"), m_editorColorText.GetAsString(wxC2S_HTML_SYNTAX));
+	config->Write(_("global/editor-color-chords"), m_editorColorChords.GetAsString(wxC2S_HTML_SYNTAX));
+	config->Write(_("global/editor-color-commands"), m_editorColorCommands.GetAsString(wxC2S_HTML_SYNTAX));
 
 	//-----------------------------------------------------------------
     // save configuration data

@@ -18,7 +18,7 @@
 #include <wx/button.h>
 #include <wx/statline.h>
 
-#include "bschordsApp.h"
+#include "app.h"
 #include "songstylesheet.h"
 
 class SongStyleSheetDlg: public wxDialog

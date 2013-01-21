@@ -21,8 +21,8 @@
 #include <wx/dirctrl.h>
 #include <wx/stc/stc.h>
 
-#include "bschordsApp.h"
-#include "bschordsPreview.h"
+#include "app.h"
+#include "previewwnd.h"
 #include "songbookwnd.h"
 
 namespace bschords
@@ -37,16 +37,16 @@ namespace bschords
 		void clear() { m_changed = false; m_path.Empty(); m_type = wxTextFileType_None; };
 	};
 
-	class bschordsFrame: public wxFrame
+	class MainWnd: public wxFrame
 	{
 		public:
 			//wxRichTextCtrl *m_songContent;
 			wxStyledTextCtrl *m_songContent;
-			bschordsFrame(wxFrame *frame, const wxString& title);
-			~bschordsFrame();
+			MainWnd(wxFrame *frame, const wxString& title);
+			~MainWnd();
 
 		private:
-			BSChordsPreview *m_preview;
+			PreviewWnd *m_preview;
 			//wxStyledTextCtrl *m_songContent;
 			wxGenericDirCtrl* m_dirCtrl;
 			SongBookWnd *m_songBookWnd;
@@ -67,6 +67,7 @@ namespace bschords
 			void SaveFile();
 			void CloseFile();
 			void UpdateTitle();
+			void updateEditorStyles();
 
 			void OnFileNewSong(wxCommandEvent& event);
 			void OnFileOpenSong(wxCommandEvent& event);
@@ -95,6 +96,7 @@ namespace bschords
 			void OnAbout(wxCommandEvent& event);
 			void OnSongContentChange(wxCommandEvent& event);
 			void OnSongEditorChange(wxStyledTextEvent& event);
+			void OnSongEditorStyleNeeded(wxStyledTextEvent& event);
 			void OnFSBrowserSelChanged(wxTreeEvent& event);
 			void OnFSBrowserItemMenu(wxTreeEvent& event);
 			void OnFSBrowserItemAddToSongbook(wxCommandEvent& event);
@@ -113,7 +115,7 @@ namespace bschords
 	class BSChordsPrintout: public wxPrintout
 	{
 		public:
-			BSChordsPrintout(bschordsFrame* frame, const wxString &title = _("My printout"))
+			BSChordsPrintout(MainWnd* frame, const wxString &title = _("My printout"))
 			: wxPrintout(title) { m_frame = frame; }
 
 		virtual bool OnPrintPage(int page);
@@ -128,7 +130,7 @@ namespace bschords
 		bool WritePageHeader(wxPrintout *printout, wxDC *dc, const wxString& text, float mmToLogical);
 
 	private:
-		bschordsFrame *m_frame;
+		MainWnd *m_frame;
 	};
 }
 

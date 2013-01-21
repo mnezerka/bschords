@@ -1,5 +1,5 @@
-#include "bschordsApp.h"
-#include "bschordsdcpainter.h"
+#include "app.h"
+#include "dcpainter.h"
 
 using namespace bschords;
 

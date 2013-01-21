@@ -14,39 +14,43 @@
     #include <wx/wx.h>
 #endif
 
-#include "bschordsApp.h"
-
 #include <wx/button.h>
 #include <wx/statline.h>
 
-class bschordsPreferences: public wxDialog
+#include "app.h"
+
+class PreferencesDlg: public wxDialog
 {
     public:
-        bschordsPreferences(wxDialog *dlg, const wxString& title);
-        ~bschordsPreferences();
         wxFont m_fonts[BS_FONT_LAST];
         bool m_showTsetBlocks;
         bool m_showTsetMargins;
+		wxColor m_editorColorText;
+		wxColor m_editorColorChords;
+		wxColor m_editorColorCommands;
+
+        PreferencesDlg(wxDialog *dlg, const wxString& title);
+        ~PreferencesDlg();
+        bool TransferDataToWindow();
+        bool TransferDataFromWindow();
 
     protected:
-        enum
-        {
-            idBtnSelFont = 1000,
-        };
-
-/*        wxStaticText* m_staticText1;
-        wxStaticLine* m_staticline1;
-        wxStaticText *fontTestTitle;
-        wxStaticText *fontTextTitles[BS_FONT_LAST];
-        wxComboBox *fontSelType; */
 		wxStaticText *m_editorFontPreview;
+		wxBitmapButton *m_btnEditorColorText;
+		wxBitmapButton *m_btnEditorColorChords;
+		wxBitmapButton *m_btnEditorColorCommands;
+
     private:
         void OnClose(wxCloseEvent& event);
         void OnSelFont(wxCommandEvent &event);
+		void OnSelColor(wxCommandEvent &event);
 
         wxPanel* CreateGeneralPage(wxWindow* parent);
         wxPanel* CreateViewPage(wxWindow* parent);
         wxPanel* CreateEditorPage(wxWindow* parent);
+
+		wxBitmap createColorBitmap(const wxColour& c);
+		void updateColors();
 
         DECLARE_EVENT_TABLE()
 };

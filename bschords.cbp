@@ -168,63 +168,63 @@
 		<ResourceCompiler>
 			<Add directory="D:\wxwidgets\include" />
 		</ResourceCompiler>
+		<Unit filename="src\app.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src\app.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
 		<Unit filename="src\bschordpro.cpp" />
 		<Unit filename="src\bschordpro.h" />
-		<Unit filename="src\bschordsApp.cpp">
+		<Unit filename="src\dcpainter.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsApp.h">
+		<Unit filename="src\dcpainter.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsMain.cpp">
+		<Unit filename="src\mainwnd.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsMain.h">
+		<Unit filename="src\mainwnd.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreferences.cpp">
+		<Unit filename="src\preferencesdlg.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreferences.h">
+		<Unit filename="src\preferencesdlg.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreview.cpp">
+		<Unit filename="src\previewwnd.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src\bschordsPreview.h">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\bschordsdcpainter.cpp">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src\bschordsdcpainter.h">
+		<Unit filename="src\previewwnd.h">
 			<Option target="debug_win" />
 			<Option target="release_win" />
 			<Option target="debug_linux" />

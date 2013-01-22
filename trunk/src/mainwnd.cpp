@@ -92,7 +92,7 @@ enum
 	idMenuFileNewSongBook,
 	idMenuFileOpenSongBook,
 	idMenuFileSaveSongBook,
-	idMenuFileSaveAsSongBook,
+	idMenuFileSaveSongBookAs,
 	idMenuFileCloseSongBook,
 
 	idMenuViewFileBrowser,
@@ -129,7 +129,7 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(idMenuFileNewSongBook, MainWnd::OnFileNewSongBook)
 	EVT_MENU(idMenuFileOpenSongBook, MainWnd::OnFileOpenSongBook)
 	EVT_MENU(idMenuFileSaveSongBook, MainWnd::OnFileSaveSongBook)
-	EVT_MENU(idMenuFileSaveAsSongBook, MainWnd::OnFileSaveAsSongBook)
+	EVT_MENU(idMenuFileSaveSongBookAs, MainWnd::OnFileSaveSongBookAs)
 	EVT_MENU(idMenuFileCloseSongBook, MainWnd::OnFileCloseSongBook)
 	EVT_MENU(ID_MENU_FILE_EXPORT, MainWnd::OnFileExportSong)
 	EVT_MENU(wxID_PRINT, MainWnd::OnFilePrint)
@@ -181,7 +181,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	fileMenu->Append(idMenuFileNewSongBook, _("New songbook"), _("Create a new songbook file"));
 	fileMenu->Append(idMenuFileOpenSongBook, _("Open songbook ..."), _("Open a songbook file"));
 	fileMenu->Append(idMenuFileSaveSongBook, _("Save songbook"), _("Save the active songbook file"));
-	fileMenu->Append(idMenuFileSaveAsSongBook, _("Save songbook as..."), _("Save the active songbook under different a name"));
+	fileMenu->Append(idMenuFileSaveSongBookAs, _("Save songbook as..."), _("Save the active songbook under different a name"));
 	fileMenu->Append(idMenuFileCloseSongBook, _("Close songbook"), _("Close songbook file"));
 	fileMenu->AppendSeparator();
 
@@ -313,8 +313,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 
 	// create file browser window
 	m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
-	wxString path = wxGetApp().config->Read(_("/global/path"));
-	m_dirCtrl->SetPath(path);
+	m_dirCtrl->SetPath(wxGetApp().m_settings.m_rootPath);
 	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// create song book window
@@ -427,54 +426,50 @@ void MainWnd::OnFileCloseSong(wxCommandEvent& event)
 
 void MainWnd::OnFileNewSongBook(wxCommandEvent& event)
 {
-	/*
-	CloseFile();
-	*/
+	wxGetApp().m_songBook.empty();
+
 }
 
 void MainWnd::OnFileOpenSongBook(wxCommandEvent& event)
 {
-	/*
-	wxFileName fileName(m_dirCtrl->GetPath());
-	wxString dir(fileName.GetPath());
-
-	wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.txt"), wxOPEN, wxDefaultPosition);
-
+	wxFileName fileName(wxGetApp().m_settings.m_rootPath);
+	wxString dir(fileName.GetFullPath());
+	wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.xml"), wxOPEN, wxDefaultPosition);
 	if (openFileDialog->ShowModal() == wxID_OK )
 	{
-		OpenFile(openFileDialog->GetPath());
+		OpenSongBook(openFileDialog->GetPath());
+		m_songBookPath = openFileDialog->GetPath();
 	}
-	*/
 }
 
 void MainWnd::OnFileSaveSongBook(wxCommandEvent& event)
 {
-	SaveFile();
+	SaveSongBook();
 }
 
-void MainWnd::OnFileSaveAsSongBook(wxCommandEvent& event)
+void MainWnd::OnFileSaveSongBookAs(wxCommandEvent& event)
 {
 	wxString dir;
 	wxString name;
 
-	if (m_file.m_path.Length() > 0)
+	if (m_songBookPath.Length() > 0)
 	{
-		wxFileName fileName(m_file.m_path);
+		wxFileName fileName(m_songBookPath);
 		dir = fileName.GetPath();
 		name = fileName.GetFullName();
 	}
 	else
 	{
-		wxFileName fileName(m_dirCtrl->GetPath());
+		wxFileName fileName(wxGetApp().m_settings.m_rootPath);
 		dir = fileName.GetPath();
-		name = _("untitled.txt");
+		name = _("untitled.xml");
 	}
 
-	wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.txt"), wxSAVE, wxDefaultPosition);
+	wxFileDialog* saveDlg = new wxFileDialog(this, _("Save song book as"), dir, name, _("*.xml"), wxSAVE, wxDefaultPosition);
 
 	if (saveDlg->ShowModal() == wxID_OK )
 	{
-		m_file.m_path = saveDlg->GetPath();
+		m_songBookPath = saveDlg->GetPath();
 		SaveFile();
 	}
 }
@@ -569,7 +564,8 @@ void MainWnd::OnQuit(wxCommandEvent &event)
 	wxGetApp().config->Write(_("/global/left"), x);
 	wxGetApp().config->Write(_("/global/top"), y);
 
-	wxGetApp().config->Write(_("/global/path"), m_dirCtrl->GetPath());
+	//wxGetApp().m_settins->config->Write(_("/global/path"), m_dirCtrl->GetPath());
+	//wxGetApp().config->Write(_("/global/path"), m_dirCtrl->GetPath());
 
 	Destroy();
 }
@@ -588,7 +584,7 @@ void MainWnd::OnPreferences(wxCommandEvent &event)
 		m_preview->Refresh();
 		m_preview->Update();
 
-		m_songContent->SetFont(wxGetApp().m_editorFont);
+		m_songContent->SetFont(wxGetApp().m_settings.m_editorFont);
 
 		updateEditorStyles();
     }
@@ -880,8 +876,25 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 	{
 		if (!data->m_isDir)
 		{
-			std::cout << "  adding file: " << data->m_path.wc_str() << std::endl;
-			wxGetApp().m_songBook.add(data->m_path);
+			wxFileName fileName(data->m_path);
+			fileName.MakeRelativeTo(wxGetApp().m_settings.m_rootPath);
+			//std::wcout << L"  relative file path is : " << fn.GetFullPath().wc_str() << std::endl;
+
+			m_songBookWnd->addSongFile(data->m_path);
+
+			wxXmlNode *rootNode = wxGetApp().m_songBook.getRootNode();
+			wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
+			wxXmlProperty *songPathProp = new wxXmlProperty(wxT("path"), fileName.GetFullPath());
+			songNode->AddProperty(songPathProp);
+			if (wxXmlNode *child = rootNode->GetChildren())
+			{
+				// look for last child
+				while (child->GetNext())
+					child = child->GetNext();
+				child->SetNext(songNode);
+			}
+			else
+				rootNode->AddChild(songNode);
 			m_songBookWnd->UpdateContent();
 		}
 	}
@@ -1016,6 +1029,60 @@ void MainWnd::SaveFile()
 	}
 }
 
+void MainWnd::SaveSongBook()
+{
+	std::cout << "SaveSongBook called" << std::endl;
+
+	if (m_songBookPath.Length() == 0)
+	{
+		wxFileName fileName(m_dirCtrl->GetPath());
+		wxString dir = fileName.GetPath();
+		wxString name = _("untitled.xml");
+		wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.xml"), wxSAVE, wxDefaultPosition);
+
+		if (saveDlg->ShowModal() == wxID_OK )
+			m_songBookPath = saveDlg->GetPath();
+		else
+			return;
+	}
+
+	wxFileName fileName(m_songBookPath);
+
+	if (fileName.IsDir())
+	{
+		wxMessageBox(_("Cannot save song to directory"), wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR);
+		return;
+	}
+
+	std::wcout << L"saving song book to file " << fileName.GetFullPath().wc_str() << std::endl;
+
+	wxGetApp().m_songBook.saveToFile(fileName.GetFullPath(), wxGetApp().m_settings.m_rootPath);
+}
+
+void MainWnd::OpenSongBook(const wxString filePath)
+{
+	// TODO Check if old songbook needs to be saved
+
+	wxFileName fileName(filePath);
+
+	if (fileName.IsDir())
+	{
+		wxMessageBox(_("Cannot open directory"), wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR);
+		return;
+	}
+
+	if (!fileName.FileExists())
+	{
+		wxMessageBox(_("File doesn't exist"), wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR);
+		return;
+	}
+
+	std::wcout << L"loading songbook file " << fileName.GetFullPath().wc_str() << std::endl;
+
+	wxGetApp().m_songBook.loadFromFile(fileName.GetFullPath());
+	m_songBookWnd->UpdateContent();
+}
+
 void MainWnd::UpdateTitle()
 {
 	wxString title;
@@ -1071,12 +1138,12 @@ void MainWnd::updateEditorStyles()
 	if (!m_songContent)
 		return;
 
-    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_TEXT,	wxGetApp().m_editorColorText);
-	m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CHORD,	wxGetApp().m_editorColorChords);
-    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CMD,	wxGetApp().m_editorColorCommands);
-    m_songContent->StyleSetFont(wxSTC_CHORDPRO_TEXT, wxGetApp().m_editorFont);
-    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CHORD, wxGetApp().m_editorFont);
-    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CMD, wxGetApp().m_editorFont);
+    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_TEXT,	wxGetApp().m_settings.m_editorColorText);
+	m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CHORD,	wxGetApp().m_settings.m_editorColorChords);
+    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CMD,	wxGetApp().m_settings.m_editorColorCommands);
+    m_songContent->StyleSetFont(wxSTC_CHORDPRO_TEXT, wxGetApp().m_settings.m_editorFont);
+    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CHORD, wxGetApp().m_settings.m_editorFont);
+    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CMD, wxGetApp().m_settings.m_editorFont);
 }
 
 // ----------------------------------------------------------------------------

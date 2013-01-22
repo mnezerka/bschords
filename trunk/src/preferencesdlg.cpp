@@ -31,7 +31,8 @@ enum
 	idBtnSelFont = 1000,
 	idBtnSelColorText,
 	idBtnSelColorChords,
-	idBtnSelColorCommands
+	idBtnSelColorCommands,
+	idBtnSelRootPath,
 };
 
 
@@ -41,6 +42,7 @@ BEGIN_EVENT_TABLE(PreferencesDlg, wxDialog)
 	EVT_BUTTON(idBtnSelColorText, PreferencesDlg::OnSelColor)
 	EVT_BUTTON(idBtnSelColorChords, PreferencesDlg::OnSelColor)
 	EVT_BUTTON(idBtnSelColorCommands, PreferencesDlg::OnSelColor)
+	EVT_BUTTON(idBtnSelRootPath, PreferencesDlg::OnSelRootPath)
 END_EVENT_TABLE()
 
 PreferencesDlg::PreferencesDlg(wxDialog *dlg, const wxString &title)
@@ -81,27 +83,24 @@ PreferencesDlg::~PreferencesDlg() { }
 wxPanel* PreferencesDlg::CreateGeneralPage(wxWindow* parent)
 {
     wxPanel* panel = new wxPanel(parent, wxID_ANY);
-
-	/*
     wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
-    wxBoxSizer *item0 = new wxBoxSizer( wxVERTICAL );
 
-	// --------------------------------------------------------------------------------------
-	// margins panel
-	wxStaticBox* marginsStaticBox = new wxStaticBox(panel, wxID_ANY, _("XXX"));
-    wxBoxSizer* marginsStaticBoxSizer = new wxStaticBoxSizer(marginsStaticBox, wxVERTICAL );
-    item0->Add(marginsStaticBoxSizer, 0, wxGROW|wxALL, 5);
+	// root path
+	wxStaticBox* rootPathStaticBox = new wxStaticBox(panel, wxID_ANY, _("Root path"));
+    wxBoxSizer* rootPathStaticBoxSizer = new wxStaticBoxSizer(rootPathStaticBox, wxVERTICAL );
+    topSizer->Add(rootPathStaticBoxSizer, 0, wxGROW|wxALL, 0);
 
-	marginsSizer->AddSpacer(1);
-    marginsStaticBoxSizer->Add(marginsSizer, 0, wxALL, 3);
+	rootPathStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, wxT("Song repository root path:")), 0, wxALL | wxEXPAND, 3);
 
-	// global stuff
-    topSizer->Add( item0, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );
-    topSizer->AddSpacer(5);
+    wxBoxSizer *rootPathSizer = new wxBoxSizer( wxHORIZONTAL );
+    m_rootPathCtrl = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&(wxGetApp().m_settings.m_rootPath)));
+	rootPathSizer->Add(m_rootPathCtrl, 1, wxALL | wxEXPAND | wxCENTER);
+	rootPathSizer->AddSpacer(5);
+	rootPathSizer->Add(new wxButton(panel, idBtnSelRootPath, wxT("..."), wxDefaultPosition, wxSize(30, wxDefaultCoord)), 0, wxALL | wxEXPAND | wxCENTER);
+	rootPathStaticBoxSizer->Add(rootPathSizer, 1, wxALL | wxEXPAND, 3);
 
     panel->SetSizer(topSizer);
     topSizer->Fit(panel);
-	*/
 
     return panel;
 }
@@ -147,7 +146,7 @@ wxPanel* PreferencesDlg::CreateEditorPage(wxWindow* parent)
 
     fontStaticBoxSizer->Add(new wxButton(panel, idBtnSelFont, _("Font...")));
 	m_editorFontPreview = new wxStaticText(panel, wxID_ANY, wxT("This is editor font"), wxDefaultPosition, wxSize(300, wxDefaultCoord));
-	m_editorFontPreview->SetFont(wxGetApp().m_editorFont);
+	m_editorFontPreview->SetFont(wxGetApp().m_settings.m_editorFont);
     m_editorFontPreview->SetBackgroundColour(wxColour(255, 255, 255));
 	m_editorFontPreview->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 	fontStaticBoxSizer->Add(m_editorFontPreview, 1, wxALL | wxEXPAND, 5);
@@ -211,13 +210,13 @@ void PreferencesDlg::OnSelFont(wxCommandEvent &event)
 {
 	// fonts stuff
 	wxFontData fontData;
-	fontData.SetInitialFont(wxGetApp().m_editorFont);
+	fontData.SetInitialFont(wxGetApp().m_settings.m_editorFont);
 	wxFontDialog dialog(this, &fontData);
 	if (dialog.ShowModal() == wxID_OK)
 	{
 		wxFontData retData = dialog.GetFontData();
-		wxGetApp().m_editorFont = retData.GetChosenFont();
-		m_editorFontPreview->SetFont(wxGetApp().m_editorFont);
+		wxGetApp().m_settings.m_editorFont = retData.GetChosenFont();
+		m_editorFontPreview->SetFont(wxGetApp().m_settings.m_editorFont);
 	}
 }
 
@@ -264,6 +263,14 @@ void PreferencesDlg::OnSelColor(wxCommandEvent& event)
 	updateColors();
 }
 
+void PreferencesDlg::OnSelRootPath(wxCommandEvent& event)
+{
+	wxDirDialog dlg(this, _("Choose root song directory"), m_rootPathCtrl->GetValue());
+	if (dlg.ShowModal() != wxID_OK)
+		return;
+	m_rootPathCtrl->SetValue(dlg.GetPath());
+}
+
 // updates colors of appropriate dialog buttons
 void PreferencesDlg::updateColors()
 {
@@ -274,9 +281,9 @@ void PreferencesDlg::updateColors()
 
 bool PreferencesDlg::TransferDataToWindow()
 {
-	m_editorColorText = wxGetApp().m_editorColorText;
-	m_editorColorChords = wxGetApp().m_editorColorChords;
-	m_editorColorCommands = wxGetApp().m_editorColorCommands;
+	m_editorColorText = wxGetApp().m_settings.m_editorColorText;
+	m_editorColorChords = wxGetApp().m_settings.m_editorColorChords;
+	m_editorColorCommands = wxGetApp().m_settings.m_editorColorCommands;
 
     bool result = wxDialog::TransferDataToWindow();
 
@@ -289,9 +296,9 @@ bool PreferencesDlg::TransferDataFromWindow()
 {
 	bool result = wxDialog::TransferDataFromWindow();
 
-	wxGetApp().m_editorColorText = m_editorColorText;
-	wxGetApp().m_editorColorChords = m_editorColorChords;
-	wxGetApp().m_editorColorCommands = m_editorColorCommands;
+	wxGetApp().m_settings.m_editorColorText = m_editorColorText;
+	wxGetApp().m_settings.m_editorColorChords = m_editorColorChords;
+	wxGetApp().m_settings.m_editorColorCommands = m_editorColorCommands;
 
 	return result;
 }

@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <wx/filename.h>
+
 #include "app.h"
 #include "songbook.h"
 #include "songbookwnd.h"
@@ -17,7 +19,6 @@ enum
 };
 
 // --------------- SongBookWnd -------------------------------------------------
-
 
 BEGIN_EVENT_TABLE(SongBookTreeCtrl, wxTreeCtrl)
 	EVT_TREE_BEGIN_DRAG(idSongBookTreeCtrlId, SongBookTreeCtrl::OnBeginDrag)
@@ -211,9 +212,6 @@ SongBookWnd::SongBookWnd(wxWindow *parent)
 	//m_listBox = new wxListBox(this, wxID_ANY);
 	m_treeCtrl = new SongBookTreeCtrl(this, idSongBookTreeCtrlId, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxTR_EDIT_LABELS | wxSUNKEN_BORDER | wxTR_HIDE_ROOT);
 	wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Root item"));
-	m_treeCtrl->AppendItem(rootId, _("This is item 1"), 0);
-	m_treeCtrl->AppendItem(rootId, _("This is item 2"), 0);
-	m_treeCtrl->AppendItem(rootId, _("This is item 3"), 0);
 	sizer->Add(m_treeCtrl, 1, wxALL | wxEXPAND, 1);
 }
 
@@ -230,20 +228,46 @@ void SongBookWnd::OnSize(wxSizeEvent& event)
 
 void SongBookWnd::UpdateContent()
 {
-	//m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), _("This is new item"));
-	m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), _("This is item"));
-	/*
-	m_listBox->Clear();
+	m_treeCtrl->DeleteAllItems();
+	wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Root item"));
 
+	wxXmlNode *nodeRoot = wxGetApp().m_songBook.getRootNode();
+	if (!nodeRoot)
+		return;
 
+	// if root node is songbook
+	if (nodeRoot->GetName() != wxT("songbook"))
+		return;
 
-	SongBook &sb = wxGetApp().m_songBook;
-
-	for (size_t i = 0; i < sb.m_songs.size(); i++)
+	wxXmlNode *nodeSong = nodeRoot->GetChildren();
+	while (nodeSong)
 	{
-		Song *s = sb.m_songs[i];
+		if (nodeSong->GetName() == wxT("song"))
+		{
+			wxFileName fileName = nodeSong->GetPropVal(wxT("path"), wxEmptyString);
+			m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), fileName.GetName(), 0, 0, new wxTreeItemData());
+		}
+		nodeSong = nodeSong->GetNext();
+	}
 
-		m_listBox->Append(s->m_name);
+
+	/*
+	std::cout << "updating tree, items: " << wxGetApp().m_songBook.m_songs.size() << std::endl;
+	for (size_t i = 0; i < wxGetApp().m_songBook.m_songs.size(); i++)
+	{
+		wxFileName fileName = wxGetApp().m_songBook.m_songs[i]->m_filePath;
+		m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), fileName.GetName(), 0, 0, new wxTreeItemData());
 	}
 	*/
+}
+
+void SongBookWnd::addSongFile(wxString filePath)
+{
+	std::cout << "song book wnd - addSongFile" << std::endl;
+	Song *song = new Song();
+	song->m_filePath = filePath;
+	wxGetApp().m_songBook.add(song);
+	//m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), filePath, 0, 0, new wxTreeItemData(song));
+
+
 }

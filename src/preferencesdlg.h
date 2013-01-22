@@ -44,10 +44,12 @@ class PreferencesDlg: public wxDialog
         void OnClose(wxCloseEvent& event);
         void OnSelFont(wxCommandEvent &event);
 		void OnSelColor(wxCommandEvent &event);
+		void OnSelRootPath(wxCommandEvent &event);
 
         wxPanel* CreateGeneralPage(wxWindow* parent);
         wxPanel* CreateViewPage(wxWindow* parent);
         wxPanel* CreateEditorPage(wxWindow* parent);
+        wxTextCtrl *m_rootPathCtrl;
 
 		wxBitmap createColorBitmap(const wxColour& c);
 		void updateColors();

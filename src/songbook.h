@@ -6,6 +6,7 @@
 #endif
 
 #include <vector>
+#include <wx/xml/xml.h>
 
 namespace bschords
 {
@@ -21,16 +22,21 @@ namespace bschords
 	class SongBook
 	{
 		public:
-			wxString m_name;
-			std::vector<Song*> m_songs;
+			//wxString m_name;
+			//std::vector<Song*> m_songs;
+
 
 			SongBook();
 			virtual ~SongBook();
 			void empty();
-			void loadFromFile();
-			void saveToFile();
-			void add(wxString path);
+			void loadFromFile(wxString rootPath);
+			void saveToFile(wxString path, wxString rootPath);
+			void add(Song *song);
+			wxXmlNode *getRootNode() { return m_songs.GetRoot(); };
 		protected:
+
+		private:
+			wxXmlDocument m_songs;
 	};
 }
 

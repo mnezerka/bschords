@@ -61,10 +61,13 @@ namespace bschords
 			bool m_isInEditMode;
 
 			SongFile m_file;
+			wxString m_songBookPath;
 
 			void SetEditMode(bool newEditMode);
 			void OpenFile(const wxString filePath);
 			void SaveFile();
+			void OpenSongBook(const wxString filePath);
+			void SaveSongBook();
 			void CloseFile();
 			void UpdateTitle();
 			void updateEditorStyles();
@@ -78,7 +81,7 @@ namespace bschords
 			void OnFileNewSongBook(wxCommandEvent& event);
 			void OnFileOpenSongBook(wxCommandEvent& event);
 			void OnFileSaveSongBook(wxCommandEvent& event);
-			void OnFileSaveAsSongBook(wxCommandEvent& event);
+			void OnFileSaveSongBookAs(wxCommandEvent& event);
 			void OnFileCloseSongBook(wxCommandEvent& event);
 			void OnFilePrint(wxCommandEvent& event);
 			void OnFilePrintPreview(wxCommandEvent& event);

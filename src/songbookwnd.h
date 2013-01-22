@@ -117,13 +117,14 @@ namespace bschords
 		public:
 			SongBookWnd(wxWindow *parent);
 			virtual ~SongBookWnd();
+			void addSongFile(wxString filePath);
 			void UpdateContent();
 
 		private:
 			//wxListBox *m_listBox;
 			SongBookTreeCtrl *m_treeCtrl;
 			void OnSize(wxSizeEvent& event);
-			SongBook m_songBook;
+			//SongBook m_songBook;
 
 		DECLARE_EVENT_TABLE()
 	};

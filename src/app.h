@@ -30,12 +30,12 @@ http://en.wikipedia.org/wiki/Chord_%28software%29
 
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice
-
-class App : public wxApp
+namespace bschords
 {
-    public:
-		// current application configuration
-		wxConfig *config;
+	struct AppSettings
+	{
+		// path of the songs repository root
+		wxString m_rootPath;
 
 		// font for song editor
 		wxFont m_editorFont;
@@ -45,26 +45,41 @@ class App : public wxApp
 		wxColor m_editorColorChords;
 		wxColor m_editorColorCommands;
 
-        // global print data, to remember settings during the session
-		wxPrintData *m_printData;
+		AppSettings();
+		void LoadFromConfig(wxConfig *config);
+		void SaveToConfig(wxConfig *config);
+	};
 
-		// global page setup data
-		wxPageSetupDialogData* m_pageSetupData;
+	class App : public wxApp
+	{
+		public:
+			// current application configuration
+			wxConfig *config;
 
-		// current stylesheet
-		SongStyleSheet m_styleSheet;
+			// global print data, to remember settings during the session
+			wxPrintData *m_printData;
 
-		// current songbook
-		bschords::SongBook m_songBook;
+			// global page setup data
+			wxPageSetupDialogData* m_pageSetupData;
 
-        virtual bool OnInit();
-        virtual int OnExit();
+			// current stylesheet
+			SongStyleSheet m_styleSheet;
 
-	private:
-		//std::list<SongStylesheet> m_styleSheets;
+			// application settings
+			AppSettings m_settings;
 
-};
+			// current songbook
+			bschords::SongBook m_songBook;
 
-DECLARE_APP(App);
+			virtual bool OnInit();
+			virtual int OnExit();
+
+		private:
+			//std::list<SongStylesheet> m_styleSheets;
+
+	};
+}
+
+DECLARE_APP(bschords::App);
 
 #endif // BSCHORDSAPP_H

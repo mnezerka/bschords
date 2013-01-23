@@ -5,11 +5,21 @@
     #include <wx/wx.h>
 #endif
 
+#include <wx/xml/xml.h>
 #include <wx/treectrl.h>
 #include "songbook.h"
 
 namespace bschords
 {
+	class SongTreeItemData : public wxTreeItemData
+	{
+		public:
+			SongTreeItemData(wxXmlNode *xmlNode) : m_xmlNode(xmlNode) { };
+			wxXmlNode *getXmlNode() { return m_xmlNode; }
+		private:
+			wxXmlNode *m_xmlNode;
+	};
+
 	class SongBookTreeCtrl : public wxTreeCtrl
 	{
 		public:
@@ -28,6 +38,8 @@ namespace bschords
 			void OnEndDrag(wxTreeEvent& event);
 			void OnBeginDrag(wxTreeEvent& event);
 			void OnItemMenu(wxTreeEvent& event);
+			void OnBeginLabelEdit(wxTreeEvent& event);
+			void OnEndLabelEdit(wxTreeEvent& event);
 
 			void CreateImageList(int size = 16);
 			void ShowMenu(wxTreeItemId id, const wxPoint& pt);
@@ -111,20 +123,19 @@ namespace bschords
 		DECLARE_EVENT_TABLE()
 	};
 
-
 	class SongBookWnd : public wxWindow
 	{
 		public:
 			SongBookWnd(wxWindow *parent);
 			virtual ~SongBookWnd();
+			void OnNewSection(wxCommandEvent &event);
 			void addSongFile(wxString filePath);
 			void UpdateContent();
 
 		private:
-			//wxListBox *m_listBox;
 			SongBookTreeCtrl *m_treeCtrl;
 			void OnSize(wxSizeEvent& event);
-			//SongBook m_songBook;
+			void CreateTreeLevelContent(wxTreeItemId treeParentId, wxXmlNode *nodeParent);
 
 		DECLARE_EVENT_TABLE()
 	};

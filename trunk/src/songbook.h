@@ -25,18 +25,23 @@ namespace bschords
 			//wxString m_name;
 			//std::vector<Song*> m_songs;
 
-
 			SongBook();
 			virtual ~SongBook();
 			void empty();
 			void loadFromFile(wxString rootPath);
 			void saveToFile(wxString path, wxString rootPath);
-			void add(Song *song);
+			void addSong(wxString path, wxXmlNode *parent = NULL);
+			void addSection(wxXmlNode *parent = NULL);
 			wxXmlNode *getRootNode() { return m_songs.GetRoot(); };
+
+			static void setNodeProperty(wxXmlNode *node, wxString name, wxString value);
+			static bool moveNode(wxXmlNode *node, wxXmlNode *newParent);
 		protected:
 
 		private:
 			wxXmlDocument m_songs;
+
+			void addNode(wxXmlNode *newNode, wxXmlNode *parent = NULL);
 	};
 }
 

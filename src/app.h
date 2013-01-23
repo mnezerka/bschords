@@ -25,11 +25,12 @@ ChordPro links:
 http://home.online.no/~oeborger/skript/choprodirectives.html
 http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
-
 */
 
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice
+// TODO: check file open save identity (no new lines are added)
+
 namespace bschords
 {
 	struct AppSettings

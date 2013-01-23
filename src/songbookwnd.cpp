@@ -27,10 +27,12 @@ BEGIN_EVENT_TABLE(SongBookTreeCtrl, wxTreeCtrl)
     // on a tree control, because it includes the point of the click or item,
     // meaning that no additional placement calculations are required.
     EVT_TREE_ITEM_MENU(idSongBookTreeCtrlId, SongBookTreeCtrl::OnItemMenu)
-
+	EVT_TREE_BEGIN_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnBeginLabelEdit)
+    EVT_TREE_END_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnEndLabelEdit)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(SongBookTreeCtrl, wxTreeCtrl)
+
 
 SongBookTreeCtrl::SongBookTreeCtrl(wxWindow *parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
 	: wxTreeCtrl(parent, id, pos, size, style)
@@ -77,33 +79,28 @@ void SongBookTreeCtrl::OnEndDrag(wxTreeEvent& event)
     m_draggedItem = (wxTreeItemId)0l;
 
     // where to copy the item?
-    if ( itemDst.IsOk() && !ItemHasChildren(itemDst) )
-    {
-        // copy to the parent then
-        itemDst = GetItemParent(itemDst);
-    }
+    if (!itemDst.IsOk() || !itemSrc.IsOk())
+		return;
 
-    if ( !itemDst.IsOk() )
-    {
-        wxLogMessage(wxT("OnEndDrag: can't drop here."));
+	// items must be different (you cannot move item to itself)
+	if (itemDst == itemSrc)
+		return;
 
-        return;
-    }
+	// get nodes data
+	SongTreeItemData* dataSrc = (SongTreeItemData*)GetItemData(itemSrc);
+	SongTreeItemData* dataDst = (SongTreeItemData*)GetItemData(itemDst);
+	if (!dataSrc || !dataDst)
+		return;
 
-    wxString text = GetItemText(itemSrc);
+	// appropriate node of dest item and check if it could act as drag destination
+	if (!(dataDst->getXmlNode()->GetName() == wxT("songbook") || dataDst->getXmlNode()->GetName() == wxT("section")))
+		return;
 
-    /*wxLogMessage(wxT("OnEndDrag: '%s' copied to '%s'."),
-                 text.c_str(), GetItemText(itemDst).c_str());
-	*/
-    // just do append here - we could also insert it just before/after the item
-    // on which it was dropped, but this requires slightly more work... we also
-    // completely ignore the client data and icon of the old item but could
-    // copy them as well.
-    //
-    // Finally, we only copy one item here but we might copy the entire tree if
-    // we were dragging a folder.
-    //int image = wxGetApp().ShowImages() ? TreeCtrlIcon_File : -1;
-    AppendItem(itemDst, text, 0);
+	// cannot move songbook (it must stay root)
+	if (dataSrc->getXmlNode()->GetName() == wxT("songbook"))
+		return;
+
+	SongBook::moveNode(dataSrc->getXmlNode(), dataDst->getXmlNode());
 }
 
 void SongBookTreeCtrl::OnItemMenu(wxTreeEvent& event)
@@ -119,6 +116,62 @@ void SongBookTreeCtrl::OnItemMenu(wxTreeEvent& event)
 
     ShowMenu(itemId, clientpt);
     event.Skip();
+}
+
+void SongBookTreeCtrl::OnBeginLabelEdit(wxTreeEvent& event)
+{
+	/*
+    // for testing, prevent this item's label editing
+    wxTreeItemId itemId = event.GetItem();
+
+    if ( IsTestItem(itemId) )
+    {
+        wxMessageBox(wxT("You can't edit this item."));
+
+        event.Veto();
+    }
+    else if ( itemId == GetRootItem() )
+    {
+        // test that it is possible to change the text of the item being edited
+        SetItemText(itemId, _T("Editing root item"));
+    }
+    */
+}
+
+void SongBookTreeCtrl::OnEndLabelEdit(wxTreeEvent& event)
+{
+	std::cout << "end of item label edit" << std::endl;
+
+    // don't allow anything except letters in the labels
+    if (!event.GetLabel().IsWord())
+    {
+        wxMessageBox(wxT("The new label should be a single word."));
+        event.Veto();
+    }
+
+	wxTreeItemId itemId = event.GetItem();
+	if (!itemId.IsOk())
+	{
+		std::cout << "item is not ok" << std::endl;
+		event.Veto();
+		return;
+	}
+
+	SongTreeItemData* data = (SongTreeItemData*)GetItemData(itemId);
+	if (data)
+	{
+		std::cout << "data are present" << std::endl;
+		wxXmlNode *node = data->getXmlNode();
+		if (node->GetName() == wxT("section") || node->GetName() == wxT("songbook"))
+		{
+			std::cout << "setting node property name: " << event.GetLabel() << std::endl;
+			SongBook::setNodeProperty(node, wxT("name"), event.GetLabel());
+		}
+		else
+		{
+			event.Veto();
+		}
+	}
 }
 
 void SongBookTreeCtrl::CreateImageList(int size)
@@ -190,11 +243,13 @@ void SongBookTreeCtrl::ShowMenu(wxTreeItemId id, const wxPoint& pt)
 
 enum
 {
-	ID_SONG_LIST = 1000
+	ID_SONG_LIST = 1000,
+	ID_BTN_NEW_SECTION
 };
 
 BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
 	EVT_SIZE(SongBookWnd::OnSize)
+	EVT_BUTTON(ID_BTN_NEW_SECTION, SongBookWnd::OnNewSection)
 END_EVENT_TABLE()
 
 SongBookWnd::SongBookWnd(wxWindow *parent)
@@ -206,13 +261,19 @@ SongBookWnd::SongBookWnd(wxWindow *parent)
 	// create control bar
 	wxPanel *panel = new wxPanel(this);
 	new wxStaticText(panel, wxID_ANY, _("This is list of songs"));
-
 	sizer->Add(panel, 0, wxALL | wxEXPAND, 1);
 
 	//m_listBox = new wxListBox(this, wxID_ANY);
-	m_treeCtrl = new SongBookTreeCtrl(this, idSongBookTreeCtrlId, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxTR_EDIT_LABELS | wxSUNKEN_BORDER | wxTR_HIDE_ROOT);
-	wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Root item"));
+	m_treeCtrl = new SongBookTreeCtrl(this, idSongBookTreeCtrlId, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxTR_EDIT_LABELS | wxSUNKEN_BORDER);
+	//wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Empty songbook"), 1, 1);
 	sizer->Add(m_treeCtrl, 1, wxALL | wxEXPAND, 1);
+
+	// create buttons bar
+	wxPanel *panel2 = new wxPanel(this);
+	new wxButton(panel2, ID_BTN_NEW_SECTION, _("Add section"));
+	sizer->Add(panel2, 0, wxALL | wxEXPAND, 1);
+
+	UpdateContent();
 }
 
 SongBookWnd::~SongBookWnd()
@@ -226,47 +287,72 @@ void SongBookWnd::OnSize(wxSizeEvent& event)
 		Layout();
 }
 
+void SongBookWnd::OnNewSection(wxCommandEvent &event)
+{
+	wxTreeItemId selItem = m_treeCtrl->GetSelection();
+
+	if (selItem.IsOk())
+	{
+		SongTreeItemData* data = (SongTreeItemData*) m_treeCtrl->GetItemData(selItem);
+		if (data)
+		{
+			wxGetApp().m_songBook.addSection(data->getXmlNode());
+		}
+	}
+	else
+	{
+		wxGetApp().m_songBook.addSection();
+	}
+
+	UpdateContent();
+}
+
 void SongBookWnd::UpdateContent()
 {
 	m_treeCtrl->DeleteAllItems();
-	wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Root item"));
 
 	wxXmlNode *nodeRoot = wxGetApp().m_songBook.getRootNode();
 	if (!nodeRoot)
 		return;
 
-	// if root node is songbook
+	// check that root node is songbook
 	if (nodeRoot->GetName() != wxT("songbook"))
 		return;
 
-	wxXmlNode *nodeSong = nodeRoot->GetChildren();
-	while (nodeSong)
-	{
-		if (nodeSong->GetName() == wxT("song"))
-		{
-			wxFileName fileName = nodeSong->GetPropVal(wxT("path"), wxEmptyString);
-			m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), fileName.GetName(), 0, 0, new wxTreeItemData());
-		}
-		nodeSong = nodeSong->GetNext();
-	}
+	wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Songbook"), 1, 1, new SongTreeItemData(nodeRoot));
 
-
-	/*
-	std::cout << "updating tree, items: " << wxGetApp().m_songBook.m_songs.size() << std::endl;
-	for (size_t i = 0; i < wxGetApp().m_songBook.m_songs.size(); i++)
-	{
-		wxFileName fileName = wxGetApp().m_songBook.m_songs[i]->m_filePath;
-		m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), fileName.GetName(), 0, 0, new wxTreeItemData());
-	}
-	*/
+	CreateTreeLevelContent(m_treeCtrl->GetRootItem(), nodeRoot);
 }
+
+void SongBookWnd::CreateTreeLevelContent(wxTreeItemId treeParentId, wxXmlNode *nodeParent)
+{
+	if (!nodeParent)
+		return;
+
+	wxXmlNode *childNode = nodeParent->GetChildren();
+	while (childNode)
+	{
+		if (childNode->GetName() == wxT("song"))
+		{
+			wxFileName fileName = childNode->GetPropVal(wxT("path"), wxEmptyString);
+			m_treeCtrl->AppendItem(treeParentId, fileName.GetName(), 0, 0, new SongTreeItemData(childNode));
+		}
+		else if (childNode->GetName() == wxT("section"))
+		{
+			wxTreeItemId itemId = m_treeCtrl->AppendItem(treeParentId, childNode->GetPropVal(wxT("name"), wxT("Section")), 2, 2, new SongTreeItemData(childNode));
+			CreateTreeLevelContent(itemId, childNode);
+		}
+		childNode = childNode->GetNext();
+	}
+}
+
 
 void SongBookWnd::addSongFile(wxString filePath)
 {
 	std::cout << "song book wnd - addSongFile" << std::endl;
-	Song *song = new Song();
-	song->m_filePath = filePath;
-	wxGetApp().m_songBook.add(song);
+	//Song *song = new Song();
+	//song->m_filePath = filePath;
+	//wxGetApp().m_songBook.add(song);
 	//m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), filePath, 0, 0, new wxTreeItemData(song));
 
 

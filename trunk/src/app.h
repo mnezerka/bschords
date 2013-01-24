@@ -74,6 +74,7 @@ namespace bschords
 
 			virtual bool OnInit();
 			virtual int OnExit();
+			virtual wxLog* CreateLogTarget();
 
 		private:
 			//std::list<SongStylesheet> m_styleSheets;

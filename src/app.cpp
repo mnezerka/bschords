@@ -116,4 +116,8 @@ int App::OnExit()
     return wxApp::OnExit();
 }
 
+wxLog* App::CreateLogTarget()
+{
+	return new wxLogStderr();
+}
 

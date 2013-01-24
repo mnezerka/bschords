@@ -40,9 +40,11 @@ namespace bschords
 			void OnItemMenu(wxTreeEvent& event);
 			void OnBeginLabelEdit(wxTreeEvent& event);
 			void OnEndLabelEdit(wxTreeEvent& event);
+			void OnDeleteItem(wxTreeEvent& event);
 
 			void CreateImageList(int size = 16);
 			void ShowMenu(wxTreeItemId id, const wxPoint& pt);
+			void UpdateContent();
 
 			/*
 			void OnBeginRDrag(wxTreeEvent& event);
@@ -68,16 +70,10 @@ namespace bschords
 			void OnRMouseUp(wxMouseEvent& event);
 			void OnRMouseDClick(wxMouseEvent& event);
 
-			void GetItemsRecursively(const wxTreeItemId& idParent,
-									 wxTreeItemIdValue cookie = 0);
-
-			void CreateImageList(int size = 16);
 			void CreateButtonsImageList(int size = 11);
 
 			void AddTestItemsToTree(size_t numChildren, size_t depth);
 
-			void DoSortChildren(const wxTreeItemId& item, bool reverse = false)
-				{ m_reverseSort = reverse; wxTreeCtrl::SortChildren(item); }
 			void DoEnsureVisible() { if (m_lastItem.IsOk()) EnsureVisible(m_lastItem); }
 
 			void DoToggleIcon(const wxTreeItemId& item);
@@ -101,6 +97,8 @@ namespace bschords
 		private:
 			wxTreeItemId m_draggedItem;    // item being dragged right now
 			int m_imageSize;               // current size of images
+
+			void CreateTreeLevelContent(wxTreeItemId treeParentId, wxXmlNode *nodeParent);
 /*
 		void AddItemsRecursively(const wxTreeItemId& idParent,
 								 size_t nChildren,
@@ -130,12 +128,12 @@ namespace bschords
 			virtual ~SongBookWnd();
 			void OnNewSection(wxCommandEvent &event);
 			void addSongFile(wxString filePath);
-			void UpdateContent();
+			void Update();
 
 		private:
 			SongBookTreeCtrl *m_treeCtrl;
 			void OnSize(wxSizeEvent& event);
-			void CreateTreeLevelContent(wxTreeItemId treeParentId, wxXmlNode *nodeParent);
+
 
 		DECLARE_EVENT_TABLE()
 	};

@@ -895,7 +895,7 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 			}
 			else
 				rootNode->AddChild(songNode);
-			m_songBookWnd->UpdateContent();
+			m_songBookWnd->Update();
 		}
 	}
 }
@@ -1080,7 +1080,8 @@ void MainWnd::OpenSongBook(const wxString filePath)
 	std::wcout << L"loading songbook file " << fileName.GetFullPath().wc_str() << std::endl;
 
 	wxGetApp().m_songBook.loadFromFile(fileName.GetFullPath());
-	m_songBookWnd->UpdateContent();
+
+	m_songBookWnd->Update();
 }
 
 void MainWnd::UpdateTitle()

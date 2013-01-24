@@ -144,6 +144,13 @@ bool SongBook::moveNode(wxXmlNode *node, wxXmlNode *newParent)
 	if (!foundInSubtree)
 	{
 		std::cout << "moving item " << std::endl;
+
+		// remove item from current position in xml tree
+		if (node->GetParent())
+			node->GetParent()->RemoveChild(node);
+
+		// insert item into new position
+		newParent->AddChild(node);
 	}
 
 	return true;

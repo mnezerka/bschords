@@ -29,6 +29,7 @@ BEGIN_EVENT_TABLE(SongBookTreeCtrl, wxTreeCtrl)
     EVT_TREE_ITEM_MENU(idSongBookTreeCtrlId, SongBookTreeCtrl::OnItemMenu)
 	EVT_TREE_BEGIN_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnBeginLabelEdit)
     EVT_TREE_END_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnEndLabelEdit)
+    EVT_TREE_DELETE_ITEM(idSongBookTreeCtrlId, SongBookTreeCtrl::OnDeleteItem)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(SongBookTreeCtrl, wxTreeCtrl)
@@ -100,7 +101,8 @@ void SongBookTreeCtrl::OnEndDrag(wxTreeEvent& event)
 	if (dataSrc->getXmlNode()->GetName() == wxT("songbook"))
 		return;
 
-	SongBook::moveNode(dataSrc->getXmlNode(), dataDst->getXmlNode());
+	if (SongBook::moveNode(dataSrc->getXmlNode(), dataDst->getXmlNode()))
+		UpdateContent();
 }
 
 void SongBookTreeCtrl::OnItemMenu(wxTreeEvent& event)
@@ -143,9 +145,9 @@ void SongBookTreeCtrl::OnEndLabelEdit(wxTreeEvent& event)
 	std::cout << "end of item label edit" << std::endl;
 
     // don't allow anything except letters in the labels
-    if (!event.GetLabel().IsWord())
+    if (event.GetLabel().Length() == 0)
     {
-        wxMessageBox(wxT("The new label should be a single word."));
+        wxMessageBox(wxT("The new label should be a least one character long."));
         event.Veto();
     }
 
@@ -172,6 +174,13 @@ void SongBookTreeCtrl::OnEndLabelEdit(wxTreeEvent& event)
 			event.Veto();
 		}
 	}
+}
+
+void SongBookTreeCtrl::OnDeleteItem(wxTreeEvent& event)
+{
+	wxLogMessage(wxT("ahoj"));
+
+	return;
 }
 
 void SongBookTreeCtrl::CreateImageList(int size)
@@ -237,6 +246,44 @@ void SongBookTreeCtrl::ShowMenu(wxTreeItemId id, const wxPoint& pt)
 #endif // wxUSE_MENUS
 }
 
+void SongBookTreeCtrl::UpdateContent()
+{
+	DeleteAllItems();
+
+	wxXmlNode *nodeRoot = wxGetApp().m_songBook.getRootNode();
+	if (!nodeRoot)
+		return;
+
+	// check that root node is songbook
+	if (nodeRoot->GetName() != wxT("songbook"))
+		return;
+
+	wxTreeItemId rootId = AddRoot(nodeRoot->GetPropVal(wxT("name"), wxT("Songbook")), 1, 1, new SongTreeItemData(nodeRoot));
+
+	CreateTreeLevelContent(GetRootItem(), nodeRoot);
+}
+
+void SongBookTreeCtrl::CreateTreeLevelContent(wxTreeItemId treeParentId, wxXmlNode *nodeParent)
+{
+	if (!nodeParent)
+		return;
+
+	wxXmlNode *childNode = nodeParent->GetChildren();
+	while (childNode)
+	{
+		if (childNode->GetName() == wxT("song"))
+		{
+			wxFileName fileName = childNode->GetPropVal(wxT("path"), wxEmptyString);
+			AppendItem(treeParentId, fileName.GetName(), 0, 0, new SongTreeItemData(childNode));
+		}
+		else if (childNode->GetName() == wxT("section"))
+		{
+			wxTreeItemId itemId = AppendItem(treeParentId, childNode->GetPropVal(wxT("name"), wxT("Section")), 2, 2, new SongTreeItemData(childNode));
+			CreateTreeLevelContent(itemId, childNode);
+		}
+		childNode = childNode->GetNext();
+	}
+}
 
 // --------------- SongBookWnd -------------------------------------------------
 
@@ -273,7 +320,7 @@ SongBookWnd::SongBookWnd(wxWindow *parent)
 	new wxButton(panel2, ID_BTN_NEW_SECTION, _("Add section"));
 	sizer->Add(panel2, 0, wxALL | wxEXPAND, 1);
 
-	UpdateContent();
+	m_treeCtrl->UpdateContent();
 }
 
 SongBookWnd::~SongBookWnd()
@@ -304,48 +351,8 @@ void SongBookWnd::OnNewSection(wxCommandEvent &event)
 		wxGetApp().m_songBook.addSection();
 	}
 
-	UpdateContent();
+	m_treeCtrl->UpdateContent();
 }
-
-void SongBookWnd::UpdateContent()
-{
-	m_treeCtrl->DeleteAllItems();
-
-	wxXmlNode *nodeRoot = wxGetApp().m_songBook.getRootNode();
-	if (!nodeRoot)
-		return;
-
-	// check that root node is songbook
-	if (nodeRoot->GetName() != wxT("songbook"))
-		return;
-
-	wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Songbook"), 1, 1, new SongTreeItemData(nodeRoot));
-
-	CreateTreeLevelContent(m_treeCtrl->GetRootItem(), nodeRoot);
-}
-
-void SongBookWnd::CreateTreeLevelContent(wxTreeItemId treeParentId, wxXmlNode *nodeParent)
-{
-	if (!nodeParent)
-		return;
-
-	wxXmlNode *childNode = nodeParent->GetChildren();
-	while (childNode)
-	{
-		if (childNode->GetName() == wxT("song"))
-		{
-			wxFileName fileName = childNode->GetPropVal(wxT("path"), wxEmptyString);
-			m_treeCtrl->AppendItem(treeParentId, fileName.GetName(), 0, 0, new SongTreeItemData(childNode));
-		}
-		else if (childNode->GetName() == wxT("section"))
-		{
-			wxTreeItemId itemId = m_treeCtrl->AppendItem(treeParentId, childNode->GetPropVal(wxT("name"), wxT("Section")), 2, 2, new SongTreeItemData(childNode));
-			CreateTreeLevelContent(itemId, childNode);
-		}
-		childNode = childNode->GetNext();
-	}
-}
-
 
 void SongBookWnd::addSongFile(wxString filePath)
 {
@@ -356,4 +363,9 @@ void SongBookWnd::addSongFile(wxString filePath)
 	//m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), filePath, 0, 0, new wxTreeItemData(song));
 
 
+}
+
+void SongBookWnd::Update()
+{
+	m_treeCtrl->UpdateContent();
 }

@@ -41,6 +41,7 @@ namespace bschords
 			void OnBeginLabelEdit(wxTreeEvent& event);
 			void OnEndLabelEdit(wxTreeEvent& event);
 			void OnDeleteItem(wxTreeEvent& event);
+			void OnItemActivated(wxTreeEvent& event);
 
 			void CreateImageList(int size = 16);
 			void ShowMenu(wxTreeItemId id, const wxPoint& pt);

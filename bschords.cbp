@@ -182,6 +182,13 @@
 		</Unit>
 		<Unit filename="src\bschordpro.cpp" />
 		<Unit filename="src\bschordpro.h" />
+		<Unit filename="src\bschords.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
 		<Unit filename="src\dcpainter.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />

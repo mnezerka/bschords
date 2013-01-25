@@ -30,6 +30,7 @@ BEGIN_EVENT_TABLE(SongBookTreeCtrl, wxTreeCtrl)
 	EVT_TREE_BEGIN_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnBeginLabelEdit)
     EVT_TREE_END_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnEndLabelEdit)
     EVT_TREE_DELETE_ITEM(idSongBookTreeCtrlId, SongBookTreeCtrl::OnDeleteItem)
+	EVT_TREE_ITEM_ACTIVATED(idSongBookTreeCtrlId, SongBookTreeCtrl::OnItemActivated)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(SongBookTreeCtrl, wxTreeCtrl)
@@ -178,7 +179,26 @@ void SongBookTreeCtrl::OnEndLabelEdit(wxTreeEvent& event)
 
 void SongBookTreeCtrl::OnDeleteItem(wxTreeEvent& event)
 {
-	wxLogMessage(wxT("ahoj"));
+	std::cout << "item deleted" << std::endl;
+	return;
+}
+
+void SongBookTreeCtrl::OnItemActivated(wxTreeEvent& event)
+{
+	std::cout << "item activated" << std::endl;
+
+	// show some info about this item
+    wxTreeItemId itemId = event.GetItem();
+    SongTreeItemData *data = (SongTreeItemData *)GetItemData(itemId);
+    if (data)
+    {
+    	wxXmlNode *node = data->getXmlNode();
+		if (node->GetName() == wxT("song") && node->HasProp(wxT("path")))
+		{
+			wxFileName fn = node->GetPropVal(wxT("path"), wxEmptyString);
+		}
+
+    }
 
 	return;
 }

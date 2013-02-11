@@ -29,7 +29,8 @@ http://en.wikipedia.org/wiki/Chord_%28software%29
 
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice
-// TODO: check file open save identity (no new lines are added)
+// TODO: separate section for song title (especially in case of multicolumn stylesheet)
+// TODO: song directives (e.g. request for 2 cols)
 
 namespace bschords
 {

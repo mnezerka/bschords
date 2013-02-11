@@ -938,33 +938,38 @@ void MainWnd::OpenFile(const wxString filePath)
 	std::wcout << L"loading file " << fileName.GetFullPath().wc_str() << std::endl;
 
 	m_file.m_path = fileName.GetFullPath();
-	//m_file.m_changed = false;
 
-	wxTextFile fileIn;
-	wxString lines;
-	if (fileIn.Open(fileName.GetFullPath()))
-	{
-		m_file.m_type = fileIn.GuessType();
+	bool success = false;
+    wxFile file(m_file.m_path, wxFile::read);
+    if (file.IsOpened())
+    {
+        wxString contents;
+        // get the file size (assume it is not huge file...)
+        ssize_t len = (ssize_t)file.Length();
+        if (len > 0)
+        {
+            wxMemoryBuffer buffer(len+1);
+            success = (file.Read(buffer.GetData(), len) == len);
+            if (success) {
+                ((char*)buffer.GetData())[len] = 0;
+                contents = wxString(buffer, wxConvUTF8, len);
+            }
+        }
+        else
+        {
+            if (len == 0)
+                success = true;  // empty file is ok
+            else
+                success = false; // len == wxInvalidOffset
+        }
 
-		lines = fileIn.GetFirstLine();
-		// Read all the lines (one by one)
-		while(!fileIn.Eof())
-		{
-			if (lines.size() > 0)
-				lines += wxT('\n');
-			lines += fileIn.GetNextLine();
-		}
-		fileIn.Close(); // Close the opened file
-		m_songContent->ClearAll();
-		m_songContent->AppendText(lines);
-		m_songContent->EmptyUndoBuffer();
-		m_songContent->SetSavePoint();
-
-		m_file.m_path = fileName.GetFullPath();
-		m_file.m_changed = false;
-
-		UpdateTitle();
-	}
+        if (success)
+        {
+            m_songContent->SetText(contents);
+            m_songContent->EmptyUndoBuffer();
+            m_songContent->SetSavePoint();
+        }
+    }
 }
 
 void MainWnd::CloseFile()
@@ -1010,22 +1015,17 @@ void MainWnd::SaveFile()
 
 	std::wcout << L"saving song to file " << fileName.GetFullPath().wc_str() << std::endl;
 
-	wxTextFile fileOut;
-	bool fileIsOk = fileName.FileExists() ? fileOut.Open(fileName.GetFullPath()) : fileOut.Create(fileName.GetFullPath());
-	if (fileIsOk)
+	wxFile file(fileName.GetFullPath(), wxFile::write);
+
+    if (file.IsOpened())
 	{
-		fileOut.Clear();
-		fileOut.AddLine(m_songContent->GetText());
+		bool success = file.Write(m_songContent->GetText(), wxConvUTF8);
 
-		// preserve file eol encoding if available (remembered from file opening)
-		if (m_file.m_type != wxTextFileType_None)
-			fileOut.Write();
-		else
-			fileOut.Write(m_file.m_type);
-		fileOut.Close(); // Close the opened file
-		m_songContent->SetSavePoint();
-
-		UpdateTitle();
+		if (success)
+		{
+			m_songContent->SetSavePoint();
+			UpdateTitle();
+		}
 	}
 }
 

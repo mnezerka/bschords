@@ -80,10 +80,14 @@
 					<Add option="-mthreads" />
 					<Add option="-Wl,--subsystem,windows -mwindows" />
 					<Add option="-static-libgcc" />
-					<Add library="wxmsw28u_richtext" />
-					<Add library="wxmsw28u_adv" />
-					<Add library="wxmsw28u_html" />
-					<Add library="wxmsw28u_core" />
+					<Add library="libwxbase28u.a" />
+					<Add library="libwxmsw28u_stc.a" />
+					<Add library="libwxmsw28u_aui.a" />
+					<Add library="libwxmsw28u_richtext.a" />
+					<Add library="libwxbase28u_xml.a" />
+					<Add library="libwxmsw28u_adv" />
+					<Add library="libwxmsw28u_html" />
+					<Add library="libwxmsw28u_core" />
 					<Add library="wxbase28u" />
 					<Add library="wxtiff" />
 					<Add library="wxjpeg" />
@@ -106,7 +110,7 @@
 					<Add library="advapi32" />
 					<Add library="wsock32" />
 					<Add library="odbc32" />
-					<Add directory="D:\wxwidgets\lib\gcc_lib" />
+					<Add directory="$(#wx)\lib\gcc_lib" />
 				</Linker>
 			</Target>
 			<Target title="debug_linux">

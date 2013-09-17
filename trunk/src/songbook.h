@@ -7,28 +7,38 @@
 
 #include <vector>
 #include <wx/xml/xml.h>
+#include <wx/filename.h>
 
 namespace bschords
 {
-	// songbook representation
+	// single song representation
+	class SongBookItem
+	{
+		public:
+			SongBookItem(wxString path);
+			wxString getPath();
+			wxString getTitle();
+		private:
+			wxString m_path;
+			wxString m_title;
+	};
+
+	// songbook (group of songs with attributes) representation
 	class SongBook
 	{
 		public:
 			SongBook();
 			virtual ~SongBook();
+			void setBasePath(wxString path);
 			void empty();
-			void loadFromFile(wxString rootPath);
-			void saveToFile(wxString path, wxString rootPath);
-			void addSong(wxString path, wxXmlNode *parent = NULL);
-			void addSection(wxXmlNode *parent = NULL);
-			wxXmlNode *getRootNode() { return m_songs.GetRoot(); };
-			static void setNodeProperty(wxXmlNode *node, wxString name, wxString value);
-			static bool moveNode(wxXmlNode *node, wxXmlNode *newParent);
-
+			unsigned int getCount();
+			SongBookItem *getItem(unsigned int index);
+			void loadFromXmlFile(wxString rootPath);
+			void saveToXmlFile(wxString path, wxString rootPath);
+			void addSong(wxString path);
 		private:
-			wxXmlDocument m_songs;
-
-			void addNode(wxXmlNode *newNode, wxXmlNode *parent = NULL);
+			std::vector<SongBookItem *> m_items;
+			wxString m_basePath;
 	};
 }
 

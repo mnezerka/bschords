@@ -470,7 +470,7 @@ void MainWnd::OnFileSaveSongBookAs(wxCommandEvent& event)
 	if (saveDlg->ShowModal() == wxID_OK )
 	{
 		m_songBookPath = saveDlg->GetPath();
-		SaveFile();
+		SaveSongBook();
 	}
 }
 
@@ -587,6 +587,8 @@ void MainWnd::OnPreferences(wxCommandEvent &event)
 		m_songContent->SetFont(wxGetApp().m_settings.m_editorFont);
 
 		updateEditorStyles();
+
+		//wxGetApp().m_songBook.setBasePath(wxGetApp.);
     }
     dlg->Destroy();
 }
@@ -882,11 +884,11 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 
 			m_songBookWnd->addSongFile(data->m_path);
 
-			wxXmlNode *rootNode = wxGetApp().m_songBook.getRootNode();
-			wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
-			wxXmlProperty *songPathProp = new wxXmlProperty(wxT("path"), fileName.GetFullPath());
-			songNode->AddProperty(songPathProp);
-			if (wxXmlNode *child = rootNode->GetChildren())
+			//wxXmlNode *rootNode = wxGetApp().m_songBook.getRootNode();
+			//wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
+			//wxXmlProperty *songPathProp = new wxXmlProperty(wxT("path"), fileName.GetFullPath());
+			//songNode->AddProperty(songPathProp);
+			/*if (wxXmlNode *child = rootNode->GetChildren())
 			{
 				// look for last child
 				while (child->GetNext())
@@ -895,6 +897,7 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 			}
 			else
 				rootNode->AddChild(songNode);
+			*/
 			m_songBookWnd->Update();
 		}
 	}
@@ -1055,8 +1058,9 @@ void MainWnd::SaveSongBook()
 	}
 
 	std::wcout << L"saving song book to file " << fileName.GetFullPath().wc_str() << std::endl;
+	std::wcout << L"Number of items: " << fileName.GetFullPath().wc_str() << std::endl;
 
-	wxGetApp().m_songBook.saveToFile(fileName.GetFullPath(), wxGetApp().m_settings.m_rootPath);
+	wxGetApp().m_songBook.saveToXmlFile(fileName.GetFullPath(), wxGetApp().m_settings.m_rootPath);
 }
 
 void MainWnd::OpenSongBook(const wxString filePath)
@@ -1079,7 +1083,7 @@ void MainWnd::OpenSongBook(const wxString filePath)
 
 	std::wcout << L"loading songbook file " << fileName.GetFullPath().wc_str() << std::endl;
 
-	wxGetApp().m_songBook.loadFromFile(fileName.GetFullPath());
+	wxGetApp().m_songBook.loadFromXmlFile(fileName.GetFullPath());
 
 	m_songBookWnd->Update();
 }

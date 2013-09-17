@@ -78,6 +78,8 @@ bool App::OnInit()
 	// load application settings
 	m_settings.LoadFromConfig(config);
 
+	// set path to songbook base directory
+	m_songBook.setBasePath(m_settings.m_rootPath);
 
 	//-----------------------------------------------------------------
 	// initialize printing

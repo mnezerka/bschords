@@ -1,3 +1,8 @@
+
+#ifdef WX_PRECOMP
+#include "wx_pch.h"
+#endif
+
 #include <iostream>
 
 #include <vector>
@@ -7,6 +12,25 @@
 #include "songbook.h"
 
 using namespace bschords;
+
+SongBookItem::SongBookItem(wxString path)
+{
+	// check if path is valid text file
+	wxFileName filePath(path);
+
+	m_path = filePath.GetFullPath();
+	m_title = filePath.GetName();
+}
+
+wxString SongBookItem::getTitle()
+{
+	return m_title;
+}
+
+wxString SongBookItem::getPath()
+{
+	return m_path;
+}
 
 SongBook::SongBook()
 {
@@ -18,33 +42,36 @@ SongBook::~SongBook()
 	empty();
 }
 
+void SongBook::setBasePath(wxString path)
+{
+	// check if path is valid text file
+	wxFileName filePath(path, wxEmptyString);
+
+	if (!filePath.IsDir())
+	{
+		wxMessageBox(_("Songbook Base Path must be valid directory - " + path), wxMessageBoxCaptionStr, wxOK | wxCENTRE | wxICON_ERROR);
+		return;
+	}
+
+	m_basePath = filePath.GetPath();
+}
+
 void SongBook::empty()
 {
-	wxXmlNode *rootNode = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, wxT("songbook"));
-	m_songs.SetRoot(rootNode);
+	for (unsigned i = 0; i < m_items.size(); i++)
+		delete(m_items[i]);
+	m_items.clear();
 }
 
-void SongBook::addNode(wxXmlNode *newNode, wxXmlNode *parent)
+SongBookItem *SongBook::getItem(unsigned int index)
 {
-	// use root node of tree if no specific parent provided
-	wxXmlNode *realParent = parent ? parent : m_songs.GetRoot();
-
-	// look for last child
-	if (wxXmlNode *child = realParent->GetChildren())
-	{
-		std::cout << "adding new node to song book (as child)" << std::endl;
-		while (child->GetNext())
-			child = child->GetNext();
-		child->SetNext(newNode);
-	}
-	else
-	{
-		std::cout << "adding new node to song book (as root)" << std::endl;
-		realParent->AddChild(newNode);
-	}
+	SongBookItem *result = NULL;
+	if (index < m_items.size())
+		result = m_items[index];
+	return result;
 }
 
-void SongBook::addSong(wxString path, wxXmlNode *parent)
+void SongBook::addSong(wxString path)
 {
 	// check if path is valid text file
 	wxFileName filePath(path);
@@ -61,98 +88,77 @@ void SongBook::addSong(wxString path, wxXmlNode *parent)
 		return;
 	}
 
-	wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
-	wxXmlProperty *prop = new wxXmlProperty(wxT("path"), filePath.GetFullPath());
-	songNode->AddProperty(prop);
-	addNode(songNode, parent);
+	SongBookItem *item = new SongBookItem(filePath.GetFullPath());
+	m_items.push_back(item);
 }
 
-// add new section item
-void SongBook::addSection(wxXmlNode *parent)
+void SongBook::saveToXmlFile(wxString path, wxString rootPath)
 {
-	wxXmlNode *sectionNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("section"));
-	wxXmlProperty *prop = new wxXmlProperty(wxT("name"), wxT("Section"));
-	sectionNode->AddProperty(prop);
-	addNode(sectionNode, parent);
-}
+	wxXmlDocument doc;
+	wxXmlNode *rootNode = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, wxT("songbook"));
 
-void SongBook::saveToFile(wxString path, wxString rootPath)
-{
+	std::cout << "Saving to XML file (begin)" << std::endl;
+	std::cout << "Number of items to be saved: " << m_items.size() << std::endl;
+	std::wcout << L"Base path: " << m_basePath.mb_str(wxConvUTF8) << std::endl;
+
+	wxXmlNode *lastChild = NULL;
+	for (unsigned i = 0; i < m_items.size(); i++)
+	{
+		wxFileName filePath(m_items[i]->getPath());
+		std::wcout << L"File to be added: " << filePath.GetFullPath().mb_str(wxConvUTF8) << std::endl;
+		filePath.MakeRelativeTo(m_basePath);
+		std::wcout << L"File to be added after relative step: " << filePath.GetFullPath().mb_str(wxConvUTF8) << std::endl;
+
+		wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
+		wxXmlProperty *prop = new wxXmlProperty(wxT("path"), filePath.GetFullPath(wxPATH_UNIX));
+		songNode->AddProperty(prop);
+		std::cout << "Adding node to xml file" << std::endl;
+		if (lastChild != NULL)
+			lastChild->SetNext(songNode);
+		else
+			rootNode->AddChild(songNode);
+		lastChild = songNode;
+	}
+
+	doc.SetRoot(rootNode);
+
 	// TODO: convert path separators to normalized form
-	if (!m_songs.Save(path))
+	if (!doc.Save(path))
 		wxMessageBox(_("Error saving songbook"));
+
+	std::cout << "Saving to XML file (end)" << std::endl;
 }
 
-void SongBook::loadFromFile(wxString path)
+void SongBook::loadFromXmlFile(wxString path)
 {
-	if (!m_songs.Load(path))
+	wxXmlDocument doc;
+	if (!doc.Load(path))
 		wxMessageBox(_("Error loading songbook"));
-}
 
-void SongBook::setNodeProperty(wxXmlNode *node, wxString name, wxString value)
-{
-	if (!node)
+	// clear contents of current song book
+	empty();
+
+	wxXmlNode *rootNode = doc.GetRoot();
+
+	if (rootNode->GetName() != wxT("songbook"))
 		return;
 
-	if (node->HasProp(name))
+	wxXmlNode *c = rootNode->GetChildren();
+	while (c)
 	{
-		wxXmlProperty *p = node->GetProperties();
-		while (p)
+		if (c->GetName() == wxT("song"))
 		{
-			if (p->GetName() == name)
-			{
-				p->SetValue(value);
-				break;
-			}
-			p = p->GetNext();
+			wxString songPath = c->GetPropVal(wxT("path"), wxT(""));
+			wxFileName fileName(songPath, wxPATH_UNIX);
+			fileName.MakeAbsolute(m_basePath);
+			std::wcout << "New dir is: " << fileName.GetFullPath().mb_str(wxConvUTF8) << std::endl;
+			addSong(fileName.GetFullPath(wxPATH_NATIVE));
 		}
+		c = c->GetNext();
 	}
-	else
-		node->AddProperty(name, value);
 }
 
-bool SongBook::moveNode(wxXmlNode *node, wxXmlNode *newParent)
+unsigned int SongBook::getCount()
 {
-	// check if nodes are valid pointers
-	if (!node || !newParent)
-		return false;
-
-	// look for newParent in children of node
-	std::vector<wxXmlNode *> toVisit;
-	toVisit.push_back(node);
-	bool foundInSubtree = false;
-	while (!toVisit.empty() && !foundInSubtree)
-	{
-		wxXmlNode *curNode = toVisit.back();
-		toVisit.pop_back();
-
-		wxXmlNode *c =curNode->GetChildren();
-		while (c)
-		{
-			if (c == newParent)
-			{
-				foundInSubtree = true;
-				break;
-			}
-			if (c->GetChildren())
-				toVisit.push_back(c);
-			c = c->GetNext();
-		}
-	}
-
-	// if newParent isn't in children of node, we can move node to new parent
-	if (!foundInSubtree)
-	{
-		std::cout << "moving item " << std::endl;
-
-		// remove item from current position in xml tree
-		if (node->GetParent())
-			node->GetParent()->RemoveChild(node);
-
-		// insert item into new position
-		newParent->AddChild(node);
-	}
-
-	return true;
+	return m_items.size();
 }
-

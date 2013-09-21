@@ -76,10 +76,11 @@ bool App::OnInit()
 	m_styleSheet.LoadFromConfig(config);
 
 	// load application settings
-	m_settings.LoadFromConfig(config);
+	m_settings = new AppSettings();
+	m_settings->LoadFromConfig(config);
 
 	// set path to songbook base directory
-	m_songBook.setBasePath(m_settings.m_rootPath);
+	m_songBook.setBasePath(m_settings->m_rootPath);
 
 	//-----------------------------------------------------------------
 	// initialize printing
@@ -93,7 +94,6 @@ bool App::OnInit()
 	//-----------------------------------------------------------------
 	// open main window (frame)
     MainWnd* frame = new MainWnd(0L, _("BSChords"));
-
     frame->Show();
 
     return true;
@@ -108,7 +108,8 @@ int App::OnExit()
 	m_styleSheet.SaveToConfig(config);
 
 	// save settings
-	m_settings.SaveToConfig(config);
+	m_settings->SaveToConfig(config);
+	delete m_settings;
 
 	delete config;
 
@@ -118,8 +119,9 @@ int App::OnExit()
     return wxApp::OnExit();
 }
 
-wxLog* App::CreateLogTarget()
+/*wxLog* App::CreateLogTarget()
 {
-	return new wxLogStderr();
+	//return new wxLogStderr();
 }
+*/
 

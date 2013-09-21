@@ -313,7 +313,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 
 	// create file browser window
 	m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
-	m_dirCtrl->SetPath(wxGetApp().m_settings.m_rootPath);
+	m_dirCtrl->SetPath(wxGetApp().m_settings->m_rootPath);
 	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// create song book window
@@ -432,7 +432,7 @@ void MainWnd::OnFileNewSongBook(wxCommandEvent& event)
 
 void MainWnd::OnFileOpenSongBook(wxCommandEvent& event)
 {
-	wxFileName fileName(wxGetApp().m_settings.m_rootPath);
+	wxFileName fileName(wxGetApp().m_settings->m_rootPath);
 	wxString dir(fileName.GetFullPath());
 	wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.xml"), wxOPEN, wxDefaultPosition);
 	if (openFileDialog->ShowModal() == wxID_OK )
@@ -460,7 +460,7 @@ void MainWnd::OnFileSaveSongBookAs(wxCommandEvent& event)
 	}
 	else
 	{
-		wxFileName fileName(wxGetApp().m_settings.m_rootPath);
+		wxFileName fileName(wxGetApp().m_settings->m_rootPath);
 		dir = fileName.GetPath();
 		name = _("untitled.xml");
 	}
@@ -584,7 +584,7 @@ void MainWnd::OnPreferences(wxCommandEvent &event)
 		m_preview->Refresh();
 		m_preview->Update();
 
-		m_songContent->SetFont(wxGetApp().m_settings.m_editorFont);
+		m_songContent->SetFont(wxGetApp().m_settings->m_editorFont);
 
 		updateEditorStyles();
 
@@ -730,7 +730,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 	int startPos = m_songContent->GetEndStyled();
     int firstLineNumber = m_songContent->LineFromPosition(startPos);
 	int lastLineNumber = m_songContent->LineFromPosition(event.GetPosition());
-	//std::cout << "style needed from line " << firstLineNumber << " to " << lastLineNumber << std::endl;
+	std::cout << "EVENT - style needed from line " << firstLineNumber << " to " << lastLineNumber << std::endl;
 
 	// loop through all lines which need to be styled
 	for (int lineIx = firstLineNumber; lineIx <= lastLineNumber; lineIx++)
@@ -744,7 +744,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 		//m_songContent->SetStyling(linePosMax - linePosMin, wxSTC_CHORDPRO_TEXT);
 		size_t stylingPos = 0;
 
-		//std::cout << "  styling line (len: " << lineLength << ") " << linePosMin << ", " << linePosMax << "<" << ">" << std::endl;
+		std::cout << "..styling line " << lineIx << " (len: " << lineLength << ") linePosMin is " << linePosMin << std::endl;
 
 		// loop through line characters
 		wxCharBuffer buffer = m_songContent->GetLineRaw(lineIx);
@@ -764,9 +764,13 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 				continue;
 			}
 
+			std::cout << "....checking char " << (int)buffer[linePos] << std::endl;
+
 			switch (buffer[linePos])
 			{
-				case '[':
+				case wxChar('['):
+					std::cout << "....found [ at " << linePos << std::endl;
+
 					// chord sections are allowed only in text context
 					if (style == wxSTC_CHORDPRO_TEXT)
 					{
@@ -776,21 +780,25 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 						{
 							int ss = linePos - stylingPos;
 							m_songContent->SetStyling(ss, wxSTC_CHORDPRO_TEXT);
+							std::cout << "....setting style TEXT for " << ss << std::endl;
 							stylingPos += ss;
 						}
 					}
 					break;
-				case ']':
+
+				case wxChar(']'):
+					std::cout << "....found ] at " << linePos << std::endl;
 					if (linePos > 0 && style == wxSTC_CHORDPRO_CHORD)
 					{
 						int ss = linePos - stylingPos + 1;
 						m_songContent->SetStyling(ss, wxSTC_CHORDPRO_CHORD);
+						std::cout << "....setting style CHORD for " << ss << std::endl;
 						stylingPos += ss;
 						style = wxSTC_CHORDPRO_TEXT;
 					}
 					break;
 
-				case '{':
+				case wxChar('{'):
 					// cmd sections are allowed only in text context
 					if (style == wxSTC_CHORDPRO_TEXT)
 					{
@@ -800,15 +808,18 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 						{
 							int ss = linePos - stylingPos;
 							m_songContent->SetStyling(ss, wxSTC_CHORDPRO_TEXT);
+							std::cout << "....setting style TEXT for " << ss << std::endl;
 							stylingPos += ss;
 						}
 					}
 					break;
-				case '}':
+
+				case wxChar('}'):
 					if (linePos > 0 && style == wxSTC_CHORDPRO_CMD)
 					{
 						int ss = linePos - stylingPos + 1;
 						m_songContent->SetStyling(ss, wxSTC_CHORDPRO_CMD);
+						std::cout << "....setting style CMD for " << ss << std::endl;
 						stylingPos += ss;
 						style = wxSTC_CHORDPRO_TEXT;
 					}
@@ -822,6 +833,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 		{
 			//std::cout << " - styling rest after loop of size " << linePos - stylingPos << std::endl;
 			m_songContent->SetStyling(linePos - stylingPos, wxSTC_CHORDPRO_TEXT);
+			std::cout << "....setting style TEXT (rest) for " << linePos - stylingPos << std::endl;
 		}
 	}
 }
@@ -879,7 +891,7 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 		if (!data->m_isDir)
 		{
 			wxFileName fileName(data->m_path);
-			fileName.MakeRelativeTo(wxGetApp().m_settings.m_rootPath);
+			fileName.MakeRelativeTo(wxGetApp().m_settings->m_rootPath);
 			//std::wcout << L"  relative file path is : " << fn.GetFullPath().wc_str() << std::endl;
 
 			m_songBookWnd->addSongFile(data->m_path);
@@ -905,7 +917,7 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 
 void MainWnd::OnFSBrowserItemMenu(wxTreeEvent& event)
 {
-    wxTreeItemId itemId = event.GetItem();
+    //wxTreeItemId itemId = event.GetItem();
     //MyTreeItemData *item = itemId.IsOk() ? (MyTreeItemData *)GetItemData(itemId) : NULL;
     wxPoint clientpt = event.GetPoint();
     //wxPoint screenpt = m_dirCtrl->ClientToScreen(clientpt);
@@ -1060,7 +1072,7 @@ void MainWnd::SaveSongBook()
 	std::wcout << L"saving song book to file " << fileName.GetFullPath().wc_str() << std::endl;
 	std::wcout << L"Number of items: " << fileName.GetFullPath().wc_str() << std::endl;
 
-	wxGetApp().m_songBook.saveToXmlFile(fileName.GetFullPath(), wxGetApp().m_settings.m_rootPath);
+	wxGetApp().m_songBook.saveToXmlFile(fileName.GetFullPath(), wxGetApp().m_settings->m_rootPath);
 }
 
 void MainWnd::OpenSongBook(const wxString filePath)
@@ -1143,12 +1155,12 @@ void MainWnd::updateEditorStyles()
 	if (!m_songContent)
 		return;
 
-    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_TEXT,	wxGetApp().m_settings.m_editorColorText);
-	m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CHORD,	wxGetApp().m_settings.m_editorColorChords);
-    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CMD,	wxGetApp().m_settings.m_editorColorCommands);
-    m_songContent->StyleSetFont(wxSTC_CHORDPRO_TEXT, wxGetApp().m_settings.m_editorFont);
-    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CHORD, wxGetApp().m_settings.m_editorFont);
-    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CMD, wxGetApp().m_settings.m_editorFont);
+    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_TEXT,	wxGetApp().m_settings->m_editorColorText);
+	m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CHORD,	wxGetApp().m_settings->m_editorColorChords);
+    m_songContent->StyleSetForeground(wxSTC_CHORDPRO_CMD,	wxGetApp().m_settings->m_editorColorCommands);
+    m_songContent->StyleSetFont(wxSTC_CHORDPRO_TEXT, wxGetApp().m_settings->m_editorFont);
+    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CHORD, wxGetApp().m_settings->m_editorFont);
+    m_songContent->StyleSetFont(wxSTC_CHORDPRO_CMD, wxGetApp().m_settings->m_editorFont);
 }
 
 // ----------------------------------------------------------------------------

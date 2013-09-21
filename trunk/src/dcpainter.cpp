@@ -5,7 +5,7 @@ using namespace bschords;
 
 // ------- TSetBlock  --------------------------------------------------------
 
-void TSetBlock::drawBoundingRect(const wxPoint pos)
+void TSetBlock::drawBoundingRect()
 {
 	// select color according to block type
 	wxColour rectColor;
@@ -23,7 +23,7 @@ void TSetBlock::drawBoundingRect(const wxPoint pos)
 	wxPen pen(rectColor, 0.1);
 	m_painter->m_dc.SetPen(pen);
 	wxRect r = getBoundingRect();
-	r.SetPosition(pos);
+	r.SetPosition(mPos);
 	m_painter->m_dc.DrawRectangle(r);
 	m_painter->m_dc.DrawLine(r.GetPosition(), r.GetPosition() + r.GetSize());
 }
@@ -51,8 +51,9 @@ bool TSetBlockText::hasChords()
 	return false;
 }
 
-void TSetBlockText::draw(wxPoint pos)
+void TSetBlockText::draw()
 {
+	wxPoint pos = mPos;
 	wxCoord posY = pos.y;
 
 	// add block indent for chorus
@@ -190,11 +191,11 @@ bool TSetBlockVerse::hasNumbering()
 
 // ------- TSetBlockTitle  ----------------------------------------------------------
 
-void TSetBlockTitle::draw(wxPoint pos)
+void TSetBlockTitle::draw()
 {
 	// typeset chord line (chord items)
 	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
-	m_painter->m_dc.DrawText(*m_title->txt, pos.x, pos.y);
+	m_painter->m_dc.DrawText(*m_title->txt, mPos.x, mPos.y);
 }
 
 wxRect TSetBlockTitle::getBoundingRect()
@@ -209,8 +210,9 @@ bool TSetBlockTab::isVisible()
 	return m_painter->m_ss->m_showTabs;
 }
 
-void TSetBlockTab::draw(wxPoint pos)
+void TSetBlockTab::draw()
 {
+	wxPoint pos = mPos;
 
 	// loop through block lines
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
@@ -245,6 +247,115 @@ wxRect TSetBlockTab::getBoundingRect()
 	result.SetHeight(height);
 
 	return result;
+}
+
+// ------- TSetPage -------------------------------------------------------------
+TSetPage::TSetPage(TSetDCPainter *painter, wxRect pageRect) : mPageRect(pageRect), mPainter(painter), mCol(0)
+{
+	mPos = mPageRect.GetTopLeft();
+	wxCoord columnWidth = pageRect.GetWidth() / mPainter->m_ss->m_cols;
+	mColRect = pageRect;
+	mColRect.SetWidth(columnWidth);
+}
+
+TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
+{
+	//bool clippingDetected = false;
+
+	// skip hidden blocks
+	if (!block->isVisible())
+		return ADD_OK;
+
+	// get bounding rectangle of new block
+	wxRect blockRect = block->getBoundingRect();
+
+	// check if block is not too heigh for this page
+	if (blockRect.GetHeight() > mPageRect.GetHeight())
+		return(ADD_PAGE_OVERSIZE);
+
+	// check if there is enough horizontal space for block to be drawn
+	// in current column
+	if (blockRect.GetWidth() > mColRect.GetWidth())
+	{
+		//clippingDetected = true;
+		std::cout << "problem with horizontal clipping found" << std::endl;
+	}
+
+	// check if we have enough of horizontal space to draw block
+	if (mPos.y + blockRect.GetHeight() > mPageRect.GetBottom())
+	{
+		//cout << "not enough space for block, pos.y: " << pos.y << " block height: " << blockHeight << endl;
+
+		if (mCol < mPainter->m_ss->m_cols - 1)
+		{
+			//cout << "starting new column" << endl;
+			mCol++;
+			mColRect.SetLeft(mColRect.GetLeft() + mColRect.GetWidth());
+			mPos.x = mColRect.GetLeft();
+			mPos.y = mColRect.GetTop();
+		}
+		else
+		{
+			std::cout << "TSetPage -> not enougth space on this page" << std::endl;
+			return(ADD_PAGE_FULL);
+		}
+	}
+
+	// set block position on page
+	block->setPosition(mPos);
+
+	// add block to current page
+	m_blocks.push_back(block);
+
+	// move page typesetting cursor
+	mPos.y += block->getBoundingRect().GetHeight();
+
+	std::cout << "addBlock - block height: " << block->getBoundingRect().GetHeight() << ", new pos.y: " << mPos.y << std::endl;
+
+	return(ADD_OK);
+}
+
+void TSetPage::draw()
+{
+	std::cout << "drawing page" << std::endl;
+
+	// draw white (paper) background
+	mPainter->m_dc.DrawRectangle(0, 0, mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetWidth()) , mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetHeight()));
+	mPainter->m_dc.SetBackgroundMode(wxTRANSPARENT);
+
+	// draw gray border to see typesetting area (margins)
+	if (mPainter->m_drawTsetMargins)
+	{
+		wxPen pen(wxColour(200, 200, 200), 0.1); // red pen of width 1
+		mPainter->m_dc.SetPen(pen);
+		mPainter->m_dc.DrawRectangle(mPageRect);
+	}
+
+	// loop through current page blocks
+    for (size_t blockIx = 0; blockIx < m_blocks.size(); blockIx++)
+    {
+        TSetBlock *block = m_blocks[blockIx];
+
+		// draw bounding box
+        if (mPainter->m_drawTsetBlocks)
+			block->drawBoundingRect();
+
+		std::cout << "drawing block " << blockIx << " of type " << block->getType() << " height " << block->getBoundingRect().GetHeight() << " y: " << block->getPosition().y << std::endl;
+		// draw block content
+        block->draw();
+
+        // draw warning
+        /*if (clippingDetected)^M
+        //{^M
+            // draw bounding rect^M
+            wxPen pen(wxColor(255, 0, 0), 5);^M
+            m_dc.SetPen(pen);^M
+            m_dc.DrawLine(colRect.GetRight(), pos.y, colRect.GetRight(), pos.y + blockRect.GetHeight());^M
+            m_stat.m_clippings++;^M
+        }*/
+
+    }
+
 }
 
 // ------- TSetDCPainter -------------------------------------------------------------
@@ -286,110 +397,39 @@ wxCoord TSetDCPainter::getDeviceY(int numMM)
 void TSetDCPainter::onBegin()
 {
 	//cout << "OnBegin" << endl;
-	// create page structure
-	m_curPage = new TSetPage();
-	m_stat.m_pages++;
-}
-
-// all drawing is done here after parsing whole content and computing dimensions
-// of each block
-void TSetDCPainter::onEnd()
-{
-	//cout << "OnBegin" << endl;
-
 
 	// prepare rectangle representation of "drawable" page space (paper - margins)
-	wxPoint pos(getDeviceX(m_ss->m_marginLeft), getDeviceY(m_ss->m_marginTop));
-	wxRect pageRect (
+	//wxPoint pos(getDeviceX(m_ss->m_marginLeft), getDeviceY(m_ss->m_marginTop));
+	wxRect pageRect(
 		getDeviceX(m_ss->m_marginLeft),
 		getDeviceY(m_ss->m_marginTop),
 		getDeviceX(m_ss->m_pageSize.GetWidth() - m_ss->m_marginLeft - m_ss->m_marginRight),
 		getDeviceY(m_ss->m_pageSize.GetHeight() - m_ss->m_marginTop - m_ss->m_marginBottom));
+	mPageRect = pageRect;
 
-	// draw white (paper) background
-	m_dc.DrawRectangle(0, 0, getDeviceX(m_ss->m_pageSize.GetWidth()) , getDeviceX(m_ss->m_pageSize.GetHeight()));
-	m_dc.SetBackgroundMode(wxTRANSPARENT);
+	// create page structure
+	m_curPage = new TSetPage(this, mPageRect);
+	m_pages.push_back(m_curPage);
+	m_stat.m_pages++;
+}
 
-	// draw gray border to see typesetting area (margins)
-	if (m_drawTsetMargins)
+void TSetDCPainter::onEnd()
+{
+	// close any open block
+	if (m_curBlock != NULL)
 	{
-		wxPen pen(wxColour(200, 200, 200), 0.1); // red pen of width 1
-		m_dc.SetPen(pen);
-		m_dc.DrawRectangle(pageRect);
+		addBlock(m_curBlock);
+		m_curBlock = NULL;
 	}
 
-	int curColumn = 0;
-	wxCoord columnWidth = pageRect.GetWidth() / m_ss->m_cols;
-	wxRect colRect(pageRect);
-	colRect.SetWidth(columnWidth);
-	m_dc.SetClippingRegion(colRect);
+	//cout << "OnBegin" << endl;
 
-	// loop through current page blocks
-	for (size_t blockIx = 0; blockIx < m_curPage->m_blocks.size(); blockIx++)
-	{
-		TSetBlock *block = m_curPage->m_blocks[blockIx];
-		bool clippingDetected = false;
+	// loop over pages
 
-		if (!block->isVisible())
-			continue;
-
-		wxRect blockRect = block->getBoundingRect();
-
-		// check if there is enough horizontal space for block to be drawn
-		// in current column
-		if (blockRect.GetWidth() > colRect.GetWidth())
-		{
-			clippingDetected = true;
-			std::cout << "problem with horizontal clipping found" << std::endl;
-		}
-
-		wxCoord blockHeight = blockRect.GetHeight();
-
-		// check if we have enough space to draw block
-		if (pos.y + blockHeight > pageRect.GetBottom())
-		{
-			//cout << "not enough space for block, pos.y: " << pos.y << " block height: " << blockHeight << endl;
-			if (curColumn < m_ss->m_cols - 1)
-			{
-				//cout << "starting new column" << endl;
-				curColumn++;
-				colRect.SetLeft(colRect.GetLeft() + colRect.GetWidth());
-				m_dc.DestroyClippingRegion();
-				m_dc.SetClippingRegion(colRect);
-				pos.x = colRect.GetLeft();
-				pos.y = colRect.GetTop();
-			}
-			else
-			{
-				m_stat.m_pages++;
-				std::cout << "new page is required !!!" << std::endl;
-				break;
-			}
-		}
-
-		// draw bounding box
-		if (m_drawTsetBlocks)
-			block->drawBoundingRect(pos);
-		block->draw(pos);
-
-		// draw warning
-		if (clippingDetected)
-		{
-			// draw bounding rect
-			wxPen pen(wxColor(255, 0, 0), 5);
-			m_dc.SetPen(pen);
-			m_dc.DrawLine(colRect.GetRight(), pos.y, colRect.GetRight(), pos.y + blockRect.GetHeight());
-			m_stat.m_clippings++;
-		}
-
-		pos.y += block->getBoundingRect().GetHeight();
-		//cout << "block height: " << block->getBoundingRect().GetHeight() << ", new pos.y: " << pos.y << endl;
-	}
 }
 
 void TSetDCPainter::onText(const std::wstring& text)
 {
-
 	// create new text line item
 	TSetLineItem *item = new TSetLineItem();
 	m_isLineEmpty = false;
@@ -441,13 +481,12 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 
 		TSetBlockTitle *block = new TSetBlockTitle(this);
 		block->m_title = item;
-		m_curPage->m_blocks.push_back(block);
+		addBlock(block);
 		m_curBlock = NULL;
 	}
 	else if (command == bschordpro::CMD_CHORUS_START)
 	{
 		TSetBlockChorus *block = new TSetBlockChorus(this);
-		m_curPage->m_blocks.push_back(block);
 		m_curBlock = block;
 	}
 	else if (command == bschordpro::CMD_CHORUS_END)
@@ -456,6 +495,7 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 		if (m_curBlock->getType() == TSetBlock::BLTYPE_CHORUS)
 		{
 			// finish block
+			addBlock(m_curBlock);
 			m_curBlock = NULL;
 		}
 		// else igonre end of chorus command
@@ -463,7 +503,6 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 	else if (command == bschordpro::CMD_TAB_START)
 	{
 		TSetBlockTab *block = new TSetBlockTab(this);
-		m_curPage->m_blocks.push_back(block);
 		m_curBlock = block;
 	}
 	else if (command == bschordpro::CMD_TAB_END)
@@ -472,6 +511,7 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 		if (m_curBlock->getType() == TSetBlock::BLTYPE_TAB)
 		{
 			// finish block
+			addBlock(m_curBlock);
 			m_curBlock = NULL;
 		}
 		// else igonre end of chorus command
@@ -508,7 +548,7 @@ void TSetDCPainter::onLineEnd()
 		{
 			// create new hspace (empty line) block and close it
 			m_curBlock = new TSetBlockHSpace(this);
-			m_curPage->m_blocks.push_back(m_curBlock);
+			addBlock(m_curBlock);
 			m_curBlock = NULL;
 		}
 		else
@@ -516,7 +556,7 @@ void TSetDCPainter::onLineEnd()
 			// create new text block and add current line
 			TSetBlockVerse *block = new TSetBlockVerse(this, m_verseCounter);
 			block->m_lines.push_back(m_curLine);
-			m_curPage->m_blocks.push_back(block);
+			// todel addBlock(block);
 			m_curBlock = block;
 			m_verseCounter++;
 		}
@@ -531,7 +571,8 @@ void TSetDCPainter::onLineEnd()
 				// close block if line is empty
 				if (m_isLineEmpty)
 				{
-					m_curPage->m_blocks.push_back(new TSetBlockHSpace(this));
+					addBlock(m_curBlock);
+					addBlock(new TSetBlockHSpace(this));
 					m_curBlock = NULL;
 				}
 				// line is not empty -> add it to the block contents
@@ -554,3 +595,30 @@ void TSetDCPainter::onLineEnd()
 	}
 }
 
+TSetPage::TPageAddResult TSetDCPainter::addBlock(TSetBlock *block)
+{
+	TSetPage::TPageAddResult addResult = m_curPage->addBlock(block);
+	switch (addResult)
+	{
+		case TSetPage::ADD_PAGE_FULL:
+			// create new page
+			m_curPage = new TSetPage(this, mPageRect);
+			m_pages.push_back(m_curPage);
+			m_stat.m_pages++;
+			addResult = m_curPage->addBlock(block);
+			break;
+		case TSetPage::ADD_OK:
+			break;
+		default:
+			;
+	}
+
+	return(addResult);
+}
+
+void TSetDCPainter::drawPage(unsigned int i)
+{
+	if (i < m_pages.size())
+		m_pages[i]->draw();
+
+}

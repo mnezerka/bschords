@@ -730,7 +730,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 	int startPos = m_songContent->GetEndStyled();
     int firstLineNumber = m_songContent->LineFromPosition(startPos);
 	int lastLineNumber = m_songContent->LineFromPosition(event.GetPosition());
-	std::cout << "EVENT - style needed from line " << firstLineNumber << " to " << lastLineNumber << std::endl;
+	//std::cout << "EVENT - style needed from line " << firstLineNumber << " to " << lastLineNumber << std::endl;
 
 	// loop through all lines which need to be styled
 	for (int lineIx = firstLineNumber; lineIx <= lastLineNumber; lineIx++)
@@ -744,7 +744,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 		//m_songContent->SetStyling(linePosMax - linePosMin, wxSTC_CHORDPRO_TEXT);
 		size_t stylingPos = 0;
 
-		std::cout << "..styling line " << lineIx << " (len: " << lineLength << ") linePosMin is " << linePosMin << std::endl;
+		//std::cout << "..styling line " << lineIx << " (len: " << lineLength << ") linePosMin is " << linePosMin << std::endl;
 
 		// loop through line characters
 		wxCharBuffer buffer = m_songContent->GetLineRaw(lineIx);
@@ -764,12 +764,12 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 				continue;
 			}
 
-			std::cout << "....checking char " << (int)buffer[linePos] << std::endl;
+			//std::cout << "....checking char " << (int)buffer[linePos] << std::endl;
 
 			switch (buffer[linePos])
 			{
 				case wxChar('['):
-					std::cout << "....found [ at " << linePos << std::endl;
+					//std::cout << "....found [ at " << linePos << std::endl;
 
 					// chord sections are allowed only in text context
 					if (style == wxSTC_CHORDPRO_TEXT)
@@ -780,19 +780,19 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 						{
 							int ss = linePos - stylingPos;
 							m_songContent->SetStyling(ss, wxSTC_CHORDPRO_TEXT);
-							std::cout << "....setting style TEXT for " << ss << std::endl;
+							//std::cout << "....setting style TEXT for " << ss << std::endl;
 							stylingPos += ss;
 						}
 					}
 					break;
 
 				case wxChar(']'):
-					std::cout << "....found ] at " << linePos << std::endl;
+					//std::cout << "....found ] at " << linePos << std::endl;
 					if (linePos > 0 && style == wxSTC_CHORDPRO_CHORD)
 					{
 						int ss = linePos - stylingPos + 1;
 						m_songContent->SetStyling(ss, wxSTC_CHORDPRO_CHORD);
-						std::cout << "....setting style CHORD for " << ss << std::endl;
+						//std::cout << "....setting style CHORD for " << ss << std::endl;
 						stylingPos += ss;
 						style = wxSTC_CHORDPRO_TEXT;
 					}
@@ -808,7 +808,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 						{
 							int ss = linePos - stylingPos;
 							m_songContent->SetStyling(ss, wxSTC_CHORDPRO_TEXT);
-							std::cout << "....setting style TEXT for " << ss << std::endl;
+							//std::cout << "....setting style TEXT for " << ss << std::endl;
 							stylingPos += ss;
 						}
 					}
@@ -819,7 +819,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 					{
 						int ss = linePos - stylingPos + 1;
 						m_songContent->SetStyling(ss, wxSTC_CHORDPRO_CMD);
-						std::cout << "....setting style CMD for " << ss << std::endl;
+						//std::cout << "....setting style CMD for " << ss << std::endl;
 						stylingPos += ss;
 						style = wxSTC_CHORDPRO_TEXT;
 					}
@@ -833,7 +833,7 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
 		{
 			//std::cout << " - styling rest after loop of size " << linePos - stylingPos << std::endl;
 			m_songContent->SetStyling(linePos - stylingPos, wxSTC_CHORDPRO_TEXT);
-			std::cout << "....setting style TEXT (rest) for " << linePos - stylingPos << std::endl;
+			//std::cout << "....setting style TEXT (rest) for " << linePos - stylingPos << std::endl;
 		}
 	}
 }

@@ -52,6 +52,7 @@ void PreviewWndCanvas::OnDraw(wxDC& dc)
 	bschords::TSetDCPainter painter(dc, m_screenPPI.GetWidth() / MM_PER_IN);
 	bschordpro::Parser p(&painter);
 	p.parse(std::wstring(text.wc_str()));
+	painter.drawPage(0);
 
 	wxString infoText;
 	bool infoIsWarning = false;

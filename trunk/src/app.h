@@ -68,14 +68,14 @@ namespace bschords
 			SongStyleSheet m_styleSheet;
 
 			// application settings
-			AppSettings m_settings;
+			AppSettings *m_settings;
 
 			// current songbook
 			bschords::SongBook m_songBook;
 
 			virtual bool OnInit();
 			virtual int OnExit();
-			virtual wxLog* CreateLogTarget();
+			//virtual wxLog* CreateLogTarget();
 
 		private:
 			//std::list<SongStylesheet> m_styleSheets;

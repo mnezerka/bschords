@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <wx/imaglist.h>
+
 #include <wx/filename.h>
 
 #include "app.h"

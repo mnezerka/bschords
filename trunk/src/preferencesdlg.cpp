@@ -93,7 +93,7 @@ wxPanel* PreferencesDlg::CreateGeneralPage(wxWindow* parent)
 	rootPathStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, wxT("Song repository root path:")), 0, wxALL | wxEXPAND, 3);
 
     wxBoxSizer *rootPathSizer = new wxBoxSizer( wxHORIZONTAL );
-    m_rootPathCtrl = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&(wxGetApp().m_settings.m_rootPath)));
+    m_rootPathCtrl = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&(wxGetApp().m_settings->m_rootPath)));
 	rootPathSizer->Add(m_rootPathCtrl, 1, wxALL | wxEXPAND | wxCENTER);
 	rootPathSizer->AddSpacer(5);
 	rootPathSizer->Add(new wxButton(panel, idBtnSelRootPath, wxT("..."), wxDefaultPosition, wxSize(30, wxDefaultCoord)), 0, wxALL | wxEXPAND | wxCENTER);
@@ -146,7 +146,7 @@ wxPanel* PreferencesDlg::CreateEditorPage(wxWindow* parent)
 
     fontStaticBoxSizer->Add(new wxButton(panel, idBtnSelFont, _("Font...")));
 	m_editorFontPreview = new wxStaticText(panel, wxID_ANY, wxT("This is editor font"), wxDefaultPosition, wxSize(300, wxDefaultCoord));
-	m_editorFontPreview->SetFont(wxGetApp().m_settings.m_editorFont);
+	m_editorFontPreview->SetFont(wxGetApp().m_settings->m_editorFont);
     m_editorFontPreview->SetBackgroundColour(wxColour(255, 255, 255));
 	m_editorFontPreview->SetBackgroundStyle(wxBG_STYLE_COLOUR);
 	fontStaticBoxSizer->Add(m_editorFontPreview, 1, wxALL | wxEXPAND, 5);
@@ -210,13 +210,13 @@ void PreferencesDlg::OnSelFont(wxCommandEvent &event)
 {
 	// fonts stuff
 	wxFontData fontData;
-	fontData.SetInitialFont(wxGetApp().m_settings.m_editorFont);
+	fontData.SetInitialFont(wxGetApp().m_settings->m_editorFont);
 	wxFontDialog dialog(this, &fontData);
 	if (dialog.ShowModal() == wxID_OK)
 	{
 		wxFontData retData = dialog.GetFontData();
-		wxGetApp().m_settings.m_editorFont = retData.GetChosenFont();
-		m_editorFontPreview->SetFont(wxGetApp().m_settings.m_editorFont);
+		wxGetApp().m_settings->m_editorFont = retData.GetChosenFont();
+		m_editorFontPreview->SetFont(wxGetApp().m_settings->m_editorFont);
 	}
 }
 
@@ -281,9 +281,9 @@ void PreferencesDlg::updateColors()
 
 bool PreferencesDlg::TransferDataToWindow()
 {
-	m_editorColorText = wxGetApp().m_settings.m_editorColorText;
-	m_editorColorChords = wxGetApp().m_settings.m_editorColorChords;
-	m_editorColorCommands = wxGetApp().m_settings.m_editorColorCommands;
+	m_editorColorText = wxGetApp().m_settings->m_editorColorText;
+	m_editorColorChords = wxGetApp().m_settings->m_editorColorChords;
+	m_editorColorCommands = wxGetApp().m_settings->m_editorColorCommands;
 
     bool result = wxDialog::TransferDataToWindow();
 
@@ -296,9 +296,9 @@ bool PreferencesDlg::TransferDataFromWindow()
 {
 	bool result = wxDialog::TransferDataFromWindow();
 
-	wxGetApp().m_settings.m_editorColorText = m_editorColorText;
-	wxGetApp().m_settings.m_editorColorChords = m_editorColorChords;
-	wxGetApp().m_settings.m_editorColorCommands = m_editorColorCommands;
+	wxGetApp().m_settings->m_editorColorText = m_editorColorText;
+	wxGetApp().m_settings->m_editorColorChords = m_editorColorChords;
+	wxGetApp().m_settings->m_editorColorCommands = m_editorColorCommands;
 
 	return result;
 }

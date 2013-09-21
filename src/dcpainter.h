@@ -1,3 +1,15 @@
+/*
+
+m_pages
+  m_blocks
+    m_block
+      m_lines
+
+
+
+*/
+
+
 #ifndef BSCHORDSDCPAINTER_H
 #define BSCHORDSDCPAINTER_H
 
@@ -39,13 +51,20 @@ namespace bschords
 	struct TSetBlock
 	{
 		TSetDCPainter *m_painter;
+		// index of block of the same type (e.g. for verse numbering)
 		unsigned int m_pos;
+
+		// physical position of block on page
+		wxPoint mPos;
+
 		enum TBlockType { BLTYPE_NONE, BLTYPE_TEXT, BLTYPE_CHORUS, BLTYPE_HSPACE, BLTYPE_TITLE, BLTYPE_TAB, BLTYPE_VERSE };
 
 		TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos) { };
 		virtual ~TSetBlock() { }
-		virtual void draw(wxPoint pos) {};
-		virtual void drawBoundingRect(const wxPoint pos);
+		virtual void setPosition(wxPoint p) { mPos = p; }
+		virtual wxPoint getPosition() { return mPos; };
+		virtual void draw() {};
+		virtual void drawBoundingRect();
 		virtual wxRect getBoundingRect() { return wxRect(0, 0, 0, 0); };
 		virtual TBlockType getType() { return BLTYPE_NONE; };
 		virtual bool isVisible() { return true; };
@@ -64,7 +83,7 @@ namespace bschords
 		TSetLineItem* m_title;
 		TSetBlockTitle(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos), m_title(NULL) { };
 		virtual ~TSetBlockTitle() { delete m_title; }
-		virtual void draw(wxPoint pos);
+		virtual void draw();
 		virtual TBlockType getType() { return BLTYPE_TITLE; };
 		virtual wxRect getBoundingRect();
 	};
@@ -74,7 +93,7 @@ namespace bschords
 		std::vector<TSetLine*> m_lines;
 		TSetBlockText(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos) { };
 		virtual ~TSetBlockText() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
-		virtual void draw(wxPoint pos);
+		virtual void draw();
 		virtual TBlockType getType() { return BLTYPE_TEXT; };
 		virtual wxRect getBoundingRect();
 		virtual bool hasChords();
@@ -102,15 +121,30 @@ namespace bschords
 		TSetBlockTab(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos) { };
 		virtual ~TSetBlockTab() { while (!m_lines.empty()) { delete m_lines.back(); m_lines.pop_back(); } }
 		virtual TBlockType getType() { return BLTYPE_TAB; };
-		virtual void draw(wxPoint pos);
+		virtual void draw();
 		virtual wxRect getBoundingRect();
 		virtual bool isVisible();
 	};
 
+	/* Songbook page */
 	struct TSetPage
 	{
-		std::vector<TSetBlock*> m_blocks;
-		virtual ~TSetPage() { while (!m_blocks.empty()) { delete m_blocks.back(); m_blocks.pop_back(); } }
+		public:
+			enum TPageAddResult { ADD_OK, ADD_PAGE_FULL, ADD_PAGE_OVERSIZE };
+
+			TSetPage(TSetDCPainter *painter, wxRect pageRect);
+			virtual ~TSetPage() { while (!m_blocks.empty()) { delete m_blocks.back(); m_blocks.pop_back(); } }
+			TPageAddResult addBlock(TSetBlock *block);
+			void draw();
+
+		private:
+			// list of vertical blocks
+			std::vector<TSetBlock*> m_blocks;
+			wxRect mPageRect;
+			wxRect mColRect;
+			wxPoint mPos;
+			TSetDCPainter *mPainter;
+			int mCol;
 	};
 
 	struct TSetStat
@@ -123,6 +157,7 @@ namespace bschords
 		TSetStat() : m_clippings(0), m_pages(0) { };
 	};
 
+	/* Class responsible for drawing based on events from bschords parser */
 	class TSetDCPainter : public bschordpro::EventHandler
 	{
 		public:
@@ -139,6 +174,10 @@ namespace bschords
 			wxCoord getDeviceX(int numMM);
 			wxCoord getDeviceY(int numMM);
 			TSetStat getTSetStat() { return m_stat; };
+			TSetPage::TPageAddResult addBlock(TSetBlock *block);
+
+			unsigned int getPages() { return m_pages.size(); };
+			void drawPage(unsigned int i);
 
 			bool m_drawTsetBlocks;
 			bool m_drawTsetMargins;
@@ -160,8 +199,10 @@ namespace bschords
 			TSetBlock *m_curBlock;
 			TSetPage *m_curPage;
 			TSetLine *m_curLine;
-		private:
 			TSetStat m_stat;
+		private:
+			//TSetStat m_stat;
+			wxRect mPageRect;
 	};
 }
 

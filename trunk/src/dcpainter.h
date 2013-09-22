@@ -135,6 +135,7 @@ namespace bschords
 			TSetPage(TSetDCPainter *painter, wxRect pageRect);
 			virtual ~TSetPage() { while (!m_blocks.empty()) { delete m_blocks.back(); m_blocks.pop_back(); } }
 			TPageAddResult addBlock(TSetBlock *block);
+			bool isEmpty() { return mPos.y  == mPageRect.GetY(); };
 			void draw();
 
 		private:

@@ -1166,20 +1166,51 @@ void MainWnd::updateEditorStyles()
 // ----------------------------------------------------------------------------
 // BSChordsPrintout
 // ----------------------------------------------------------------------------
+
+void BSChordsPrintout::OnPreparePrinting()
+{
+	std::cout << "OnPreparePrinting" << std::endl;
+
+	// set user scale to fit a4
+	//GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
+	//GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
+
+    int ppiScreenX, ppiScreenY;
+    GetPPIScreen(&ppiScreenX, &ppiScreenY);
+
+	wxSize paperPixels;
+	paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
+	paperPixels.SetHeight(ppiScreenY * 290 / MM_PER_IN);
+	FitThisSizeToPaper(paperPixels);
+	double newScaleX, newScaleY;
+	GetDC()->GetUserScale(&newScaleX, &newScaleY);
+	//cout << "new user scale: " << newScaleX << "x" << newScaleY << endl;
+
+	wxString text = m_frame->m_songContent->GetText();;
+
+	float scale = ppiScreenX / MM_PER_IN;
+
+	TSetDCPainter pn(*GetDC(), scale);
+	bschordpro::Parser p(&pn);
+	p.parse(std::wstring(text.wc_str()));
+	mPages = pn.getPages();
+}
+
+void BSChordsPrintout::OnEndPrinting()
+{
+	std::cout << "OnEndPrinting" << std::endl;
+	//delete mPainter;
+	//mPainter = NULL;
+};
+
 bool BSChordsPrintout::OnPrintPage(int page)
 {
-	std::cout << "OnPrintPage" << std::endl;
+	std::cout << "OnPrintPage " << page << std::endl;
     wxDC *dc = GetDC();
     if (dc)
     {
-        if (page == 1)
-            DrawPageOne();
-
-        // Draw page numbers at top left corner of printable area, sized so that
-        // screen size of text matches paper size.
-        //MapScreenSizeToPage();
-
-        //dc->DrawText(wxString::Format(wxT("PAGE %d"), page), 0, 0);
+        if (page >= 1 && page <= (int)mPages)
+			mPainter->drawPage(page - 1);
 
         return true;
     }
@@ -1187,98 +1218,58 @@ bool BSChordsPrintout::OnPrintPage(int page)
         return false;
 }
 
+/* it is necessary to redraw document since DC context is new - e.g. when
+  print preview window zoom is chnaged. This cannot be done only once in
+  OnPreparePrinting.  */
 bool BSChordsPrintout::OnBeginDocument(int startPage, int endPage)
 {
 	std::cout << "OnBeginDocument" << std::endl;
+	if (!mPainter)
+		std::cout << "mPainter is NULL" << std::endl;
     if (!wxPrintout::OnBeginDocument(startPage, endPage))
         return false;
 
-	// set user scale to fit a4
-	//GetDC()->G
-	int pageSizeXMM, pageSizeYMM;
-	GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
-	//std::cout << "page size mm: " << pageSizeXMM << "x" << pageSizeYMM << std::endl;
-
-	int pageSizeXPx, pageSizeYPx;
-	GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
-	//cout << "page size px: " << pageSizeXPx << "x" << pageSizeYPx << endl;
-
-	//wxSize dcSize = GetDC()->GetSize();
-	//cout << "dc size in px: " << dcSize.GetWidth() << "x" << dcSize.GetHeight() << endl;
-
-	//wxRect paperRect = GetPaperRectPixels();
-	//cout << "paper rect in px: " << paperRect.GetLeft() << "," << paperRect.GetTop() << " - " << paperRect.GetRight() << "," << paperRect.GetBottom() << " - " << paperRect.GetWidth() << "x" << paperRect.GetHeight() << endl;
-
     int ppiScreenX, ppiScreenY;
     GetPPIScreen(&ppiScreenX, &ppiScreenY);
-    //cout << "screen ppi: " << ppiScreenX << "x" << ppiScreenY << endl;
-    int ppiPrinterX, ppiPrinterY;
-    GetPPIPrinter(&ppiPrinterX, &ppiPrinterY);
-    //cout << "printer ppi: " << ppiPrinterX << "x" << ppiPrinterY << endl;
 
 	wxSize paperPixels;
-	if (IsPreview())
-	{
-		paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
-		paperPixels.SetHeight(ppiScreenY * 290 / MM_PER_IN);
-		//cout << "fitting size to preview page " << paperPixels.GetWidth() << "x" << paperPixels.GetHeight() << endl;
-	}
-	else
-	{
-		//paperPixels.SetWidth(ppiPrinterX * 210 / MM_PER_IN);
-		//paperPixels.SetHeight(ppiPrinterY * 290 / MM_PER_IN);
-		paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
-		paperPixels.SetHeight(ppiScreenY * 290 / MM_PER_IN);
-		//cout << "fitting size to printer page " << paperPixels.GetWidth() << "x" << paperPixels.GetHeight() << endl;
-	}
+	paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
+	paperPixels.SetHeight(ppiScreenY * 290 / MM_PER_IN);
 	FitThisSizeToPaper(paperPixels);
 	double newScaleX, newScaleY;
 	GetDC()->GetUserScale(&newScaleX, &newScaleY);
-	//cout << "new user scale: " << newScaleX << "x" << newScaleY << endl;
+	float scale = ppiScreenX / MM_PER_IN;
+
+	wxString text = m_frame->m_songContent->GetText();;
+
+	mPainter = new TSetDCPainter(*GetDC(), scale);
+	bschordpro::Parser p(mPainter);
+	p.parse(std::wstring(text.wc_str()));
 
     return true;
 }
 
+void BSChordsPrintout::OnEndDocument()
+{
+	wxPrintout::OnEndDocument();
+	delete(mPainter);
+	mPainter = NULL;
+}
+
 void BSChordsPrintout::GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo)
 {
-	//std::cout << "OnGetPageInfo" << std::endl;
+	std::cout << "OnGetPageInfo" << std::endl;
     *minPage = 1;
-    *maxPage = 1;
+    *maxPage = mPages;
     *selPageFrom = 1;
-    *selPageTo = 1;
+    *selPageTo = *maxPage;
 }
 
 bool BSChordsPrintout::HasPage(int pageNum)
 {
 	std::cout << "HasPage" << std::endl;
-    return (pageNum == 1);
+    return (pageNum >= 1 && pageNum <= (int)mPages);
 }
-
-void BSChordsPrintout::DrawPageOne()
-{
-	std::cout << "DrawPageOne" << std::endl;
-	double newScaleX, newScaleY;
-	GetDC()->GetUserScale(&newScaleX, &newScaleY);
-	//cout << "  user scale: " << newScaleX << "x" << newScaleY << endl;
-
-	GetDC()->SetBackground(*wxWHITE_BRUSH);
-
-	wxString text = m_frame->m_songContent->GetText();;
-
-    int ppiScreenX, ppiScreenY;
-    GetPPIScreen(&ppiScreenX, &ppiScreenY);
-    int ppiPrinterX, ppiPrinterY;
-    GetPPIPrinter(&ppiPrinterX, &ppiPrinterY);
-
-	float scale = ppiScreenX / MM_PER_IN;
-
-	bschords::TSetDCPainter y(*GetDC(), scale);
-	bschordpro::Parser p(&y);
-
-	p.parse(std::wstring(text.wc_str()));
-}
-
-
 
 // Writes a header on a page. Margin units are in millimetres.
 bool BSChordsPrintout::WritePageHeader(wxPrintout *printout, wxDC *dc, const wxString&text, float mmToLogical)

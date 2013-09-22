@@ -24,6 +24,7 @@
 #include "app.h"
 #include "previewwnd.h"
 #include "songbookwnd.h"
+#include "dcpainter.h"
 
 namespace bschords
 {
@@ -119,11 +120,14 @@ namespace bschords
 	{
 		public:
 			BSChordsPrintout(MainWnd* frame, const wxString &title = _("My printout"))
-			: wxPrintout(title) { m_frame = frame; }
+			: wxPrintout(title) { m_frame = frame; mPainter = NULL; mPages = 0; }
 
+		virtual void OnPreparePrinting();
+		virtual void OnEndPrinting();
 		virtual bool OnPrintPage(int page);
 		virtual bool HasPage(int page);
 		virtual bool OnBeginDocument(int startPage, int endPage);
+		virtual void OnEndDocument();
 		virtual void GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo);
 
 		void DrawPageOne();
@@ -134,6 +138,8 @@ namespace bschords
 
 	private:
 		MainWnd *m_frame;
+		TSetDCPainter *mPainter;
+		unsigned int mPages;
 	};
 }
 

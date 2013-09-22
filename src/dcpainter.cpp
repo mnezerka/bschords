@@ -310,7 +310,7 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 	// move page typesetting cursor
 	mPos.y += block->getBoundingRect().GetHeight();
 
-	std::cout << "addBlock - block height: " << block->getBoundingRect().GetHeight() << ", new pos.y: " << mPos.y << std::endl;
+	//std::cout << "addBlock - block height: " << block->getBoundingRect().GetHeight() << ", new pos.y: " << mPos.y << std::endl;
 
 	return(ADD_OK);
 }
@@ -340,7 +340,7 @@ void TSetPage::draw()
         if (mPainter->m_drawTsetBlocks)
 			block->drawBoundingRect();
 
-		std::cout << "drawing block " << blockIx << " of type " << block->getType() << " height " << block->getBoundingRect().GetHeight() << " y: " << block->getPosition().y << std::endl;
+		//std::cout << "drawing block " << blockIx << " of type " << block->getType() << " height " << block->getBoundingRect().GetHeight() << " y: " << block->getPosition().y << std::endl;
 		// draw block content
         block->draw();
 

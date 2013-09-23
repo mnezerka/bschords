@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include <vector>
+#include <wx/textfile.h>
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
 
@@ -30,6 +31,44 @@ wxString SongBookItem::getTitle()
 wxString SongBookItem::getPath()
 {
 	return m_path;
+}
+
+wxString SongBookItem::getContents()
+{
+
+	wxString contents;
+	bool success = false;
+    wxFile file(m_path, wxFile::read);
+
+    std::wcout << L"Reading file contents from: " << m_path.mb_str(wxConvUTF8) << std::endl;
+
+    if (file.IsOpened())
+    {
+        // get the file size (assume it is not huge file...)
+        ssize_t len = (ssize_t)file.Length();
+        if (len > 0)
+        {
+            wxMemoryBuffer buffer(len+1);
+            success = (file.Read(buffer.GetData(), len) == len);
+            if (success) {
+                ((char*)buffer.GetData())[len] = 0;
+                contents = wxString(buffer, wxConvUTF8, len);
+            }
+        }
+        else
+        {
+            if (len < 0)
+				std::cout << "Invalid offset while reading file " << m_path.mb_str(wxConvUTF8) << std::endl;
+        }
+    }
+    else
+    {
+    	std::cout << "Cannot open file " << m_path.mb_str(wxConvUTF8) << std::endl;
+    }
+
+    std::wcout << L"File contents: " << contents.mb_str(wxConvUTF8) << std::endl;
+
+	return contents;
 }
 
 SongBook::SongBook()
@@ -161,4 +200,17 @@ void SongBook::loadFromXmlFile(wxString path)
 unsigned int SongBook::getCount()
 {
 	return m_items.size();
+}
+
+wxString SongBook::getContents()
+{
+	wxString result;
+	for (unsigned i = 0; i < m_items.size(); i++)
+	{
+		if (i > 0)
+			result.Append(wxT("\n\n"));
+		result.Append(m_items[i]->getContents());
+	}
+
+	return result;
 }

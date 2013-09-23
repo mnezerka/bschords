@@ -15,7 +15,7 @@ namespace bschords
 	class SongBookWnd : public wxWindow
 	{
 		public:
-			SongBookWnd(wxWindow *parent);
+			SongBookWnd(wxWindow *parent, wxWindowID id);
 			virtual ~SongBookWnd();
 			void OnNewSection(wxCommandEvent &event);
 			void addSongFile(wxString filePath);
@@ -25,8 +25,11 @@ namespace bschords
 			//SongBookTreeCtrl *m_treeCtrl;
 			wxListView *m_listCtrl;
 			void OnSize(wxSizeEvent& event);
-			//SongBook m_songBook;
-
+			void OnSongBookItemActivated(wxListEvent& event);
+			void OnSongBookItemRightClick(wxListEvent& event);
+			void OnContextMenu(wxContextMenuEvent& event);
+			void ShowContextMenu(const wxPoint& pos);
+			void OnListKeyDown(wxListEvent& event);
 
 		DECLARE_EVENT_TABLE()
 	};

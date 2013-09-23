@@ -41,6 +41,7 @@ namespace bschords
 	class MainWnd: public wxFrame
 	{
 		public:
+			void OpenFile(const wxString filePath);
 			//wxRichTextCtrl *m_songContent;
 			wxStyledTextCtrl *m_songContent;
 			MainWnd(wxFrame *frame, const wxString& title);
@@ -65,7 +66,7 @@ namespace bschords
 			wxString m_songBookPath;
 
 			void SetEditMode(bool newEditMode);
-			void OpenFile(const wxString filePath);
+
 			void SaveFile();
 			void OpenSongBook(const wxString filePath);
 			void SaveSongBook();
@@ -86,6 +87,8 @@ namespace bschords
 			void OnFileCloseSongBook(wxCommandEvent& event);
 			void OnFilePrint(wxCommandEvent& event);
 			void OnFilePrintPreview(wxCommandEvent& event);
+			void OnFilePrintSongBook(wxCommandEvent& event);
+			void OnFilePrintPreviewSongBook(wxCommandEvent& event);
 			void OnFilePageSetup(wxCommandEvent& event);
 
 			void OnSongInsert(wxCommandEvent& event);
@@ -119,8 +122,8 @@ namespace bschords
 	class BSChordsPrintout: public wxPrintout
 	{
 		public:
-			BSChordsPrintout(MainWnd* frame, const wxString &title = _("My printout"))
-			: wxPrintout(title) { m_frame = frame; mPainter = NULL; mPages = 0; }
+			BSChordsPrintout(MainWnd* frame, const wxString &contents, const wxString &title = _("My printout"))
+			: wxPrintout(title), mContents(contents) { m_frame = frame; mPainter = NULL; mPages = 0; }
 
 		virtual void OnPreparePrinting();
 		virtual void OnEndPrinting();
@@ -140,6 +143,7 @@ namespace bschords
 		MainWnd *m_frame;
 		TSetDCPainter *mPainter;
 		unsigned int mPages;
+		wxString mContents;
 	};
 }
 

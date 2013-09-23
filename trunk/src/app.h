@@ -27,10 +27,13 @@ http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
 */
 
+// TODO: split parsing and painting - song should have its own class - wrapper around chordpro and other formats
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice
 // TODO: separate section for song title (especially in case of multicolumn stylesheet)
 // TODO: song directives (e.g. request for 2 cols)
+// TODO: log window
+// TODO: each block should remember it's clipping status
 
 namespace bschords
 {

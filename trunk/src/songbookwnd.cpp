@@ -7,6 +7,7 @@
 #include "app.h"
 #include "songbook.h"
 #include "songbookwnd.h"
+#include "mainwnd.h"
 
 #include "res/song.xpm"
 #include "res/songbook.xpm"
@@ -37,24 +38,27 @@ END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(SongBookTreeCtrl, wxTreeCtrl)*/
 
-
-
 // --------------- SongBookWnd -------------------------------------------------
-
 
 enum
 {
 	ID_SONG_LIST = 1000,
-	ID_BTN_NEW_SECTION
+	ID_BTN_NEW_SECTION,
+	ID_BTN_REMOVE,
 };
 
 BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
 	EVT_SIZE(SongBookWnd::OnSize)
 	EVT_BUTTON(ID_BTN_NEW_SECTION, SongBookWnd::OnNewSection)
+	EVT_LIST_ITEM_ACTIVATED(ID_SONG_LIST, SongBookWnd::OnSongBookItemActivated)
+	EVT_LIST_ITEM_RIGHT_CLICK(ID_SONG_LIST, SongBookWnd::OnSongBookItemRightClick)
+	EVT_LIST_KEY_DOWN(ID_SONG_LIST, SongBookWnd::OnListKeyDown)
 END_EVENT_TABLE()
 
-SongBookWnd::SongBookWnd(wxWindow *parent)
-	: wxWindow(parent, wxID_ANY)
+	//EVT_CONTEXT_MENU(SongBookWnd::OnContextMenu)
+
+SongBookWnd::SongBookWnd(wxWindow *parent, wxWindowID id)
+	: wxWindow(parent, id)
 {
 	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
 	this->SetSizer(sizer);
@@ -64,18 +68,13 @@ SongBookWnd::SongBookWnd(wxWindow *parent)
 	new wxStaticText(panel, wxID_ANY, _("This is list of songs"));
 	sizer->Add(panel, 0, wxALL | wxEXPAND, 1);
 
-	//m_listBox = new wxListBox(this, wxID_ANY);
-	//m_treeCtrl = new SongBookTreeCtrl(this, idSongBookTreeCtrlId, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxTR_EDIT_LABELS | wxSUNKEN_BORDER);
 	m_listCtrl = new wxListView(this, idSongBookListCtrlId, wxDefaultPosition, wxDefaultSize, wxLC_LIST);
-	//wxTreeItemId rootId = m_treeCtrl->AddRoot(_("Empty songbook"), 1, 1);
 	sizer->Add(m_listCtrl, 1, wxALL | wxEXPAND, 1);
 
 	// create buttons bar
 	wxPanel *panel2 = new wxPanel(this);
 	new wxButton(panel2, ID_BTN_NEW_SECTION, _("Add section"));
 	sizer->Add(panel2, 0, wxALL | wxEXPAND, 1);
-
-	//m_treeCtrl->UpdateContent();
 }
 
 SongBookWnd::~SongBookWnd()
@@ -114,23 +113,13 @@ void SongBookWnd::OnNewSection(wxCommandEvent &event)
 void SongBookWnd::addSongFile(wxString filePath)
 {
 	std::cout << "song book wnd - addSongFile" << std::endl;
-
-	//Song *song = new Song();
-	//song->m_filePath = filePath;
-	//wxGetApp().m_songBook.add(song);
-	//m_treeCtrl->AppendItem(m_treeCtrl->GetRootItem(), filePath, 0, 0, new wxTreeItemData(song));
-	//wxListItem *item = new wxListItem();
-	//item->SetText(filePath);
-
 	wxGetApp().m_songBook.addSong(filePath);
 
-	//m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), filePath);
 	Update();
 }
 
 void SongBookWnd::Update()
 {
-	//m_listCtrl->UpdateContent();
 	// update list ctrl according to song book contents
 	m_listCtrl->DeleteAllItems();
 
@@ -139,6 +128,55 @@ void SongBookWnd::Update()
 		SongBookItem *item = wxGetApp().m_songBook.getItem(i);
 		m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), item->getTitle());
 	}
+}
 
+void SongBookWnd::OnSongBookItemActivated(wxListEvent& event)
+{
+    std::cout << "item activated" << event.GetIndex() << event.ShouldPropagate() << std::endl;
+    SongBookItem *item = wxGetApp().m_songBook.getItem(event.GetIndex());
+    if (item)
+    {
+		MainWnd *main = static_cast<MainWnd*>(GetParent());
+		main->OpenFile(item->getPath());
+    }
+}
 
+void SongBookWnd::OnSongBookItemRightClick(wxListEvent& event)
+{
+    std::cout << "item right click" << event.GetIndex() << event.ShouldPropagate() << std::endl;
+    SongBookItem *item = wxGetApp().m_songBook.getItem(event.GetIndex());
+    if (item)
+    {
+    	wxPoint point = event.GetPoint();
+
+		wxMenu menu;
+		menu.Append(wxID_ABOUT, _T("&Remove"));
+		menu.Append(wxID_ANY, _T("&Edit"));
+		menu.Append(wxID_ANY, _T("&Move"));
+		PopupMenu(&menu, point.x, point.y);
+    }
+}
+
+void SongBookWnd::OnListKeyDown(wxListEvent& event)
+{
+	long item;
+
+	switch (event.GetKeyCode())
+	{
+		case WXK_DELETE:
+			item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+            while (item != -1)
+            {
+            	std::cout << "delete item " << item << std::endl;
+				//m_listCtrl->DeleteItem(item);
+                //wxLogMessage(_T("Item %ld deleted"), item);
+
+                // -1 because the indices were shifted by DeleteItem()
+                //item = m_listCtrl->GetNextItem(item - 1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+                item = m_listCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+            }
+            break;
+		default:
+			event.Skip();
+	}
 }

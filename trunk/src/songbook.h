@@ -18,6 +18,7 @@ namespace bschords
 			SongBookItem(wxString path);
 			wxString getPath();
 			wxString getTitle();
+			wxString getContents();
 		private:
 			wxString m_path;
 			wxString m_title;
@@ -36,6 +37,7 @@ namespace bschords
 			void loadFromXmlFile(wxString rootPath);
 			void saveToXmlFile(wxString path, wxString rootPath);
 			void addSong(wxString path);
+			wxString getContents();
 		private:
 			std::vector<SongBookItem *> m_items;
 			wxString m_basePath;

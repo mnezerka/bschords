@@ -18,6 +18,7 @@ SongStyleSheet::SongStyleSheet()
 	m_lineSpacing = 0;
 	m_chordLineSpacing = 0;
 	m_cols = 1;
+	m_songNewPage = true;
 }
 
 SongStyleSheet::~SongStyleSheet()
@@ -51,6 +52,7 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 		m_showSubtitles = config->Read(_("stylesheet/content/show-subtitles"), m_showSubtitles);
 		m_showTabs = config->Read(_("stylesheet/content/show-tabs"), m_showTabs);
 		m_equalLineHeights = config->Read(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
+		m_songNewPage = config->Read(_("stylesheet/content/song-new-page"), m_songNewPage);
 
 		// read fonts
 		for (int i = 0; i < BS_FONT_LAST; i++)
@@ -91,7 +93,7 @@ void SongStyleSheet::SaveToConfig(wxConfig *config)
 	config->Write(_("stylesheet/content/show-subtitles"), m_showSubtitles);
 	config->Write(_("stylesheet/content/show-tabs"), m_showTabs);
 	config->Write(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
-
+	config->Write(_("stylesheet/content/song-new-page"), m_songNewPage);
 
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)

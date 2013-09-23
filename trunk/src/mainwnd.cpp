@@ -94,6 +94,8 @@ enum
 	idMenuFileSaveSongBook,
 	idMenuFileSaveSongBookAs,
 	idMenuFileCloseSongBook,
+	idMenuFilePrintSongbook,
+	idMenuFilePrintPreviewSongbook,
 
 	idMenuViewFileBrowser,
 	idMenuViewEditor,
@@ -115,6 +117,8 @@ enum
 	ID_FSBROWSER,
 	ID_TOOLBAR_CHORD,
 	ID_SONG_EDITOR,
+
+	idWindowSongBook,
 };
 
 BEGIN_EVENT_TABLE(MainWnd, wxFrame)
@@ -134,6 +138,8 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(ID_MENU_FILE_EXPORT, MainWnd::OnFileExportSong)
 	EVT_MENU(wxID_PRINT, MainWnd::OnFilePrint)
 	EVT_MENU(wxID_PREVIEW, MainWnd::OnFilePrintPreview)
+	EVT_MENU(idMenuFilePrintSongbook, MainWnd::OnFilePrintSongBook)
+	EVT_MENU(idMenuFilePrintPreviewSongbook, MainWnd::OnFilePrintPreviewSongBook)
 	EVT_MENU(wxID_PRINT_SETUP, MainWnd::OnFilePageSetup)
 	EVT_MENU(idMenuQuit, MainWnd::OnQuit)
 	EVT_MENU(idMenuPreferences, MainWnd::OnPreferences)
@@ -190,6 +196,8 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	fileMenu->Append(wxID_PRINT_SETUP, _("Page setup..."), _("Page setup for printing"));
     fileMenu->Append(wxID_PRINT, _("&Print..."), _("Print"));
     fileMenu->Append(wxID_PREVIEW, _("Print Pre&view"), _("Preview"));
+    fileMenu->Append(idMenuFilePrintSongbook, _("Print Songbook ..."), _("Print"));
+    fileMenu->Append(idMenuFilePrintPreviewSongbook, _("Songbook Print Preview"), _("Preview"));
 	fileMenu->AppendSeparator();
 	fileMenu->Append(wxID_ANY, _("Song &information..."), _("Close song file"));
 	fileMenu->Append(idMenuQuit, _("&Quit\tAlt-F4"), _("Quit the application"));
@@ -317,7 +325,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// create song book window
-	m_songBookWnd = new SongBookWnd(this);
+	m_songBookWnd = new SongBookWnd(this, idWindowSongBook);
     m_auiMgr.AddPane(m_songBookWnd, wxAuiPaneInfo().Name(_("song-book")).Caption(wxT("Song Book")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// load perspective
@@ -518,14 +526,80 @@ void MainWnd::OnFileExportSong(wxCommandEvent& event)
 
 void MainWnd::OnFilePrint(wxCommandEvent& event)
 {
+    wxPrintDialogData printDialogData(* wxGetApp().m_printData);
 
+    wxPrinter printer(& printDialogData);
+    BSChordsPrintout printout(this, m_songContent->GetText());
+    if (!printer.Print(this, &printout, true /*prompt*/))
+    {
+        if (wxPrinter::GetLastError() == wxPRINTER_ERROR)
+            wxMessageBox(_T("There was a problem printing.\nPerhaps your current printer is not set correctly?"), _T("Printing"), wxOK);
+        else
+            wxMessageBox(_T("You canceled printing"), _T("Printing"), wxOK);
+    }
+    else
+    {
+        (*wxGetApp().m_printData) = printer.GetPrintDialogData().GetPrintData();
+    }
 }
 
 void MainWnd::OnFilePrintPreview(wxCommandEvent& event)
 {
 	// Pass two printout objects: for preview, and possible printing.
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
-    wxPrintPreview *preview = new wxPrintPreview(new BSChordsPrintout(this), new BSChordsPrintout(this), &printDialogData);
+    wxPrintPreview *preview = new wxPrintPreview(
+		new BSChordsPrintout(this, m_songContent->GetText()),
+		new BSChordsPrintout(this, m_songContent->GetText()),
+		&printDialogData);
+
+    if (!preview->IsOk())
+    {
+        delete preview;
+        wxLogError(wxT("There was a problem previewing.\nPerhaps your current printer is not set correctly?"));
+        return;
+    }
+
+    wxPreviewFrame *frame = new wxPreviewFrame(preview, this, wxT("Demo Print Preview"), wxPoint(100, 100), wxSize(600, 650));
+    frame->Centre(wxBOTH);
+    frame->Initialize();
+    frame->Show();
+}
+
+void MainWnd::OnFilePrintSongBook(wxCommandEvent& event)
+{
+	// prepare text to be printed
+	wxString contents = wxGetApp().m_songBook.getContents();
+
+    wxPrintDialogData printDialogData(* wxGetApp().m_printData);
+
+    wxPrinter printer(& printDialogData);
+    BSChordsPrintout printout(this, contents);
+    if (!printer.Print(this, &printout, true /*prompt*/))
+    {
+        if (wxPrinter::GetLastError() == wxPRINTER_ERROR)
+            wxMessageBox(_T("There was a problem printing.\nPerhaps your current printer is not set correctly?"), _T("Printing"), wxOK);
+        else
+            wxMessageBox(_T("You canceled printing"), _T("Printing"), wxOK);
+    }
+    else
+    {
+        (*wxGetApp().m_printData) = printer.GetPrintDialogData().GetPrintData();
+    }
+}
+
+void MainWnd::OnFilePrintPreviewSongBook(wxCommandEvent& event)
+{
+	// prepare text to be printed
+	wxString contents = wxGetApp().m_songBook.getContents();
+
+	//std::wcout << L"Songbook contents: " << contents.mb_str(wxConvUTF8) << std::endl;
+
+	// Pass two printout objects: for preview, and possible printing.
+    wxPrintDialogData printDialogData(* wxGetApp().m_printData);
+    wxPrintPreview *preview = new wxPrintPreview(
+		new BSChordsPrintout(this, contents),
+		new BSChordsPrintout(this, contents),
+		&printDialogData);
 
     if (!preview->IsOk())
     {
@@ -1186,13 +1260,11 @@ void BSChordsPrintout::OnPreparePrinting()
 	GetDC()->GetUserScale(&newScaleX, &newScaleY);
 	//cout << "new user scale: " << newScaleX << "x" << newScaleY << endl;
 
-	wxString text = m_frame->m_songContent->GetText();;
-
 	float scale = ppiScreenX / MM_PER_IN;
 
 	TSetDCPainter pn(*GetDC(), scale);
 	bschordpro::Parser p(&pn);
-	p.parse(std::wstring(text.wc_str()));
+	p.parse(std::wstring(mContents.wc_str()));
 	mPages = pn.getPages();
 }
 
@@ -1240,11 +1312,9 @@ bool BSChordsPrintout::OnBeginDocument(int startPage, int endPage)
 	GetDC()->GetUserScale(&newScaleX, &newScaleY);
 	float scale = ppiScreenX / MM_PER_IN;
 
-	wxString text = m_frame->m_songContent->GetText();;
-
 	mPainter = new TSetDCPainter(*GetDC(), scale);
 	bschordpro::Parser p(mPainter);
-	p.parse(std::wstring(text.wc_str()));
+	p.parse(std::wstring(mContents.wc_str()));
 
     return true;
 }
@@ -1304,8 +1374,8 @@ bool BSChordsPrintout::WritePageHeader(wxPrintout *printout, wxDC *dc, const wxS
     dc->DrawText(text, (long)xPos, (long)topMarginLogical);
 
     dc->SetPen(* wxBLACK_PEN);
-    dc->DrawLine( (long)leftMarginLogical, (long)(topMarginLogical+yExtent),
-                  (long)rightMarginLogical, (long)topMarginLogical+yExtent );
+    dc->DrawLine((long)leftMarginLogical, (long)(topMarginLogical+yExtent),
+                  (long)rightMarginLogical, (long)topMarginLogical+yExtent);
 
     return true;
 }

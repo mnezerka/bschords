@@ -238,6 +238,14 @@ wxPanel* SongStyleSheetDlg::CreateContentPage(wxWindow* parent)
 	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Equal line heights (text lines without chords have equal height as lines chords)"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_equalLineHeights)), 1, wxEXPAND | wxALL, 5);
 
 	// --------------------------------------------------------------------------------------
+	// songbook
+	wxStaticBox* sbkStaticBox = new wxStaticBox(panel, wxID_ANY, _("Songbook"));
+    wxBoxSizer* sbkStaticBoxSizer = new wxStaticBoxSizer(sbkStaticBox, wxVERTICAL);
+    col0->Add(sbkStaticBoxSizer, 0, wxGROW|wxALL, 5);
+
+	sbkStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Force new page for each song"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_songNewPage)), 1, wxEXPAND | wxALL, 5);
+
+	// --------------------------------------------------------------------------------------
    	// global stuff
     topSizer->Add(col0, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );
 

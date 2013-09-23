@@ -394,6 +394,8 @@ wxCoord TSetDCPainter::getDeviceY(int numMM)
 	//return numMM / MM_PER_IN * m_dcPPI.GetHeight();
 }
 
+// --------------------------------- TSetDCPainter ----------------------------
+
 void TSetDCPainter::onBegin()
 {
 	//cout << "OnBegin" << endl;
@@ -473,6 +475,13 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 	//m_dc.SetFont(*fontTitle_);
 	if (command == bschordpro::CMD_TITLE)
     {
+    	// check if new page is required for each song (which starts with title commnad)
+    	if (wxGetApp().m_styleSheet.m_songNewPage)
+    	{
+			AddPageBreak();
+			m_curBlock = NULL;
+    	}
+
 		TSetLineItem *item = new TSetLineItem();
 		m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
 		item->txt = new wxString(value);
@@ -614,6 +623,21 @@ TSetPage::TPageAddResult TSetDCPainter::addBlock(TSetBlock *block)
 	}
 
 	return(addResult);
+}
+
+void TSetDCPainter::AddPageBreak()
+{
+	if (!m_curPage)
+		return;
+
+	// ignore page break if page is empty
+	if (m_curPage->isEmpty())
+		return;
+
+	// create new page
+	m_curPage = new TSetPage(this, mPageRect);
+	m_pages.push_back(m_curPage);
+	m_stat.m_pages++;
 }
 
 void TSetDCPainter::drawPage(unsigned int i)

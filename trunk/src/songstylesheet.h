@@ -60,6 +60,8 @@ class SongStyleSheet
 		bool m_showTabs;
 		// print chord lines even if no chord is present (same line spacing for whole verse/chorus)
 		bool m_equalLineHeights;
+		// force new page for song (starting with song title)
+		bool m_songNewPage;
 
 		SongStyleSheet();
 		virtual ~SongStyleSheet();

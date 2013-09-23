@@ -176,6 +176,7 @@ namespace bschords
 			wxCoord getDeviceY(int numMM);
 			TSetStat getTSetStat() { return m_stat; };
 			TSetPage::TPageAddResult addBlock(TSetBlock *block);
+			void AddPageBreak();
 
 			unsigned int getPages() { return m_pages.size(); };
 			void drawPage(unsigned int i);

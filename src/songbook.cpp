@@ -14,33 +14,52 @@
 
 using namespace bschords;
 
-SongBookItem::SongBookItem(wxString path)
+
+/* ------------------- SongBookItem --------------------------------------- */
+
+/* ------------------- SongBookSection ------------------------------------ */
+
+void SongBookSection::readFromXmlNode(wxXmlNode *node, wxString basePath)
 {
-	// check if path is valid text file
+	if (node->GetName() != wxT("section"))
+		return;
+
+	mTitle = node->GetPropVal(wxT("name"), wxT("section"));
+}
+
+wxXmlNode* SongBookSection::createXmlNode(wxString basePath)
+{
+	wxXmlNode *sectionNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("section"));
+	wxXmlProperty *prop = new wxXmlProperty(wxT("name"), mTitle);
+	sectionNode->AddProperty(prop);
+	return sectionNode;
+}
+
+/* ------------------- SongBookSong --------------------------------------- */
+SongBookSong::SongBookSong(wxString path)
+{
 	wxFileName filePath(path);
-
-	m_path = filePath.GetFullPath();
-	m_title = filePath.GetName();
+	mPath = filePath.GetFullPath();
 }
 
-wxString SongBookItem::getTitle()
+wxString SongBookSong::getTitle()
 {
-	return m_title;
+	wxFileName filePath(mPath);
+	return filePath.GetName();
 }
 
-wxString SongBookItem::getPath()
+wxString SongBookSong::getPath()
 {
-	return m_path;
+	return mPath;
 }
 
-wxString SongBookItem::getContents()
+wxString SongBookSong::getContents()
 {
-
 	wxString contents;
 	bool success = false;
-    wxFile file(m_path, wxFile::read);
+    wxFile file(mPath, wxFile::read);
 
-    std::wcout << L"Reading file contents from: " << m_path.mb_str(wxConvUTF8) << std::endl;
+    std::wcout << L"Reading file contents from: " << mPath.mb_str(wxConvUTF8) << std::endl;
 
     if (file.IsOpened())
     {
@@ -58,18 +77,45 @@ wxString SongBookItem::getContents()
         else
         {
             if (len < 0)
-				std::cout << "Invalid offset while reading file " << m_path.mb_str(wxConvUTF8) << std::endl;
+				std::cout << "Invalid offset while reading file " << mPath.mb_str(wxConvUTF8) << std::endl;
         }
     }
     else
     {
-    	std::cout << "Cannot open file " << m_path.mb_str(wxConvUTF8) << std::endl;
+    	std::cout << "Cannot open file " << mPath.mb_str(wxConvUTF8) << std::endl;
     }
 
     std::wcout << L"File contents: " << contents.mb_str(wxConvUTF8) << std::endl;
 
 	return contents;
 }
+
+void SongBookSong::readFromXmlNode(wxXmlNode *node, wxString basePath)
+{
+	if (node->GetName() != wxT("song"))
+		return;
+
+	wxString songPath = node->GetPropVal(wxT("path"), wxT(""));
+	wxFileName fileName(songPath, wxPATH_UNIX);
+	fileName.MakeAbsolute(basePath);
+	mPath = fileName.GetFullPath(wxPATH_NATIVE);
+}
+
+wxXmlNode* SongBookSong::createXmlNode(wxString basePath)
+{
+	wxFileName filePath(mPath);
+	std::wcout << L"File to be added: " << filePath.GetFullPath().mb_str(wxConvUTF8) << std::endl;
+	filePath.MakeRelativeTo(basePath);
+	std::wcout << L"File to be added after relative step: " << filePath.GetFullPath().mb_str(wxConvUTF8) << std::endl;
+
+	wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
+	wxXmlProperty *prop = new wxXmlProperty(wxT("path"), filePath.GetFullPath(wxPATH_UNIX));
+	songNode->AddProperty(prop);
+
+	return songNode;
+}
+
+/* ------------------- SongBook -------------------------------------------- */
 
 SongBook::SongBook()
 {
@@ -97,21 +143,41 @@ void SongBook::setBasePath(wxString path)
 
 void SongBook::empty()
 {
-	for (unsigned i = 0; i < m_items.size(); i++)
-		delete(m_items[i]);
-	m_items.clear();
+	std::list<SongBookItem *>::iterator it;
+	while (!m_items.empty())
+	{
+		it = m_items.begin();
+		delete(*it);
+		m_items.erase(it);
+	}
 }
 
 SongBookItem *SongBook::getItem(unsigned int index)
 {
 	SongBookItem *result = NULL;
-	if (index < m_items.size())
-		result = m_items[index];
+	unsigned int i = 0;
+	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+	{
+		if (i == index)
+		{
+			result = *it;
+			break;
+		}
+		else
+			i++;
+	}
+
 	return result;
 }
 
-void SongBook::addSong(wxString path)
+void SongBook::addItem(SongBookItem *item)
 {
+	if (!item)
+		return;
+
+	m_items.push_back(item);
+
+	/*
 	// check if path is valid text file
 	wxFileName filePath(path);
 
@@ -127,8 +193,26 @@ void SongBook::addSong(wxString path)
 		return;
 	}
 
-	SongBookItem *item = new SongBookItem(filePath.GetFullPath());
+	SongBookSong *item = new SongBookSong(filePath.GetFullPath());
 	m_items.push_back(item);
+	*/
+}
+
+void SongBook::deleteSelected()
+{
+	std::list<SongBookItem *>::iterator it = m_items.begin();
+
+	while (it != m_items.end())
+	{
+		if ((*it)->isSelected())
+		{
+			delete(*it);
+			m_items.erase(it);
+			it = m_items.begin();
+		}
+		else
+			it++;
+	}
 }
 
 void SongBook::saveToXmlFile(wxString path, wxString rootPath)
@@ -141,27 +225,20 @@ void SongBook::saveToXmlFile(wxString path, wxString rootPath)
 	std::wcout << L"Base path: " << m_basePath.mb_str(wxConvUTF8) << std::endl;
 
 	wxXmlNode *lastChild = NULL;
-	for (unsigned i = 0; i < m_items.size(); i++)
+	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
 	{
-		wxFileName filePath(m_items[i]->getPath());
-		std::wcout << L"File to be added: " << filePath.GetFullPath().mb_str(wxConvUTF8) << std::endl;
-		filePath.MakeRelativeTo(m_basePath);
-		std::wcout << L"File to be added after relative step: " << filePath.GetFullPath().mb_str(wxConvUTF8) << std::endl;
+		wxXmlNode *itemNode = (*it)->createXmlNode(m_basePath);
 
-		wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
-		wxXmlProperty *prop = new wxXmlProperty(wxT("path"), filePath.GetFullPath(wxPATH_UNIX));
-		songNode->AddProperty(prop);
 		std::cout << "Adding node to xml file" << std::endl;
 		if (lastChild != NULL)
-			lastChild->SetNext(songNode);
+			lastChild->SetNext(itemNode);
 		else
-			rootNode->AddChild(songNode);
-		lastChild = songNode;
+			rootNode->AddChild(itemNode);
+		lastChild = itemNode;
 	}
 
 	doc.SetRoot(rootNode);
 
-	// TODO: convert path separators to normalized form
 	if (!doc.Save(path))
 		wxMessageBox(_("Error saving songbook"));
 
@@ -187,11 +264,13 @@ void SongBook::loadFromXmlFile(wxString path)
 	{
 		if (c->GetName() == wxT("song"))
 		{
-			wxString songPath = c->GetPropVal(wxT("path"), wxT(""));
-			wxFileName fileName(songPath, wxPATH_UNIX);
-			fileName.MakeAbsolute(m_basePath);
-			std::wcout << "New dir is: " << fileName.GetFullPath().mb_str(wxConvUTF8) << std::endl;
-			addSong(fileName.GetFullPath(wxPATH_NATIVE));
+			SongBookSong *s = new SongBookSong(c, m_basePath);
+			m_items.push_back(s);
+		}
+		else if (c->GetName() == wxT("section"))
+		{
+			SongBookSection *s = new SongBookSection(c, m_basePath);
+			m_items.push_back(s);
 		}
 		c = c->GetNext();
 	}
@@ -205,12 +284,27 @@ unsigned int SongBook::getCount()
 wxString SongBook::getContents()
 {
 	wxString result;
-	for (unsigned i = 0; i < m_items.size(); i++)
+	unsigned int i = 0;
+	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
 	{
 		if (i > 0)
 			result.Append(wxT("\n\n"));
-		result.Append(m_items[i]->getContents());
+		result.Append((*it)->getContents());
+		i++;
 	}
 
 	return result;
+}
+
+void SongBook::selectAll(bool select)
+{
+	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+		(*it)->select(select);
+}
+
+void SongBook::selectItem(unsigned int index, bool select)
+{
+	SongBookItem *item = getItem(index);
+	if (item)
+		item->select(select);
 }

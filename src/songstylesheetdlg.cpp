@@ -179,7 +179,7 @@ wxPanel* SongStyleSheetDlg::CreateFontsPage(wxWindow* parent)
     wxBoxSizer* fontSelSizer = new wxBoxSizer(wxHORIZONTAL);
 	fontSelType = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(100,-1) );
     for (int i = 0; i < BS_FONT_LAST; i++)
-        fontSelType->Append(fontNames[i]);
+        fontSelType->Append(SongStyleSheet::getFontName(i));
 	fontSelType->Select(0);
 
 	fontSelSizer->Add(fontSelType, 0, wxALL | wxALIGN_CENTER, 2);
@@ -198,7 +198,7 @@ wxPanel* SongStyleSheetDlg::CreateFontsPage(wxWindow* parent)
     // create test tests to demonstrate font look
     for (int i = 0; i < BS_FONT_LAST; i++)
     {
-        fontTextTitles[i] = new wxStaticText(fontsPreviewPanel, wxID_ANY, fontNames[i]);
+        fontTextTitles[i] = new wxStaticText(fontsPreviewPanel, wxID_ANY, SongStyleSheet::getFontName(i));
         fontTextTitles[i]->SetFont(m_fonts[i]);
         fontsPreviewPanelSizer->Add(fontTextTitles[i], 0, wxALL | wxALIGN_CENTER, 10);
     }

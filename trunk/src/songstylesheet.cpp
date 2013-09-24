@@ -1,9 +1,30 @@
 #include <iostream>
 #include "songstylesheet.h"
+#include <wx/arrstr.h>
 
 // page size
 #define SIZE_A4_WIDTH 210
 #define SIZE_A4_HEIGHT 297
+
+
+
+//fontNames.Add(wxT("Titlex"));
+/*
+fontNames.Add(wxT("Subtitle"));
+fontNames.Add(wxT("Text"));
+fontNames.Add(wxT("Chords"));
+fontNames.Add(wxT("Tab"));*/
+
+/*
+static const wxString fontNames[] =
+{
+    wxT("Titlex"),
+    wxT("Subtitle"),
+    wxT("Text"),
+    wxT("Chords"),
+    wxT("Tab")
+};
+*/
 
 SongStyleSheet::SongStyleSheet()
 {
@@ -58,7 +79,7 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 		for (int i = 0; i < BS_FONT_LAST; i++)
 		{
 			wxString key(_("stylesheet/fonts/"));
-			key += fontNames[i];
+			key += SongStyleSheet::getFontName(i);
 			wxString nativeFontInfo = config->Read(key, _(""));
 			m_fonts[i] = *wxNORMAL_FONT;
 			if (nativeFontInfo.size() > 0)
@@ -101,8 +122,24 @@ void SongStyleSheet::SaveToConfig(wxConfig *config)
         std::cout << i << " user desc: " << m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
         wxString nativeFontInfo = m_fonts[i].GetNativeFontInfoDesc();
         wxString key(_("stylesheet/fonts/"));
-        key += fontNames[i];
+        key += SongStyleSheet::getFontName(i);
         config->Write(key, nativeFontInfo);
         std::cout << nativeFontInfo.c_str() << std::endl;
     }
+}
+
+wxString SongStyleSheet::getFontName(unsigned int index)
+{
+	static wxString fontNames[BS_FONT_LAST] = {
+		wxT("Title"),
+		wxT("Subtitle"),
+		wxT("Text"),
+		wxT("Chords"),
+		wxT("Tab")
+	};
+
+	wxString result(wxT(""));
+	if (index < BS_FONT_LAST)
+		result = fontNames[index];
+	return result;
 }

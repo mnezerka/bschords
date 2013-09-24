@@ -18,15 +18,6 @@ enum {
     BS_FONT_LAST
 };
 
-static const wxString fontNames[] =
-{
-    _("Title"),
-    _("Subtitle"),
-    _("Text"),
-    _("Chords"),
-    _("Tab")
-};
-
 class SongStyleSheet
 {
 	public:
@@ -67,6 +58,7 @@ class SongStyleSheet
 		virtual ~SongStyleSheet();
 		void LoadFromConfig(const wxConfig *config);
 		void SaveToConfig(wxConfig *config);
+		static wxString getFontName(unsigned int index);
 
 	protected:
 

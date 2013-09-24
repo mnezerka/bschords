@@ -12,6 +12,25 @@
 
 namespace bschords
 {
+	class SongBookListCtrl: public wxListCtrl
+	{
+		public:
+			SongBookListCtrl(
+				wxWindow *parent,
+				const wxWindowID id,
+				const wxPoint& pos,
+				const wxSize& size,
+				long style): wxListCtrl(parent, id, pos, size, style),   mAttr(*wxBLUE, *wxLIGHT_GREY, wxNullFont) { };
+			    void OnBeginDrag(wxListEvent& event);
+			    void OnBeginLabelEdit(wxListEvent& event);
+				void OnEndLabelEdit(wxListEvent& event);
+        private:
+			wxListItemAttr mAttr;
+
+		DECLARE_NO_COPY_CLASS(SongBookListCtrl)
+		DECLARE_EVENT_TABLE()
+	};
+
 	class SongBookWnd : public wxWindow
 	{
 		public:
@@ -23,7 +42,7 @@ namespace bschords
 
 		private:
 			//SongBookTreeCtrl *m_treeCtrl;
-			wxListView *m_listCtrl;
+			SongBookListCtrl *m_listCtrl;
 			void OnSize(wxSizeEvent& event);
 			void OnSongBookItemActivated(wxListEvent& event);
 			void OnSongBookItemRightClick(wxListEvent& event);

@@ -27,7 +27,6 @@ http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
 */
 
-// TODO: songbook items should have properties - print checkbox, transposition
 // TODO: split parsing and painting - song should have its own class - wrapper around chordpro and other formats
 // TODO: implement chord transform utility
 // TODO: solve CR LF problem - one checkbox in preferences could be nice

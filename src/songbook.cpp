@@ -296,6 +296,13 @@ wxString SongBook::getContents()
 	return result;
 }
 
+void SongBook::setItemTitle(unsigned int index, wxString title)
+{
+	SongBookItem *item = getItem(index);
+	if (item)
+		item->setTitle(title);
+}
+
 void SongBook::selectAll(bool select)
 {
 	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
@@ -307,4 +314,65 @@ void SongBook::selectItem(unsigned int index, bool select)
 	SongBookItem *item = getItem(index);
 	if (item)
 		item->select(select);
+}
+
+void SongBook::moveSelectedUp()
+{
+	std::list<SongBookItem *>::iterator it = m_items.begin();
+
+	while (it != m_items.end())
+	{
+		if ((*it)->isSelected())
+		{
+			// get previous item
+			std::list<SongBookItem *>::iterator prev = it;
+			std::advance(prev, -1);
+			// if previous item exists
+			if (it != prev && it != m_items.begin())
+			{
+				SongBookItem *movedItem = *it;
+				m_items.erase(it);
+				m_items.insert(prev, movedItem);
+				it = prev;
+				continue;
+			}
+		}
+		it++;
+	}
+}
+
+void SongBook::moveSelectedDown()
+{
+	std::list<SongBookItem *>::iterator it = m_items.end();
+
+	if (m_items.empty())
+		return;
+
+	// go to last element (since end() retruns iterator pointing after last element)
+	it--;
+
+	// checking is against end, because this is only way how to detect crossing beginning
+	// of the list (list is cyclic)
+	while (it != m_items.end())
+	{
+		if ((*it)->isSelected())
+		{
+			// get 2 next items
+			std::list<SongBookItem *>::iterator next = it;
+			next++;
+			if (next != m_items.end())
+			{
+				std::wcout << "moving item by 1" << std::endl;
+				std::list<SongBookItem *>::iterator next2 = next;
+				next2++;
+				SongBookItem *movedItem = *it;
+				std::list<SongBookItem *>::iterator toMove = it;
+				it--;
+				m_items.erase(toMove);
+				m_items.insert(next2, movedItem);
+				continue;
+			}
+		}
+		it--;
+	}
 }

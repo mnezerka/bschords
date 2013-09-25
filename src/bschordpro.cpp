@@ -12,6 +12,10 @@ static const wchar_t *cmdTabStart			= L"start_of_tab";
 static const wchar_t *cmdTabStartShort		= L"sot";
 static const wchar_t *cmdTabEnd				= L"end_of_tab";
 static const wchar_t *cmdTabEndShort		= L"eot";
+static const wchar_t *cmdStructStart		= L"start_of_struct";
+static const wchar_t *cmdStructStartShort	= L"sos";
+static const wchar_t *cmdStructEnd			= L"end_of_struct";
+static const wchar_t *cmdStructEndShort		= L"eos";
 
 /*
 
@@ -311,6 +315,17 @@ void Parser::parseCommand(const std::wstring& cmd)
 		{
 			m_rawMode = false;
 			cmdType = CMD_TAB_END;
+		}
+    	// switch on or off raw mode (no chords are parsed)
+		else if (cmdId == cmdStructStart || cmdId == cmdStructStartShort)
+		{
+			m_rawMode = true;
+			cmdType = CMD_STRUCT_START;
+		}
+		else if (cmdId == cmdStructEnd || cmdId == cmdStructEndShort)
+		{
+			m_rawMode = false;
+			cmdType = CMD_STRUCT_END;
 		}
 		else if (cmdId == ::cmdChorusStart || cmdId == ::cmdChorusStartShort)
 			cmdType = CMD_CHORUS_START;

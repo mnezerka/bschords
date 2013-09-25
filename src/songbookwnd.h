@@ -49,6 +49,8 @@ namespace bschords
 			void OnContextMenu(wxContextMenuEvent& event);
 			void ShowContextMenu(const wxPoint& pos);
 			void OnListKeyDown(wxListEvent& event);
+			void OnMoveUp(wxCommandEvent &event);
+			void OnMoveDown(wxCommandEvent &event);
 
 		DECLARE_EVENT_TABLE()
 	};

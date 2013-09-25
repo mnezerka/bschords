@@ -233,6 +233,7 @@ wxPanel* SongStyleSheetDlg::CreateContentPage(wxWindow* parent)
 	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show chords"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showChords)), 1, wxEXPAND | wxALL, 5);
 	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show subtitles"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showSubtitles)), 1, wxEXPAND | wxALL, 5);
 	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show tabs"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showTabs)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show song structure sections"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showStructs)), 1, wxEXPAND | wxALL, 5);
 
 	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Verse numbering"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_verseNumbering)), 1, wxEXPAND | wxALL, 5);
 	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Equal line heights (text lines without chords have equal height as lines chords)"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_equalLineHeights)), 1, wxEXPAND | wxALL, 5);

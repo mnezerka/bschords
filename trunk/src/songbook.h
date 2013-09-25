@@ -16,6 +16,7 @@ namespace bschords
 	{
 		public:
 			SongBookItem() : mSelected(false) { };
+			virtual ~SongBookItem() = 0;
 			void select(bool select = true) { mSelected = select; };
 			bool isSelected() { return(mSelected); };
 			virtual wxString getPath() = 0;
@@ -33,6 +34,7 @@ namespace bschords
 		public:
 			SongBookSection(wxXmlNode *node, wxString basePath) : SongBookItem() { readFromXmlNode(node, basePath); };
 			SongBookSection(wxString title) : mTitle(title) { };
+			virtual ~SongBookSection() { };
 			virtual wxString getTitle() { return (mTitle); };
 			virtual void setTitle(wxString title) { mTitle = title; };
 			virtual wxString getContents() { return wxT(""); };
@@ -48,6 +50,7 @@ namespace bschords
 		public:
 			SongBookSong(wxString path);
 			SongBookSong(wxXmlNode *node, wxString basePath) : SongBookItem() { readFromXmlNode(node, basePath); };
+			virtual ~SongBookSong() { };
 			virtual wxString getTitle();
 			virtual void setTitle(wxString title) { };
 			wxString getPath();

@@ -16,7 +16,10 @@ using namespace bschords;
 
 
 /* ------------------- SongBookItem --------------------------------------- */
+SongBookItem::~SongBookItem()
+{
 
+}
 /* ------------------- SongBookSection ------------------------------------ */
 
 void SongBookSection::readFromXmlNode(wxXmlNode *node, wxString basePath)

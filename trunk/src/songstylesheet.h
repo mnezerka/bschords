@@ -15,6 +15,7 @@ enum {
     BS_FONT_TEXT,
     BS_FONT_CHORDS,
     BS_FONT_TAB,
+    BS_FONT_STRUCT,
     BS_FONT_LAST
 };
 
@@ -49,6 +50,8 @@ class SongStyleSheet
 		bool m_showSubtitles;
 		// show tab sections
 		bool m_showTabs;
+		// show structure sections
+		bool m_showStructs;
 		// print chord lines even if no chord is present (same line spacing for whole verse/chorus)
 		bool m_equalLineHeights;
 		// force new page for song (starting with song title)

@@ -1,5 +1,9 @@
+
+#include <wx/tokenzr.h>
+
 #include "app.h"
 #include "dcpainter.h"
+
 
 using namespace bschords;
 
@@ -249,6 +253,117 @@ wxRect TSetBlockTab::getBoundingRect()
 	return result;
 }
 
+// ------- TSetBlockStruct  ----------------------------------------------------------
+
+bool TSetBlockStruct::isVisible()
+{
+	return m_painter->m_ss->m_showStructs;
+}
+
+std::vector<wxString> TSetBlockStruct::prepare()
+{
+	wxStringTokenizer tkBars;
+
+	std::vector<wxString> result;
+
+	std::cout << "tstruct prepare" << std::endl;
+
+	// loop through block lines
+	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
+	{
+		wxString *line = m_lines[lineIx];
+		tkBars.SetString(*line, wxT("/"), wxTOKEN_RET_EMPTY);
+		// loop over bars
+		while (tkBars.HasMoreTokens())
+		{
+
+			// analyze individual bars
+			wxString bar = tkBars.GetNextToken();
+
+			std::wcout << L"analyzing bar <" << bar.wc_str() << L">" << std::endl;
+
+			wxString chord;
+			enum {READING_CHORD_SPACE, READING_CHORD_SYMBOL} state = READING_CHORD_SYMBOL;
+			unsigned int i = 0;
+			while (i < bar.Length())
+			{
+				switch (state)
+				{
+					case READING_CHORD_SYMBOL:
+						if (bar[i] == wxChar(' '))
+						{
+							state = READING_CHORD_SPACE;
+						}
+						chord.Append(bar[i]);
+						break;
+					case READING_CHORD_SPACE:
+						if (bar[i] != wxChar(' '))
+						{
+							//std::wcout << L"Chord found <" << chord.wc_str() << L">" << (chord.Length() / (float)bar.Length()) << std::endl;
+							result.push_back(chord);
+							chord.Empty();
+							state = READING_CHORD_SYMBOL;
+						}
+						chord.Append(bar[i]);
+						break;
+				}
+				i++;
+			}
+			if (chord.Length() > 0)
+				result.push_back(chord);
+
+		}
+	}
+
+	for (std::vector<wxString>::iterator it = result.begin(); it != result.end(); it++)
+		//std::wcout << L"Chord found <" << (*it).wc_str() << L">" << ((*it).Length() / (float)bar.Length()) << std::endl;
+		std::wcout << L"Chord found <" << (*it).wc_str() << std::endl;
+
+	return result;
+}
+
+void TSetBlockStruct::draw()
+{
+	wxPoint pos = mPos;
+
+	prepare();
+
+	// loop through block lines
+	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
+	{
+		wxString *line = m_lines[lineIx];
+
+		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_STRUCT]);
+		m_painter->m_dc.DrawText(*line, pos);
+		pos.y += m_painter->m_dc.GetCharHeight();
+	}
+}
+
+wxRect TSetBlockStruct::getBoundingRect()
+{
+	wxRect result;
+
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_STRUCT]);
+	wxCoord lineHeight = m_painter->m_dc.GetCharHeight();
+
+	wxCoord maxWidth = 0;
+	wxCoord height = m_lines.size() * lineHeight;
+
+	// loop through block lines
+	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
+	{
+		wxString *line = m_lines[lineIx];
+		wxSize lineSize = m_painter->m_dc.GetTextExtent(*line);
+		if (lineSize.GetWidth() > maxWidth)
+			maxWidth = lineSize.GetWidth();
+	}
+
+	result.SetWidth(maxWidth);
+	result.SetHeight(height);
+
+	return result;
+}
+
 // ------- TSetPage -------------------------------------------------------------
 TSetPage::TSetPage(TSetDCPainter *painter, wxRect pageRect) : mPageRect(pageRect), mPainter(painter), mCol(0)
 {
@@ -317,8 +432,6 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 
 void TSetPage::draw()
 {
-	std::cout << "drawing page" << std::endl;
-
 	// draw white (paper) background
 	mPainter->m_dc.DrawRectangle(0, 0, mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetWidth()) , mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetHeight()));
 	mPainter->m_dc.SetBackgroundMode(wxTRANSPARENT);
@@ -514,10 +627,26 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 		TSetBlockTab *block = new TSetBlockTab(this);
 		m_curBlock = block;
 	}
-	else if (command == bschordpro::CMD_TAB_END)
+	else if (m_curBlock && command == bschordpro::CMD_TAB_END)
 	{
-		// if we are still in chorus block
+		// if we are still in tab block
 		if (m_curBlock->getType() == TSetBlock::BLTYPE_TAB)
+		{
+			// finish block
+			addBlock(m_curBlock);
+			m_curBlock = NULL;
+		}
+		// else igonre end of chorus command
+	}
+	else if (command == bschordpro::CMD_STRUCT_START)
+	{
+		TSetBlockStruct *block = new TSetBlockStruct(this);
+		m_curBlock = block;
+	}
+	else if (m_curBlock && command == bschordpro::CMD_STRUCT_END)
+	{
+		// if we are still in struct block
+		if (m_curBlock->getType() == TSetBlock::BLTYPE_STRUCT)
 		{
 			// finish block
 			addBlock(m_curBlock);
@@ -529,13 +658,20 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 
 void TSetDCPainter::onLine(const std::wstring& line)
 {
-	// for tab, capture block directly
+	// for tab and struct, capture block directly
 	if (m_curBlock != NULL)
+	{
 		if (m_curBlock->getType() == TSetBlock::BLTYPE_TAB)
 		{
 			static_cast<TSetBlockTab*>(m_curBlock)->m_lines.push_back(new wxString(line));
 			return;
 		}
+		else if (m_curBlock->getType() == TSetBlock::BLTYPE_STRUCT)
+		{
+			static_cast<TSetBlockStruct*>(m_curBlock)->m_lines.push_back(new wxString(line));
+			return;
+		}
+	}
 }
 
 void TSetDCPainter::onLineBegin()
@@ -595,6 +731,7 @@ void TSetDCPainter::onLineEnd()
 				break;
 
 			case TSetBlock::BLTYPE_TAB:
+			case TSetBlock::BLTYPE_STRUCT:
 			case TSetBlock::BLTYPE_TITLE:
 			case TSetBlock::BLTYPE_HSPACE:
 			case TSetBlock::BLTYPE_NONE:

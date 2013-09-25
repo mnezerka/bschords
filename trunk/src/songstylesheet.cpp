@@ -72,6 +72,7 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 		m_showChords = config->Read(_("stylesheet/content/show-chords"), m_showChords);
 		m_showSubtitles = config->Read(_("stylesheet/content/show-subtitles"), m_showSubtitles);
 		m_showTabs = config->Read(_("stylesheet/content/show-tabs"), m_showTabs);
+		m_showStructs = config->Read(_("stylesheet/content/show-structs"), m_showStructs);
 		m_equalLineHeights = config->Read(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
 		m_songNewPage = config->Read(_("stylesheet/content/song-new-page"), m_songNewPage);
 
@@ -113,6 +114,7 @@ void SongStyleSheet::SaveToConfig(wxConfig *config)
 	config->Write(_("stylesheet/content/show-chords"), m_showChords);
 	config->Write(_("stylesheet/content/show-subtitles"), m_showSubtitles);
 	config->Write(_("stylesheet/content/show-tabs"), m_showTabs);
+	config->Write(_("stylesheet/content/show-structs"), m_showStructs);
 	config->Write(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
 	config->Write(_("stylesheet/content/song-new-page"), m_songNewPage);
 
@@ -135,7 +137,8 @@ wxString SongStyleSheet::getFontName(unsigned int index)
 		wxT("Subtitle"),
 		wxT("Text"),
 		wxT("Chords"),
-		wxT("Tab")
+		wxT("Tab"),
+		wxT("Structure")
 	};
 
 	wxString result(wxT(""));

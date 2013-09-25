@@ -50,11 +50,15 @@ enum
 	ID_SONG_LIST = 1000,
 	ID_BTN_NEW_SECTION,
 	ID_BTN_REMOVE,
+	ID_BTN_UP,
+	ID_BTN_DOWN
 };
 
 BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
 	EVT_SIZE(SongBookWnd::OnSize)
 	EVT_BUTTON(ID_BTN_NEW_SECTION, SongBookWnd::OnNewSection)
+	EVT_BUTTON(ID_BTN_UP, SongBookWnd::OnMoveUp)
+	EVT_BUTTON(ID_BTN_DOWN, SongBookWnd::OnMoveDown)
 	EVT_LIST_ITEM_ACTIVATED(ID_SONG_LIST, SongBookWnd::OnSongBookItemActivated)
 	EVT_LIST_ITEM_RIGHT_CLICK(ID_SONG_LIST, SongBookWnd::OnSongBookItemRightClick)
 	EVT_LIST_KEY_DOWN(ID_SONG_LIST, SongBookWnd::OnListKeyDown)
@@ -85,8 +89,9 @@ void SongBookListCtrl::OnBeginLabelEdit(wxListEvent& event)
 
 void SongBookListCtrl::OnEndLabelEdit(wxListEvent& event)
 {
-	std::cout << "end editing" << std::endl;
+	std::wcout << L"end editing " << event.m_item.m_text.c_str()  << std::endl;
 	//std::cout << (event.IsEditCancelled() ? "cancelled" : event.m_item.m_text.c_str()) << std::endl;
+	wxGetApp().m_songBook.setItemTitle(event.GetIndex(), event.GetItem().GetText());
 }
 /* ---------------- SongBookWnd ----------------------------------- */
 
@@ -101,12 +106,22 @@ SongBookWnd::SongBookWnd(wxWindow *parent, wxWindowID id)
 	new wxStaticText(panel, wxID_ANY, _("This is list of songs"));
 	sizer->Add(panel, 0, wxALL | wxEXPAND, 1);
 
-	m_listCtrl = new SongBookListCtrl(this, idSongBookListCtrlId, wxDefaultPosition, wxDefaultSize, wxLC_LIST | wxSUNKEN_BORDER | wxLC_EDIT_LABELS);
+	m_listCtrl = new SongBookListCtrl(this, idSongBookListCtrlId, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxSUNKEN_BORDER | wxLC_EDIT_LABELS);
+	m_listCtrl->InsertColumn(0, wxT("Name"));
+	m_listCtrl->InsertColumn(1, wxT("P"));
+	m_listCtrl->InsertColumn(2, wxT("T"));
+	m_listCtrl->SetColumnWidth(0, 200);
+	m_listCtrl->SetColumnWidth(1, 20);
+	m_listCtrl->SetColumnWidth(2, 20);
 	sizer->Add(m_listCtrl, 1, wxALL | wxEXPAND, 1);
 
 	// create buttons bar
 	wxPanel *panel2 = new wxPanel(this);
-	new wxButton(panel2, ID_BTN_NEW_SECTION, _("Add section"));
+	wxBoxSizer *sizerBtn = new wxBoxSizer(wxHORIZONTAL);
+	panel2->SetSizer(sizerBtn);
+	sizerBtn->Add(new wxButton(panel2, ID_BTN_NEW_SECTION, _("Add section")), 0, wxALL | wxEXPAND, 1);
+	sizerBtn->Add(new wxButton(panel2, ID_BTN_UP, _("Move Up")), 0, wxALL | wxEXPAND, 1);
+	sizerBtn->Add(new wxButton(panel2, ID_BTN_DOWN, _("Move Down")), 0, wxALL | wxEXPAND, 1);
 	sizer->Add(panel2, 0, wxALL | wxEXPAND, 1);
 }
 
@@ -142,7 +157,27 @@ void SongBookWnd::Update()
 	for (unsigned int i = 0; i < wxGetApp().m_songBook.getCount(); i++)
 	{
 		SongBookItem *item = wxGetApp().m_songBook.getItem(i);
-		m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), item->getTitle());
+		long itemIndex = m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), item->getTitle());
+		m_listCtrl->SetItem(itemIndex, 1, wxT("X"));
+		m_listCtrl->SetItem(itemIndex, 2, wxT("0"));
+		//m_listCtrl->SetBackgroundColor();
+		if (item->isSelected())
+			m_listCtrl->SetItemState(itemIndex, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+
+		// colorize section items
+		if (item->getPath().Length() == 0)
+		{
+			wxListItem info;
+			info.SetId(itemIndex);
+			m_listCtrl->GetItem(info);
+			wxListItemAttr *attr = info.GetAttributes();
+			if ( !attr || !attr->HasTextColour() )
+			{
+				info.SetTextColour(*wxBLUE);
+				m_listCtrl->SetItem(info);
+				m_listCtrl->RefreshItem(info.GetId());
+			}
+		}
 	}
 }
 
@@ -215,5 +250,30 @@ void SongBookWnd::OnListKeyDown(wxListEvent& event)
 	}
 }
 
+void SongBookWnd::OnMoveUp(wxCommandEvent &event)
+{
+	wxGetApp().m_songBook.selectAll(false);
+	long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	while (item != -1)
+	{
+		wxGetApp().m_songBook.selectItem(item);
+		item = m_listCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	}
+    wxGetApp().m_songBook.moveSelectedUp();
+    Update();
+}
+
+void SongBookWnd::OnMoveDown(wxCommandEvent &event)
+{
+	wxGetApp().m_songBook.selectAll(false);
+	long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	while (item != -1)
+	{
+		wxGetApp().m_songBook.selectItem(item);
+		item = m_listCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	}
+    wxGetApp().m_songBook.moveSelectedDown();
+    Update();
+}
 
 

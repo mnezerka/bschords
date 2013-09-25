@@ -14,6 +14,8 @@ namespace bschordpro
 		CMD_CHORUS_END,
 		CMD_TAB_START,
 		CMD_TAB_END,
+		CMD_STRUCT_START,
+		CMD_STRUCT_END,
 		CMD_NONE
 	};
 

@@ -327,6 +327,10 @@ void SongBook::moveSelectedUp()
 	{
 		if ((*it)->isSelected())
 		{
+			// cannot move up if selection contains first item
+			if (it == m_items.begin())
+				break;
+
 			// get previous item
 			std::list<SongBookItem *>::iterator prev = it;
 			std::advance(prev, -1);
@@ -375,6 +379,9 @@ void SongBook::moveSelectedDown()
 				m_items.insert(next2, movedItem);
 				continue;
 			}
+			else
+				// cannot move down if selection contains last item
+				break;
 		}
 		it--;
 	}

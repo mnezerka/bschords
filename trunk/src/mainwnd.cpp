@@ -32,7 +32,7 @@
 #include "mainwnd.h"
 #include "preferencesdlg.h"
 #include "songstylesheetdlg.h"
-#include "bschordsicon.xpm"
+//#include "bschordsicon.xpm"
 #include "dcpainter.h"
 
 using namespace bschords;
@@ -107,6 +107,20 @@ enum
 	idMenuSongInsertChorus,
 	idMenuSongInsertTab,
 	idMenuSongAddToSongbook,
+	idMenuSongTrnUp1,
+	idMenuSongTrnUp2,
+	idMenuSongTrnUp3,
+	idMenuSongTrnUp4,
+	idMenuSongTrnUp5,
+	idMenuSongTrnUp6,
+	idMenuSongTrnUp7,
+	idMenuSongTrnDown1,
+	idMenuSongTrnDown2,
+	idMenuSongTrnDown3,
+	idMenuSongTrnDown4,
+	idMenuSongTrnDown5,
+	idMenuSongTrnDown6,
+	idMenuSongTrnDown7,
 
 	idFSBrowserAddToSongbook,
 
@@ -154,6 +168,22 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(idMenuSongInsertChorus, MainWnd::OnSongInsert)
 	EVT_MENU(idMenuSongInsertTab, MainWnd::OnSongInsert)
 	EVT_MENU(idMenuSongAddToSongbook, MainWnd::OnSongAddToSongbook)
+
+	EVT_MENU(idMenuSongTrnUp1, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnUp2, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnUp3, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnUp4, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnUp5, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnUp6, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnUp7, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnDown1, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnDown2, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnDown3, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnDown4, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnDown5, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnDown6, MainWnd::OnSongTranspose)
+	EVT_MENU(idMenuSongTrnDown7, MainWnd::OnSongTranspose)
+
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, MainWnd::OnSongContentChange)
 	EVT_STC_MODIFIED(ID_SONG_EDITOR, MainWnd::OnSongEditorChange)
 	EVT_STC_STYLENEEDED(ID_SONG_EDITOR, MainWnd::OnSongEditorStyleNeeded)
@@ -224,7 +254,24 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	songMenu->AppendSeparator();
 	songMenu->Append(idMenuSongAddToSongbook, _("Add to songbook"), _("Add item to current songbook"));
 
-	songMenu->Append(wxID_ANY, _("Trans&pose.."), _("Transpose song chords to different key"));
+	//songMenu->Append(wxID_ANY, _("Trans&pose.."), _("Transpose song chords to different key"));
+
+	wxMenu* songTransposeMenu = new wxMenu(_T(""));
+	songTransposeMenu->Append(idMenuSongTrnDown7, wxT("-7 (perfect fifth)"), _("Transpose song 7 half steps down"));
+	songTransposeMenu->Append(idMenuSongTrnDown6, wxT("-6 (diminished fifth)"), _("Transpose song 6 half steps dowm"));
+	songTransposeMenu->Append(idMenuSongTrnDown5, wxT("-5 (perfect fourth)"), _("Transpose song 5 half steps down"));
+	songTransposeMenu->Append(idMenuSongTrnDown4, wxT("-4 (major third)"), _("Transpose song 4 half steps down"));
+	songTransposeMenu->Append(idMenuSongTrnDown3, wxT("-3 (minor third)"), _("Transpose song 3 half steps down"));
+	songTransposeMenu->Append(idMenuSongTrnDown2, wxT("-2 (major second)"), _("Transpose song 2 half steps down"));
+	songTransposeMenu->Append(idMenuSongTrnDown1, wxT("-1 (minor second)"), _("Transpose song 1 half step down"));
+	songTransposeMenu->Append(idMenuSongTrnUp1, wxT("+1 (minor second)"), _("Transpose song 1 half step up"));
+	songTransposeMenu->Append(idMenuSongTrnUp2, wxT("+2 (major second)"), _("Transpose song 2 half steps up"));
+	songTransposeMenu->Append(idMenuSongTrnUp3, wxT("+3 (minor third)"), _("Transpose song 3 half steps up"));
+	songTransposeMenu->Append(idMenuSongTrnUp4, wxT("+4 (major third)"), _("Transpose song 4 half steps up"));
+	songTransposeMenu->Append(idMenuSongTrnUp5, wxT("+5 (perfect fourth)"), _("Transpose song 5 half steps up"));
+	songTransposeMenu->Append(idMenuSongTrnUp6, wxT("+6 (diminished fifth)"), _("Transpose song 6 half steps up"));
+	songTransposeMenu->Append(idMenuSongTrnUp7, wxT("+7 (perfect fifth)"), _("Transpose song 7 half steps up"));
+	songMenu->AppendSubMenu(songTransposeMenu, _("Trans&pose.."), _("Transpose song chords to different key"));
 	mbar->Append(songMenu, _("&Song"));
 
 	wxMenu* songbookMenu = new wxMenu(_T(""));
@@ -757,6 +804,36 @@ void MainWnd::OnSongInsert(wxCommandEvent& event)
 void MainWnd::OnSongAddToSongbook(wxCommandEvent& event)
 {
 	std::cout << "Adding from menu" << std::endl;
+}
+
+void MainWnd::OnSongTranspose(wxCommandEvent& event)
+{
+	int distance = 0;
+
+	switch(event.GetId())
+	{
+		case idMenuSongTrnUp1: distance = 1; break;
+		case idMenuSongTrnUp2: distance = 2; break;
+		case idMenuSongTrnUp3: distance = 3; break;
+		case idMenuSongTrnUp4: distance = 4; break;
+		case idMenuSongTrnUp5: distance = 5; break;
+		case idMenuSongTrnUp6: distance = 6; break;
+		case idMenuSongTrnUp7: distance = 7; break;
+		case idMenuSongTrnDown1: distance = -1; break;
+		case idMenuSongTrnDown2: distance = -2; break;
+		case idMenuSongTrnDown3: distance = -3; break;
+		case idMenuSongTrnDown4: distance = -4; break;
+		case idMenuSongTrnDown5: distance = -5; break;
+		case idMenuSongTrnDown6: distance = -6; break;
+		case idMenuSongTrnDown7: distance = -7; break;
+	}
+
+	if (distance != 0)
+	{
+		std::wstring contents(m_songContent->GetText().wc_str());
+		std::wstring contentsTransposed = bschordpro::Transposer::transpose(contents, distance);
+		m_songContent->SetText(contentsTransposed);
+	}
 }
 
 void MainWnd::OnAbout(wxCommandEvent &event)

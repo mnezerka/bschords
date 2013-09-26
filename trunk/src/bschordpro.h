@@ -46,6 +46,8 @@ namespace bschordpro
 	{
 		public:
 			EventHandlerTxt();
+			virtual void onBegin() {};
+			virtual void onEnd() {};
 			virtual void onLineBegin();
 			virtual void onLineEnd();
 			virtual void onCommand(const CommandType command, const std::wstring& value);
@@ -74,6 +76,14 @@ namespace bschordpro
 			void parseCommand(const std::wstring& cmd);
 			void parseChord(const std::wstring& chord);
 
+	};
+
+	// class for song transpositions
+	class Transposer
+	{
+		public:
+			static std::wstring transpose(std::wstring &song, int distance);
+			static std::wstring transposeChord(std::wstring &chord, int distance);
 	};
 }
 

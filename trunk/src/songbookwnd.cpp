@@ -9,9 +9,9 @@
 #include "songbookwnd.h"
 #include "mainwnd.h"
 
-#include "res/song.xpm"
-#include "res/songbook.xpm"
-#include "res/songfolder.xpm"
+//#include "res/song.xpm"
+//#include "res/songbook.xpm"
+//#include "res/songfolder.xpm"
 
 /*
 TODO: SongBook: add buttons for moving items

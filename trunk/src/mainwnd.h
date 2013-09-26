@@ -93,6 +93,7 @@ namespace bschords
 
 			void OnSongInsert(wxCommandEvent& event);
 			void OnSongAddToSongbook(wxCommandEvent& event);
+			void OnSongTranspose(wxCommandEvent& event);
 
 			void OnClose(wxCloseEvent& event);
 			void OnQuit(wxCommandEvent& event);

@@ -243,6 +243,18 @@
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
+		<Unit filename="src\song.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src\song.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
 		<Unit filename="src\songbook.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />

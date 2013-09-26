@@ -114,6 +114,12 @@ namespace bschords
 		virtual bool isVisible();
 	};
 
+	struct TSetStructItem {
+		TSetStructItem(wxString &chord, float size) : mChord(chord), mSize(size) { };
+		wxString mChord;
+		float mSize;
+	};
+
 	struct TSetBlockStruct : public TSetBlock
 	{
 		std::vector<wxString*> m_lines;
@@ -124,7 +130,9 @@ namespace bschords
 		virtual wxRect getBoundingRect();
 		virtual bool isVisible();
 		private:
-			std::vector<wxString> prepare();
+			//std::vector<wxString> prepare();
+			std::vector< std::vector<TSetStructItem> > prepare();
+			void getSizeParams(std::vector< std::vector<TSetStructItem> > items, size_t &numCellSize, float &numMinSize, float &numMaxLineSize, size_t &numSeparatorSize);
 	};
 
 	/* Songbook page */

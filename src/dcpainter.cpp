@@ -260,13 +260,10 @@ bool TSetBlockStruct::isVisible()
 	return m_painter->m_ss->m_showStructs;
 }
 
-std::vector<wxString> TSetBlockStruct::prepare()
+std::vector< std::vector<TSetStructItem> > TSetBlockStruct::prepare()
 {
 	wxStringTokenizer tkBars;
-
-	std::vector<wxString> result;
-
-	std::cout << "tstruct prepare" << std::endl;
+	std::vector< std::vector<TSetStructItem> > result (m_lines.size());
 
 	// loop through block lines
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
@@ -276,11 +273,9 @@ std::vector<wxString> TSetBlockStruct::prepare()
 		// loop over bars
 		while (tkBars.HasMoreTokens())
 		{
-
 			// analyze individual bars
 			wxString bar = tkBars.GetNextToken();
-
-			std::wcout << L"analyzing bar <" << bar.wc_str() << L">" << std::endl;
+			//std::wcout << L"analyzing bar <" << bar.wc_str() << L">" << std::endl;
 
 			wxString chord;
 			enum {READING_CHORD_SPACE, READING_CHORD_SYMBOL} state = READING_CHORD_SYMBOL;
@@ -300,7 +295,7 @@ std::vector<wxString> TSetBlockStruct::prepare()
 						if (bar[i] != wxChar(' '))
 						{
 							//std::wcout << L"Chord found <" << chord.wc_str() << L">" << (chord.Length() / (float)bar.Length()) << std::endl;
-							result.push_back(chord);
+							result[lineIx].push_back(TSetStructItem(chord.Trim(), (chord.Length() / (float)bar.Length())));
 							chord.Empty();
 							state = READING_CHORD_SYMBOL;
 						}
@@ -310,31 +305,75 @@ std::vector<wxString> TSetBlockStruct::prepare()
 				i++;
 			}
 			if (chord.Length() > 0)
-				result.push_back(chord);
+				result[lineIx].push_back(TSetStructItem(chord.Trim(), (chord.Length() / (float)bar.Length())));
 
 		}
 	}
 
-	for (std::vector<wxString>::iterator it = result.begin(); it != result.end(); it++)
-		//std::wcout << L"Chord found <" << (*it).wc_str() << L">" << ((*it).Length() / (float)bar.Length()) << std::endl;
-		std::wcout << L"Chord found <" << (*it).wc_str() << std::endl;
-
 	return result;
+}
+
+void TSetBlockStruct::getSizeParams(std::vector< std::vector<TSetStructItem> > items, size_t &numCellSize, float &numMinSize, float &numMaxLineSize, size_t &numSeparatorSize)
+{
+	numCellSize = 0;
+	numMinSize = 1;
+	numMaxLineSize = 0;
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_STRUCT]);
+	numSeparatorSize = m_painter->m_dc.GetTextExtent(wxT("/")).GetWidth();
+
+	// look for longest string and minimal size to be able to compute size of cell
+	wxString maxChord;
+	for (std::vector< std::vector<TSetStructItem> >::iterator lineIt = items.begin(); lineIt != items.end(); lineIt++)
+	{
+		float numLineSize = 0;
+		for (std::vector<TSetStructItem>::iterator it = (*lineIt).begin(); it != (*lineIt).end(); it++)
+		{
+			size_t l = (*it).mChord.Length();
+			if (l > maxChord.Length())
+				maxChord = (*it).mChord;
+			if ((*it).mSize < numMinSize)
+				numMinSize = (*it).mSize;
+			numLineSize += (*it).mSize;
+		}
+		if (numLineSize > numMaxLineSize)
+			numMaxLineSize = numLineSize;
+	}
+	numCellSize = m_painter->m_dc.GetTextExtent(maxChord).GetWidth() + m_painter->m_dc.GetCharWidth() * 2;
 }
 
 void TSetBlockStruct::draw()
 {
 	wxPoint pos = mPos;
 
-	prepare();
+	// parse structure and compute size parameters
+	std::vector< std::vector<TSetStructItem> > st = prepare();
+	size_t numCellSize;
+	float numMinSize;
+	float numMaxLineSize;
+	size_t numSeparatorSize;
+	getSizeParams(st, numCellSize, numMinSize, numMaxLineSize, numSeparatorSize);
 
-	// loop through block lines
-	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
+	float numLinePos = 0;
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_STRUCT]);
+	for (std::vector< std::vector<TSetStructItem> >::iterator lineIt = st.begin(); lineIt != st.end(); lineIt++)
 	{
-		wxString *line = m_lines[lineIx];
+		for (std::vector<TSetStructItem>::iterator it = (*lineIt).begin(); it != (*lineIt).end(); it++)
+		{
+			// draw separator
+			if (numLinePos == (long)numLinePos)
+			{
+				m_painter->m_dc.DrawText(wxChar('/'), pos);
+				pos.x += numSeparatorSize;
+			}
+			m_painter->m_dc.DrawText((*it).mChord, pos);
+			pos.x += numCellSize * ((*it).mSize / numMinSize);
+			numLinePos += (*it).mSize;
+		}
+		// draw last separator
+		m_painter->m_dc.DrawText(wxChar('/'), pos);
 
-		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_STRUCT]);
-		m_painter->m_dc.DrawText(*line, pos);
+		// move graphic cursor to next line
+		pos.x = mPos.x;
 		pos.y += m_painter->m_dc.GetCharHeight();
 	}
 }
@@ -346,19 +385,22 @@ wxRect TSetBlockStruct::getBoundingRect()
 	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_STRUCT]);
 	wxCoord lineHeight = m_painter->m_dc.GetCharHeight();
 
-	wxCoord maxWidth = 0;
+	// parse structure
+	std::vector< std::vector<TSetStructItem> > st = prepare();
+
+	size_t numCellSize;
+	float numMinSize;
+	float numMaxLineSize;
+	size_t numSeparatorSize;
+	getSizeParams(st, numCellSize, numMinSize, numMaxLineSize, numSeparatorSize);
+
 	wxCoord height = m_lines.size() * lineHeight;
 
-	// loop through block lines
-	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
-	{
-		wxString *line = m_lines[lineIx];
-		wxSize lineSize = m_painter->m_dc.GetTextExtent(*line);
-		if (lineSize.GetWidth() > maxWidth)
-			maxWidth = lineSize.GetWidth();
-	}
+	// width of all cells + width of all separators
+	wxCoord width = (numCellSize * 2) / numMinSize * numMaxLineSize;
+	width += (numMaxLineSize + 1) * numSeparatorSize;
 
-	result.SetWidth(maxWidth);
+	result.SetWidth(width);
 	result.SetHeight(height);
 
 	return result;

@@ -345,14 +345,109 @@ void Parser::parseChord(const std::wstring& chord)
 	m_eventHandler->onChord(chord);
 }
 
+std::wstring Transposer::transpose(std::wstring &song, int distance)
+{
+	std::wstring result;
+
+	// loop over all characters of parsed std::wstring (buffer) and look for line ends
+    // each text line is parsed separately
+    size_t i = 0;
+    bool inChord = false;
+    std::wstring chordBuffer;
+	while (i < song.length())
+	{
+		switch(song[i])
+		{
+			case L'[':
+				if (!inChord)
+				{
+					chordBuffer = L"";
+					inChord = true;
+				}
+				result += song[i];
+				break;
+
+			case L']':
+				{
+					if (inChord)
+					{
+
+						std::wstring newChord = Transposer::transposeChord(chordBuffer, distance);
+						inChord = false;
+						result += newChord;
+					}
+				}
+				result += song[i];
+				break;
+			default:
+				if (inChord)
+					chordBuffer += song[i];
+				else
+					result += song[i];
+		}
+		i++;
+	}
+
+	return result;
+}
+
+std::wstring Transposer::transposeChord(std::wstring &chord, int distance)
+{
+	static std::wstring roots[] = { L"C", L"C#", L"D", L"Eb", L"E", L"F", L"F#", L"G", L"Ab", L"A", L"Bb", L"B" };
+	//std::wcout << L"Transpose chord <" << chord << "> distance: " << distance << std::endl;
+
+	if (chord.length() < 1)
+		return chord;
+
+	// get chord root letter
+	std::wstring root;
+	root += chord[0];
+
+	// get chord root modifier
+	if (chord.length() > 1)
+	{
+		if (chord[1] == '#' || chord[1] == 'b')
+			root += chord[1];
+	}
+
+	// look for chord root in array of roots
+	int rootIndex = -1;
+	for (int i = 0; i < 12; i++)
+	{
+		if (root == roots[i])
+		{
+			rootIndex = i;
+			break;
+		}
+	}
+
+	// nothing to do if no predefined capital letter found at first position
+	if (rootIndex == -1)
+		return chord;
+
+	//std::cout << "root index is " << rootIndex << std::endl;
+	rootIndex += distance;
+	rootIndex %= 12;
+	//std::cout << "new index is " << rootIndex << std::endl;
+	if (rootIndex < 0)
+		rootIndex = 12 + rootIndex;
+	//std::cout << "new normalized index is " << rootIndex << std::endl;
+
+	std::wstring result;
+	result += roots[rootIndex];
+	result += chord.substr(root.length());
+
+	return result;
+}
+
 #ifdef _TEST
 int main(int argc, char **argv)
 {
-	EventHandler x;
-	EventHandlerTxt y;
+	//EventHandler x;
+	//EventHandlerTxt y;
 	//x.onLine("ahoj");
 
-	Parser p(&x);
+	//Parser p(&y);
 	//Parser p(&y);
 
 	//p.parse("0123456789012345678\nand this is second line.\n\rAnd this is third line\r\r\rAnd last one");
@@ -378,13 +473,24 @@ int main(int argc, char **argv)
     //p.parse(L"{}");
     //p.parse(L" {}");
     //p.parse(L"a {cmd:x} a {cmd}");
-    p.parse(L"{title: ahoj}\nThis is first text line");
+    //p.parse(L"{title: ahoj}\nThis is first text line");
 
     //p.parse("#  ahoj\n#ja jsem misa\n \na ty?");
 
     //p.parse("[A");
 
     //p.parse("x\ny\nz");
+
+    std::wstring in(L"This is some song [C] with chords [Dm] end.");
+
+	std::wcout << Transposer::transpose(in, 2) << std::endl;
+
+	/*for (int i = -14; i < 14; i++)
+	{
+		std::wstring out = Transposer::transposeChord(in, i);
+		std::wcout << in << L" shift " << i << " :" << out << std::endl;
+	}*/
+
 	return 0;
 }
 #endif // _TEST

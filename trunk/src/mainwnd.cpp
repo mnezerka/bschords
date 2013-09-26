@@ -34,6 +34,7 @@
 #include "songstylesheetdlg.h"
 //#include "bschordsicon.xpm"
 #include "dcpainter.h"
+#include "song.h"
 
 using namespace bschords;
 

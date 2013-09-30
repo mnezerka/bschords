@@ -34,16 +34,11 @@ PreviewWndCanvas::~PreviewWndCanvas()
 
 void PreviewWndCanvas::OnDraw(wxDC& dc)
 {
-	//std::wcout << L"OnDraw" << endl;
-
 	dc.SetUserScale(m_zoom, m_zoom);
 
 	int cx, cy;
 	GetViewStart(&cx, &cy);
-	//cout << "View start: " << cx << "x" << cy << " px" << endl;
-
 	GetVirtualSize(&cx, &cy);
-	//cout << "Virtual size: " << cx << "x" << cy << " px" << endl;
 
 	// get lines from song book control
 	wxString text = m_sourceCtrl->GetText();
@@ -164,7 +159,6 @@ void PreviewWnd::setZoom(float zoom)
 {
 	if (m_canvas)
 	{
-		std::cout << "setting zoom to " << zoom << std::endl;
 		m_canvas->setZoom(zoom);
 		m_canvas->Refresh();
 		m_canvas->Update();

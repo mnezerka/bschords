@@ -46,18 +46,18 @@ void EventHandlerTxt::onLineEnd()
     std::wcout << m_textBuffer << std::endl;
 }
 
-void EventHandlerTxt::onCommand(const CommandType command, const std::wstring& value)
+void EventHandlerTxt::onCommand(const CommandType command, const std::wstring& value, const RawPos &pos)
 {
     std::wcout << L"command: " << command << L" with value: " << value;
 }
 
-void EventHandlerTxt::onChord(const std::wstring& chord)
+void EventHandlerTxt::onChord(const std::wstring& chord, const RawPos &pos)
 {
     m_chordBuffer.append(chord);
     m_chordBuffer.append(L" ");
 }
 
-void EventHandlerTxt::onText(const std::wstring& text)
+void EventHandlerTxt::onText(const std::wstring& text, const RawPos &pos)
 {
     m_textBuffer.append(text);
 
@@ -71,7 +71,7 @@ void EventHandlerTxt::onText(const std::wstring& text)
     }
 }
 
-void EventHandlerTxt::onLine(const std::wstring& line)
+void EventHandlerTxt::onLine(const std::wstring& line, const RawPos &pos)
 {
     m_textBuffer.append(line);
 }
@@ -100,7 +100,7 @@ void Parser::parse(const std::wstring& s)
 
 			case L'\n':
 				// LF always ends line and forces parser to parse preceeding line
-				parseLine(s, lineFrom, lineLen);
+				parseLine(s, lineFrom, lineLen, 0);
 				lineFrom = i + 1;
 				lineLen = 0;
 				break;
@@ -114,21 +114,22 @@ void Parser::parse(const std::wstring& s)
 
 	// consume last line
 	if (lineFrom < s.length())
-		parseLine(s, lineFrom, lineLen);
+		parseLine(s, lineFrom, lineLen, 0);
 
 	m_eventHandler->onEnd();
 }
 
 // called for each text line of parsed buffer
-void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, unsigned int lineLen)
+void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, unsigned int lineLen, unsigned int lineIndex)
 {
 	bool lineHasCmd = false;
 	std::wstring curText = L"";
 	std::wstring line;
+	RawPos p;
 
 	line.assign(strBuffer, lineFrom, lineLen);
 
-    //wcout << L"from: " << lineFrom << L", len:" << lineLen << L" >" << line << L"<" << endl;
+    //std::wcout << L"from: " << lineFrom << L", len:" << lineLen << L" >" << line << L"<" << std::endl;
 
 	// remove commands from line buffer
 	while (true)
@@ -143,8 +144,9 @@ void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, uns
 			break;
 
 		// command found
-		//wcout << L"Command found from: " << cmdBegin << " to: " << cmdEnd << endl;
-		parseCommand(line.substr(cmdBegin + 1, cmdEnd - cmdBegin - 1));
+		//std::wcout << L"Command found from: " << cmdBegin << " to: " << cmdEnd << std::endl;
+		p.setPos(lineFrom + cmdBegin + 1, cmdEnd - cmdBegin - 1);
+		parseCommand(strBuffer, p);
 		line.erase(cmdBegin, cmdEnd - cmdBegin + 1);
 		lineHasCmd = true;
 	}
@@ -159,7 +161,8 @@ void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, uns
 	if (m_rawMode)
 	{
 		m_eventHandler->onLineBegin();
-		m_eventHandler->onLine(line);
+		p.setPos(lineFrom, lineLen);
+		m_eventHandler->onLine(line, p);
 		m_eventHandler->onLineEnd();
 		return;
 	}
@@ -208,11 +211,13 @@ void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, uns
 
                 if (curText.length() > 0)
                 {
-                    m_eventHandler->onText(curText);
+
+                    m_eventHandler->onText(curText, p);
                     curText.erase();
                 }
 
-				parseChord(line.substr(i + 1, endPos - i - 1));
+				p.setPos(lineFrom + i + 1, endPos - i - 1);
+				m_eventHandler->onChord(strBuffer.substr(p.mPos, p.mLen), p);
 				i = endPos + 1;
 			}
 			else
@@ -240,16 +245,18 @@ void Parser::parseLine(const std::wstring& strBuffer, unsigned int lineFrom, uns
     // empty text buffer
     if (curText.length() > 0)
     {
-        m_eventHandler->onText(curText);
+    	p.setPos(0, 0);
+        m_eventHandler->onText(curText, p);
         curText.erase();
     }
 
     m_eventHandler->onLineEnd();
 }
 
-void Parser::parseCommand(const std::wstring& cmd)
+void Parser::parseCommand(const std::wstring &strBuffer, const RawPos &p)
 {
     //wcout << L"parsing >" << cmd << L"<" << endl;
+    std::wstring cmd = strBuffer.substr(p.mPos, p.mLen);
     size_t cmdEnd = cmd.find_last_not_of(L' ');
 
     std::wstring cmdId(L"");
@@ -336,160 +343,170 @@ void Parser::parseCommand(const std::wstring& cmd)
 		else if (cmdId == ::cmdSubtitle)
 			cmdType = CMD_SUBTITLE;
 
-        m_eventHandler->onCommand(cmdType, cmdVal);
+        m_eventHandler->onCommand(cmdType, cmdVal, p);
     }
-}
-
-void Parser::parseChord(const std::wstring& chord)
-{
-	m_eventHandler->onChord(chord);
 }
 
 std::wstring Transposer::transpose(std::wstring &song, int distance)
 {
 	std::wstring result;
 
-	// loop over all characters of parsed std::wstring (buffer) and look for line ends
-    // each text line is parsed separately
-    size_t i = 0;
-    bool inChord = false;
-    std::wstring chordBuffer;
-	while (i < song.length())
+	// parse song to get all fragments to be transposed
+	mTransposeLines = false;
+	mTransposedFragments.clear();
+	Parser p(this);
+	p.parse(song);
+
+	unsigned int lastPos = 0;
+	for (std::vector<RawPos>::iterator it = mTransposedFragments.begin(); it != mTransposedFragments.end(); it++)
 	{
-		switch(song[i])
+		result += song.substr(lastPos, (*it).mPos - lastPos);
+		std::wstring toTranspose = song.substr((*it).mPos, (*it).mLen);
+		//std::wcout << "Transpose " << *it << " " << lastPos << " " << ((*it).mPos - lastPos) << std::endl;
+		result += transposeText(toTranspose, distance);
+		lastPos = (*it).mPos + (*it).mLen;
+	}
+	result += song.substr(lastPos);
+
+	//std::wstring newChord = Transposer::transposeChord(chordBuffer, distance);
+
+	return result;
+}
+
+std::wstring Transposer::transposeText(std::wstring &text, int distance)
+{
+	static std::wstring roots(L"CDEFGAB");
+	static std::wstring steps[] = { L"C", L"C#", L"D", L"Eb", L"E", L"F", L"F#", L"G", L"Ab", L"A", L"Bb", L"B" };
+	//std::wcout << L"Transpose text <" << text << "> distance: " << distance << std::endl;
+
+	if (text.length() < 1)
+		return text;
+
+	std::wstring result;
+
+	unsigned int i = 0;
+
+	while (i < text.length())
+	{
+		// look for chord root in array of roots
+		int rootIndex = -1;
+		for (size_t ix = 0; ix < roots.length(); ix++) if (text[i] == roots[ix]) { rootIndex = ix; break; }
+
+		// nothing to do if no predefined capital letter found
+		if (rootIndex == -1)
 		{
-			case L'[':
-				if (!inChord)
-				{
-					chordBuffer = L"";
-					inChord = true;
-				}
-				result += song[i];
-				break;
-
-			case L']':
-				{
-					if (inChord)
-					{
-
-						std::wstring newChord = Transposer::transposeChord(chordBuffer, distance);
-						inChord = false;
-						result += newChord;
-					}
-				}
-				result += song[i];
-				break;
-			default:
-				if (inChord)
-					chordBuffer += song[i];
-				else
-					result += song[i];
+			result += text[i];
+			i++;
+			continue;
 		}
+
+		std::wstring root;
+		root += text[i];
 		i++;
+		// check for root modifiers (#, b)
+		if (i + 1 < text.length())
+			if (text[i] == '#' || text[i] == 'b')
+			{
+				i++;
+				root += text[i];
+			}
+
+		// look for step
+		int stepIndex = -1;
+		for (int stepIx = 0; stepIx < 12; stepIx++)
+		{
+			if (root == steps[stepIx])
+			{
+				stepIndex = stepIx;
+				break;
+			}
+		}
+
+		// transposition
+		stepIndex += distance;
+		stepIndex %= 12;
+		//std::cout << "new index is " << rootIndex << std::endl;
+		if (stepIndex < 0)
+			stepIndex = 12 + stepIndex;
+
+		result += steps[stepIndex];
 	}
 
 	return result;
 }
 
-std::wstring Transposer::transposeChord(std::wstring &chord, int distance)
+void Transposer::onCommand(const CommandType command, const std::wstring& value, const RawPos &pos)
 {
-	static std::wstring roots[] = { L"C", L"C#", L"D", L"Eb", L"E", L"F", L"F#", L"G", L"Ab", L"A", L"Bb", L"B" };
-	//std::wcout << L"Transpose chord <" << chord << "> distance: " << distance << std::endl;
-
-	if (chord.length() < 1)
-		return chord;
-
-	// get chord root letter
-	std::wstring root;
-	root += chord[0];
-
-	// get chord root modifier
-	if (chord.length() > 1)
+	switch (command)
 	{
-		if (chord[1] == '#' || chord[1] == 'b')
-			root += chord[1];
-	}
-
-	// look for chord root in array of roots
-	int rootIndex = -1;
-	for (int i = 0; i < 12; i++)
-	{
-		if (root == roots[i])
-		{
-			rootIndex = i;
+		case CMD_STRUCT_START:
+			//std::wcout << "transposer - struct start" << std::endl;
+			mTransposeLines = true;
 			break;
-		}
-	}
-
-	// nothing to do if no predefined capital letter found at first position
-	if (rootIndex == -1)
-		return chord;
-
-	//std::cout << "root index is " << rootIndex << std::endl;
-	rootIndex += distance;
-	rootIndex %= 12;
-	//std::cout << "new index is " << rootIndex << std::endl;
-	if (rootIndex < 0)
-		rootIndex = 12 + rootIndex;
-	//std::cout << "new normalized index is " << rootIndex << std::endl;
-
-	std::wstring result;
-	result += roots[rootIndex];
-	result += chord.substr(root.length());
-
-	return result;
+		case CMD_STRUCT_END:
+			//std::wcout << "transposer - struct end" << std::endl;
+			mTransposeLines = false;
+			break;
+		default:
+			;
+	};
+}
+void Transposer::onChord(const std::wstring& chord, const RawPos &pos)
+{
+	//std::wcout << "transposer - chord: <" << chord << L">" << std::endl;
+	mTransposedFragments.push_back(pos);
+}
+void Transposer::onLine(const std::wstring& line, const RawPos &pos)
+{
+	//std::wcout << "transposer - line: <" << line << L">" << std::endl;
+	if (mTransposeLines)
+		mTransposedFragments.push_back(pos);
 }
 
 #ifdef _TEST
+// example implementation for simple text output
+class EventHandlerX1 : public EventHandler
+{
+	public:
+		EventHandlerX1() {};
+		virtual void onBegin() {};
+		virtual void onEnd() {};
+		virtual void onLineBegin() {};
+		virtual void onLineEnd() {};
+		virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos) { std::wcout << L"command <" << command << L"> pos " << pos << std::endl;};
+		virtual void onChord(const std::wstring& chord, const RawPos &pos) { std::wcout << L"chord <" << chord << L"> pos " << pos << std::endl;};
+		virtual void onText(const std::wstring& text, const RawPos &pos) {};
+		virtual void onLine(const std::wstring& line, const RawPos &pos) {};
+};
+
 int main(int argc, char **argv)
 {
 	//EventHandler x;
 	//EventHandlerTxt y;
+	EventHandlerX1 x;
 	//x.onLine("ahoj");
 
 	//Parser p(&y);
 	//Parser p(&y);
-
-	//p.parse("0123456789012345678\nand this is second line.\n\rAnd this is third line\r\r\rAnd last one");
-	//       012345678901234567 89 01234567890
-	//p.parse("{title: Song1}xxx\n \nmisa[]nez");
-	//p.parse("{title: Wild Horses}\n[Hm]Childwood [G]living\n[Hm]Is easy to [G]do");
-
-	//p.parse("All that you [Am]wanted\nis easy [D][G][A] to [C]do.");
-
-    //p.parse("x [A][B][C] [First]misa[C]Chord");
+	Parser p(&x);
 
     //p.parse("{title: Song1}");
     //p.parse(L"[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
     //p.parse(L"\nHold to a dream, carry it up and down\nFollow a star, search the world around\nHold to a dream, carry it close to me\nI'm frozen in time, you alone can set me free");
 	//p.parse(L"ahoj\nmiso\njani");
 
-    //p.parse(L"{title  :  Song1}");
-    //p.parse(L"{title:Song1}");
-    //p.parse(L"{  title  :  Song1  }");
-    //p.parse(L"{title:}");
-    //p.parse(L"{:}");
-    //p.parse(L"{ :}");
-    //p.parse(L"{}");
-    //p.parse(L" {}");
-    //p.parse(L"a {cmd:x} a {cmd}");
-    //p.parse(L"{title: ahoj}\nThis is first text line");
-
-    //p.parse("#  ahoj\n#ja jsem misa\n \na ty?");
-
-    //p.parse("[A");
-
     //p.parse("x\ny\nz");
 
-    std::wstring in(L"This is some song [C] with chords [Dm] end.");
+    std::wstring in(L"s[C]w[Dm]e\n"
+		L"Text taky\n"
+		L"{sos}\n"
+		L"/Am /C /Bbm /\n"
+		L"{eos}\n"
+	);
 
-	std::wcout << Transposer::transpose(in, 2) << std::endl;
-
-	/*for (int i = -14; i < 14; i++)
-	{
-		std::wstring out = Transposer::transposeChord(in, i);
-		std::wcout << in << L" shift " << i << " :" << out << std::endl;
-	}*/
+	std::wcout << in << std::endl;
+	Transposer t;
+	std::wcout << t.transpose(in, 1) << std::endl;
 
 	return 0;
 }

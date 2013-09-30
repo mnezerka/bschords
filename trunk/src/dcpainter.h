@@ -177,10 +177,10 @@ namespace bschords
 			virtual void onEnd();
 			virtual void onLineBegin();
 			virtual void onLineEnd();
-			virtual void onCommand(const bschordpro::CommandType command, const std::wstring& value);
-			virtual void onChord(const std::wstring& chord);
-			virtual void onText(const std::wstring& text);
-			virtual void onLine(const std::wstring& line);
+			virtual void onCommand(const bschordpro::CommandType command, const std::wstring& value, const bschordpro::RawPos &pos);
+			virtual void onChord(const std::wstring& chord, const bschordpro::RawPos &pos);
+			virtual void onText(const std::wstring& text, const bschordpro::RawPos &pos);
+			virtual void onLine(const std::wstring& line, const bschordpro::RawPos &pos);
 			wxCoord getDeviceX(int numMM);
 			wxCoord getDeviceY(int numMM);
 			TSetStat getTSetStat() { return m_stat; };

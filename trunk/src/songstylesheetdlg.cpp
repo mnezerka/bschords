@@ -272,7 +272,7 @@ void SongStyleSheetDlg::OnSelFont(wxCommandEvent &event)
     int fontIx = fontSelType->GetSelection();
     if (fontIx != wxNOT_FOUND && fontIx >= 0 && fontIx < BS_FONT_LAST)
     {
-        std::cout << "selected item is " << fontIx << std::endl;
+        //std::cout << "selected item is " << fontIx << std::endl;
 
         // fonts stuff
         wxFontData fontData;

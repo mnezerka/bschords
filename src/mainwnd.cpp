@@ -104,6 +104,7 @@ enum
 	idMenuViewSongBook,
 	idMenuViewTbMain,
 	idMenuViewTbChords,
+	idMenuViewLog,
 
 	idMenuSongInsertChorus,
 	idMenuSongInsertTab,
@@ -132,6 +133,9 @@ enum
 	ID_FSBROWSER,
 	ID_TOOLBAR_CHORD,
 	ID_SONG_EDITOR,
+
+	idActionFontsUp,
+	idActionFontsDown,
 
 	idWindowSongBook,
 };
@@ -165,7 +169,9 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(idMenuViewSongPreview, MainWnd::OnViewPane)
 	EVT_MENU(idMenuViewSongBook, MainWnd::OnViewPane)
 	EVT_MENU(idMenuViewTbMain, MainWnd::OnViewToolbar)
-	EVT_MENU(idMenuViewTbChords, MainWnd::OnViewPane)
+	EVT_MENU(idMenuViewTbChords, MainWnd::OnViewToolbar)
+	EVT_MENU(idMenuViewEditor, MainWnd::OnViewPane)
+	EVT_MENU(idMenuViewLog, MainWnd::OnViewPane)
 	EVT_MENU(idMenuSongInsertChorus, MainWnd::OnSongInsert)
 	EVT_MENU(idMenuSongInsertTab, MainWnd::OnSongInsert)
 	EVT_MENU(idMenuSongAddToSongbook, MainWnd::OnSongAddToSongbook)
@@ -184,6 +190,9 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(idMenuSongTrnDown5, MainWnd::OnSongTranspose)
 	EVT_MENU(idMenuSongTrnDown6, MainWnd::OnSongTranspose)
 	EVT_MENU(idMenuSongTrnDown7, MainWnd::OnSongTranspose)
+
+	EVT_MENU(idActionFontsUp, MainWnd::OnChangeFontsSize)
+	EVT_MENU(idActionFontsDown, MainWnd::OnChangeFontsSize)
 
 	EVT_COMMAND(wxID_ANY, wxEVT_COMMAND_TEXT_UPDATED, MainWnd::OnSongContentChange)
 	EVT_STC_MODIFIED(ID_SONG_EDITOR, MainWnd::OnSongEditorChange)
@@ -247,6 +256,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	viewMenu->AppendSeparator();
 	viewMenu->Append(idMenuViewTbMain, _("Main toolbar"), _("View main toolbar"), true);
 	viewMenu->Append(idMenuViewTbChords, _("Chords toolbar"), _("View chords toolbar"), true);
+	viewMenu->Append(idMenuViewLog, _("Log window"), _("View log window"), true);
 	mbar->Append(viewMenu, _("&View"));
 
 	wxMenu* songMenu = new wxMenu(_T(""));
@@ -301,6 +311,11 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     tb1->AddTool(wxID_NEW, _("New song file"), wxArtProvider::GetBitmap(wxART_NEW, wxART_OTHER, wxSize(16, 16)));
     tb1->AddTool(wxID_OPEN, _("Open song file"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_OTHER, wxSize(16, 16)));
     tb1->AddTool(wxID_SAVE, _("Save song file"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_OTHER, wxSize(16, 16)));
+	tb1->AddTool(idActionFontsUp, _("Fonts up"), wxArtProvider::GetBitmap(wxART_GO_UP, wxART_OTHER, wxSize(16, 16)));
+	tb1->AddTool(idActionFontsDown, _("Fonts down"), wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_OTHER, wxSize(16, 16)));
+	tb1->AddTool(idMenuFileOpenSongBook, _("Open songbook file"), wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_OTHER, wxSize(16, 16)));
+	tb1->AddTool(idMenuFileSaveSongBook, _("Save songbook file"), wxArtProvider::GetBitmap(wxART_FILE_SAVE, wxART_OTHER, wxSize(16, 16)));
+
     tb1->Realize();
     m_auiMgr.AddPane(tb1, wxAuiPaneInfo().Name(wxT("toolbar-main")).Caption(wxT("Mainx Toolbar")).ToolbarPane().Top().Row(0).LeftDockable(false).RightDockable(false));
 
@@ -350,7 +365,6 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	// create song content window
 	m_songContent = new wxStyledTextCtrl(this, ID_SONG_EDITOR);
 	m_songContent->SetMarginWidth(0, 15);
-
     m_songContent->SetMarginType(0, wxSTC_MARGIN_NUMBER);
     m_songContent->SetWrapMode (wxSTC_WRAP_NONE);
     m_songContent->StyleClearAll();
@@ -376,6 +390,12 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	m_songBookWnd = new SongBookWnd(this, idWindowSongBook);
     m_auiMgr.AddPane(m_songBookWnd, wxAuiPaneInfo().Name(_("song-book")).Caption(wxT("Song Book")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
+	// create log window
+	mLogTextCtrl = new wxTextCtrl(this, -1, wxEmptyString, wxPoint (0, 250), wxSize (700, 100), wxTE_MULTILINE);
+	mLogWindow = new wxLogTextCtrl(mLogTextCtrl);
+	mLogWindow->SetActiveTarget(mLogWindow);
+    m_auiMgr.AddPane(mLogTextCtrl, wxAuiPaneInfo().Name(_("log")).Caption(wxT("Log")).Right().CloseButton(false).MinSize(200, wxDefaultCoord));
+
 	// load perspective
 	wxString perspective;
 	if (wxGetApp().config->Read(_("/global/perspective"), &perspective))
@@ -386,6 +406,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 		GetMenuBar()->Check(idMenuViewEditor, m_auiMgr.GetPane(m_songContent).IsShown());
 		GetMenuBar()->Check(idMenuViewSongPreview, m_auiMgr.GetPane(m_preview).IsShown());
 		GetMenuBar()->Check(idMenuViewSongBook, m_auiMgr.GetPane(m_songBookWnd).IsShown());
+		GetMenuBar()->Check(idMenuViewLog, m_auiMgr.GetPane(mLogTextCtrl).IsShown());
 		GetMenuBar()->Check(idMenuViewTbMain, m_auiMgr.GetPane(wxT("toolbar-main")).IsShown());
 		GetMenuBar()->Check(idMenuViewTbChords, m_auiMgr.GetPane(wxT("toolbar-chords")).IsShown());
 		//m_isInEditMode = m_auiMgr.GetPane(m_songContent).IsShown();
@@ -393,6 +414,8 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	}
 
 	m_auiMgr.Update();
+
+	wxLogDebug(wxT("Main window initialized"));
 }
 
 MainWnd::~MainWnd()
@@ -725,7 +748,7 @@ void MainWnd::OnStyleSheet(wxCommandEvent &event)
         // copy font information from preferences to application
         for (int i = 0; i < BS_FONT_LAST; i++)
         {
-            std::cout << i << " native info: " << dlg->m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
+            //std::cout << i << " native info: " << dlg->m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
             wxGetApp().m_styleSheet.m_fonts[i] = dlg->m_fonts[i];
         }
 		m_preview->Refresh();
@@ -736,6 +759,7 @@ void MainWnd::OnStyleSheet(wxCommandEvent &event)
 
 void MainWnd::OnViewPane(wxCommandEvent& event)
 {
+	wxLogDebug(wxT("OnViewPane"));
 	wxMenuBar *mBar = GetMenuBar();
 
 	switch (event.GetId())
@@ -747,17 +771,17 @@ void MainWnd::OnViewPane(wxCommandEvent& event)
 		case idMenuViewFileBrowser:
 			m_auiMgr.GetPane(m_dirCtrl).Show(mBar->IsChecked(event.GetId()));
 			break;
-
 		case idMenuViewSongPreview:
 			m_auiMgr.GetPane(m_preview).Show(mBar->IsChecked(event.GetId()));
 			break;
-
 		case idMenuViewSongBook:
 			m_auiMgr.GetPane(m_songBookWnd).Show(mBar->IsChecked(event.GetId()));
 			break;
-
 		case idMenuViewTbChords:
 			m_auiMgr.GetPane(m_chordsPanel).Show(mBar->IsChecked(event.GetId()));
+			break;
+		case idMenuViewLog:
+			m_auiMgr.GetPane(mLogTextCtrl).Show(mBar->IsChecked(event.GetId()));
 			break;
 	}
 
@@ -831,8 +855,9 @@ void MainWnd::OnSongTranspose(wxCommandEvent& event)
 
 	if (distance != 0)
 	{
+		bschordpro::Transposer t;
 		std::wstring contents(m_songContent->GetText().wc_str());
-		std::wstring contentsTransposed = bschordpro::Transposer::transpose(contents, distance);
+		std::wstring contentsTransposed = t.transpose(contents, distance);
 		m_songContent->SetText(contentsTransposed);
 	}
 }
@@ -1029,8 +1054,6 @@ void MainWnd::OnFSBrowserSelChanged(wxTreeEvent& event)
 
 void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 {
-	std::cout << "Adding from fs browser" << std::endl;
-
 	wxTreeCtrl *treeCtrl = m_dirCtrl->GetTreeCtrl();
 
 	wxTreeItemId id = treeCtrl->GetSelection();
@@ -1102,7 +1125,7 @@ void MainWnd::OpenFile(const wxString filePath)
 		return;
 	}
 
-	std::wcout << L"loading file " << fileName.GetFullPath().wc_str() << std::endl;
+	wxLogDebug(wxT("loading song file %s"), fileName.GetFullPath().wc_str());
 
 	m_file.m_path = fileName.GetFullPath();
 
@@ -1157,8 +1180,6 @@ void MainWnd::CloseFile()
 
 void MainWnd::SaveFile()
 {
-	std::cout << "SaveFile called" << std::endl;
-
 	if (m_file.m_path.Length() == 0)
 	{
 		wxFileName fileName(m_dirCtrl->GetPath());
@@ -1180,7 +1201,7 @@ void MainWnd::SaveFile()
 		return;
 	}
 
-	std::wcout << L"saving song to file " << fileName.GetFullPath().wc_str() << std::endl;
+	wxLogDebug(wxT("saving song file %s"), fileName.GetFullPath().wc_str());
 
 	wxFile file(fileName.GetFullPath(), wxFile::write);
 
@@ -1198,8 +1219,6 @@ void MainWnd::SaveFile()
 
 void MainWnd::SaveSongBook()
 {
-	std::cout << "SaveSongBook called" << std::endl;
-
 	if (m_songBookPath.Length() == 0)
 	{
 		wxFileName fileName(m_dirCtrl->GetPath());
@@ -1221,9 +1240,7 @@ void MainWnd::SaveSongBook()
 		return;
 	}
 
-	std::wcout << L"saving song book to file " << fileName.GetFullPath().wc_str() << std::endl;
-	std::wcout << L"Number of items: " << fileName.GetFullPath().wc_str() << std::endl;
-
+	wxLogDebug(wxT("saving songbook file %s"), fileName.GetFullPath().wc_str());
 	wxGetApp().m_songBook.saveToXmlFile(fileName.GetFullPath(), wxGetApp().m_settings->m_rootPath);
 }
 
@@ -1245,7 +1262,7 @@ void MainWnd::OpenSongBook(const wxString filePath)
 		return;
 	}
 
-	std::wcout << L"loading songbook file " << fileName.GetFullPath().wc_str() << std::endl;
+	wxLogDebug(wxT("loading songbook file %s"), fileName.GetFullPath().wc_str());
 
 	wxGetApp().m_songBook.loadFromXmlFile(fileName.GetFullPath());
 
@@ -1288,7 +1305,7 @@ void MainWnd::UpdateTitle()
 
 void MainWnd::OnPaneClose(wxAuiManagerEvent& evt)
 {
-	std::wcout << L"OnPaneClose for " << evt.pane->name.wc_str() << std::endl;
+	wxLogDebug(wxT("OnPaneClose for %s"), evt.pane->name.wc_str());
 
     if (evt.pane->name == _("file-browser"))
     {
@@ -1315,14 +1332,30 @@ void MainWnd::updateEditorStyles()
     m_songContent->StyleSetFont(wxSTC_CHORDPRO_CMD, wxGetApp().m_settings->m_editorFont);
 }
 
+void MainWnd::OnChangeFontsSize(wxCommandEvent& event)
+{
+	int incStep = 0;
+	switch(event.GetId())
+	{
+		case idActionFontsUp: incStep = 1; break;
+		case idActionFontsDown: incStep = -1; break;
+	}
+
+	wxLogDebug(wxT("Changing size of all fonts, step size is %d"), incStep);
+
+    for (int i = 0; i < BS_FONT_LAST; i++)
+    {
+		int fontSize = wxGetApp().m_styleSheet.m_fonts[i].GetPointSize();
+		wxGetApp().m_styleSheet.m_fonts[i].SetPointSize(fontSize + incStep);
+    }
+}
+
 // ----------------------------------------------------------------------------
 // BSChordsPrintout
 // ----------------------------------------------------------------------------
 
 void BSChordsPrintout::OnPreparePrinting()
 {
-	std::cout << "OnPreparePrinting" << std::endl;
-
 	// set user scale to fit a4
 	//GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
 	//GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
@@ -1348,14 +1381,12 @@ void BSChordsPrintout::OnPreparePrinting()
 
 void BSChordsPrintout::OnEndPrinting()
 {
-	std::cout << "OnEndPrinting" << std::endl;
 	//delete mPainter;
 	//mPainter = NULL;
 };
 
 bool BSChordsPrintout::OnPrintPage(int page)
 {
-	std::cout << "OnPrintPage " << page << std::endl;
     wxDC *dc = GetDC();
     if (dc)
     {
@@ -1373,9 +1404,6 @@ bool BSChordsPrintout::OnPrintPage(int page)
   OnPreparePrinting.  */
 bool BSChordsPrintout::OnBeginDocument(int startPage, int endPage)
 {
-	std::cout << "OnBeginDocument" << std::endl;
-	if (!mPainter)
-		std::cout << "mPainter is NULL" << std::endl;
     if (!wxPrintout::OnBeginDocument(startPage, endPage))
         return false;
 
@@ -1406,7 +1434,6 @@ void BSChordsPrintout::OnEndDocument()
 
 void BSChordsPrintout::GetPageInfo(int *minPage, int *maxPage, int *selPageFrom, int *selPageTo)
 {
-	std::cout << "OnGetPageInfo" << std::endl;
     *minPage = 1;
     *maxPage = mPages;
     *selPageFrom = 1;
@@ -1415,14 +1442,12 @@ void BSChordsPrintout::GetPageInfo(int *minPage, int *maxPage, int *selPageFrom,
 
 bool BSChordsPrintout::HasPage(int pageNum)
 {
-	std::cout << "HasPage" << std::endl;
     return (pageNum >= 1 && pageNum <= (int)mPages);
 }
 
 // Writes a header on a page. Margin units are in millimetres.
 bool BSChordsPrintout::WritePageHeader(wxPrintout *printout, wxDC *dc, const wxString&text, float mmToLogical)
 {
-	std::cout << "WritePageHeader" << std::endl;
 #if 0
 	static wxFont *headerFont = (wxFont *) NULL;
 	if (!headerFont)

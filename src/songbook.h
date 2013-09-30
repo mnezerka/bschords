@@ -15,10 +15,16 @@ namespace bschords
 	class SongBookItem
 	{
 		public:
-			SongBookItem() : mSelected(false) { };
+			SongBookItem() : mSelected(false), mPrintFlag(true), mTransposeStep(0) { };
 			virtual ~SongBookItem() = 0;
 			void select(bool select = true) { mSelected = select; };
 			bool isSelected() { return(mSelected); };
+			void setPrintFlag(bool printFlag = true) { mPrintFlag = printFlag; };
+			bool getPrintFlag() { return(mPrintFlag); };
+			virtual bool isPrintable() { return false; };
+			virtual bool isTransposeable() { return false; };
+			virtual int getTransposeStep() { return mTransposeStep; }
+			virtual void setTransposeStep(int newStep) { mTransposeStep = newStep; }
 			virtual wxString getPath() = 0;
 			virtual wxString getTitle() = 0;
 			virtual void setTitle(wxString title) = 0;
@@ -27,6 +33,8 @@ namespace bschords
 			virtual void readFromXmlNode(wxXmlNode *node, wxString basePath) = 0;
 		private:
 			bool mSelected;
+			bool mPrintFlag;
+			int mTransposeStep;
 	};
 
 	class SongBookSection: public SongBookItem
@@ -51,6 +59,8 @@ namespace bschords
 			SongBookSong(wxString path);
 			SongBookSong(wxXmlNode *node, wxString basePath) : SongBookItem() { readFromXmlNode(node, basePath); };
 			virtual ~SongBookSong() { };
+			virtual bool isPrintable() { return true; };
+			virtual bool isTransposeable() { return true; };
 			virtual wxString getTitle();
 			virtual void setTitle(wxString title) { };
 			wxString getPath();
@@ -81,6 +91,7 @@ namespace bschords
 			void deleteSelected();
 			void moveSelectedUp();
 			void moveSelectedDown();
+			void setPrintFlagForSelected(bool printFlag);
 		private:
 			std::list<SongBookItem *> m_items;
 			wxString m_basePath;

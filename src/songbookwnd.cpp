@@ -51,7 +51,10 @@ enum
 	ID_BTN_NEW_SECTION,
 	ID_BTN_REMOVE,
 	ID_BTN_UP,
-	ID_BTN_DOWN
+	ID_BTN_DOWN,
+	idActionDeleteSelected,
+	idActionPrintOn,
+	idActionPrintOff
 };
 
 BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
@@ -62,37 +65,65 @@ BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
 	EVT_LIST_ITEM_ACTIVATED(ID_SONG_LIST, SongBookWnd::OnSongBookItemActivated)
 	EVT_LIST_ITEM_RIGHT_CLICK(ID_SONG_LIST, SongBookWnd::OnSongBookItemRightClick)
 	EVT_LIST_KEY_DOWN(ID_SONG_LIST, SongBookWnd::OnListKeyDown)
+	EVT_MENU(idActionDeleteSelected, SongBookWnd::OnDeleteSelected)
+	EVT_MENU(idActionPrintOn, SongBookWnd::OnPrintOn)
+	EVT_MENU(idActionPrintOff, SongBookWnd::OnPrintOff)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(SongBookListCtrl, wxListCtrl)
     EVT_LIST_BEGIN_DRAG(ID_SONG_LIST, SongBookListCtrl::OnBeginDrag)
     EVT_LIST_BEGIN_LABEL_EDIT(ID_SONG_LIST, SongBookListCtrl::OnBeginLabelEdit)
     EVT_LIST_END_LABEL_EDIT(ID_SONG_LIST, SongBookListCtrl::OnEndLabelEdit)
-    //EVT_CONTEXT_MENU(SongBookListCtrl::OnContextMenu)
+    EVT_CONTEXT_MENU(SongBookListCtrl::OnContextMenu)
 END_EVENT_TABLE()
 
 /* ---------------- SongBookListCtrl-------------------------------- */
 
 void SongBookListCtrl::OnBeginDrag(wxListEvent& event)
 {
-    const wxPoint& pt = event.m_pointDrag;
+    //const wxPoint& pt = event.m_pointDrag;
 
-    int flags;
-    std::cout << "OnBeginDrag at " << pt.x << ", " << pt.y << " hittest: " << HitTest(pt, flags) << std::endl;
+    //int flags;
+    //std::cout << "OnBeginDrag at " << pt.x << ", " << pt.y << " hittest: " << HitTest(pt, flags) << std::endl;
 }
 
 void SongBookListCtrl::OnBeginLabelEdit(wxListEvent& event)
 {
-	std::cout << "start editing" << std::endl;
-	// TODO: update appropriate item in song book
+	//std::cout << "start editing" << std::endl;
 }
 
 void SongBookListCtrl::OnEndLabelEdit(wxListEvent& event)
 {
-	std::wcout << L"end editing " << event.m_item.m_text.c_str()  << std::endl;
+	//std::wcout << L"end editing " << event.m_item.m_text.c_str()  << std::endl;
 	//std::cout << (event.IsEditCancelled() ? "cancelled" : event.m_item.m_text.c_str()) << std::endl;
 	wxGetApp().m_songBook.setItemTitle(event.GetIndex(), event.GetItem().GetText());
 }
+
+void SongBookListCtrl::OnContextMenu(wxContextMenuEvent& event)
+{
+	wxPoint point = event.GetPosition();
+
+    // If from keyboard
+    if (point.x == -1 && point.y == -1) {
+        wxSize size = GetSize();
+        point.x = size.x / 2;
+        point.y = size.y / 2;
+    } else {
+        point = ScreenToClient(point);
+    }
+
+    //ShowContextMenu(point);
+    wxMenu menu;
+
+    menu.Append(idActionDeleteSelected, _T("&Delete selected items"));
+    menu.Append(idActionPrintOn, _T("&Enable printing for selected items"));
+    menu.Append(idActionPrintOff, _T("&Disable printing for selected items"));
+    menu.AppendSeparator();
+    menu.Append(wxID_EXIT, _T("E&xit"));
+
+    PopupMenu(&menu, point.x, point.y);
+}
+
 /* ---------------- SongBookWnd ----------------------------------- */
 
 SongBookWnd::SongBookWnd(wxWindow *parent, wxWindowID id)
@@ -130,6 +161,17 @@ SongBookWnd::~SongBookWnd()
 	//dtor
 }
 
+void SongBookWnd::copySelectionToSongbook()
+{
+	wxGetApp().m_songBook.selectAll(false);
+	long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	while (item != -1)
+	{
+		wxGetApp().m_songBook.selectItem(item);
+		item = m_listCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	}
+}
+
 void SongBookWnd::OnSize(wxSizeEvent& event)
 {
 	if (GetAutoLayout())
@@ -144,13 +186,15 @@ void SongBookWnd::OnNewSection(wxCommandEvent &event)
 
 void SongBookWnd::addSongFile(wxString filePath)
 {
-	std::cout << "song book wnd - addSongFile" << std::endl;
+	//std::cout << "song book wnd - addSongFile" << std::endl;
 	wxGetApp().m_songBook.addItem(new SongBookSong(filePath));
 	Update();
 }
 
 void SongBookWnd::Update()
 {
+	//int scrollPos = m_listCtrl->GetScrollPos(wxVERTICAL);
+
 	// update list ctrl according to song book contents
 	m_listCtrl->DeleteAllItems();
 
@@ -158,8 +202,14 @@ void SongBookWnd::Update()
 	{
 		SongBookItem *item = wxGetApp().m_songBook.getItem(i);
 		long itemIndex = m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), item->getTitle());
-		m_listCtrl->SetItem(itemIndex, 1, wxT("X"));
-		m_listCtrl->SetItem(itemIndex, 2, wxT("0"));
+		if (item->getPrintFlag())
+			m_listCtrl->SetItem(itemIndex, 1, wxT("X"));
+		if (item->isTransposeable())
+		{
+			wxString transpositionLabel(wxString::Format(wxT("%d"), item->getTransposeStep()));
+			m_listCtrl->SetItem(itemIndex, 2, transpositionLabel);
+		}
+
 		//m_listCtrl->SetBackgroundColor();
 		if (item->isSelected())
 			m_listCtrl->SetItemState(itemIndex, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
@@ -179,23 +229,27 @@ void SongBookWnd::Update()
 			}
 		}
 	}
+	//m_listCtrl->SetScrollPos(wxVERTICAL, scrollPos);
 }
 
 void SongBookWnd::OnSongBookItemActivated(wxListEvent& event)
 {
-    std::cout << "item activated" << event.GetIndex() << event.ShouldPropagate() << std::endl;
+    //std::cout << "item activated" << event.GetIndex() << event.ShouldPropagate() << std::endl;
     SongBookItem *item = wxGetApp().m_songBook.getItem(event.GetIndex());
     if (item)
     {
 		MainWnd *main = static_cast<MainWnd*>(GetParent());
-		main->OpenFile(item->getPath());
+		if (item->getPath().length() > 0)
+			main->OpenFile(item->getPath());
     }
 }
 
 void SongBookWnd::OnSongBookItemRightClick(wxListEvent& event)
 {
-    std::cout << "item right click" << event.GetIndex() << event.ShouldPropagate() << std::endl;
-    SongBookItem *item = wxGetApp().m_songBook.getItem(event.GetIndex());
+	event.Skip();
+
+    //std::cout << "item right click" << event.GetIndex() << event.ShouldPropagate() << std::endl;
+    /*(SongBookItem *item = wxGetApp().m_songBook.getItem(event.GetIndex());
     if (item)
     {
     	wxPoint point = event.GetPoint();
@@ -205,46 +259,41 @@ void SongBookWnd::OnSongBookItemRightClick(wxListEvent& event)
 		menu.Append(wxID_ANY, _T("&Edit"));
 		menu.Append(wxID_ANY, _T("&Move"));
 		PopupMenu(&menu, point.x, point.y);
-    }
+    }*/
 }
 
 void SongBookWnd::OnListKeyDown(wxListEvent& event)
 {
-	long item;
+	//long item;
 
 	switch (event.GetKeyCode())
 	{
 		case WXK_DELETE:
-			wxGetApp().m_songBook.selectAll(false);
-			item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-            while (item != -1)
-            {
-            	std::cout << "delete item " << item << std::endl;
-            	wxGetApp().m_songBook.selectItem(item);
-                item = m_listCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-            }
+			copySelectionToSongbook();
             wxGetApp().m_songBook.deleteSelected();
             Update();
             break;
 		case WXK_UP:
-			std::cout << "move selected item(s) up" << std::endl;
+			//std::cout << "move selected item(s) up" << std::endl;
 			break;
 
 		case WXK_DOWN:
-			std::cout << "move selected item(s) down" << std::endl;
+			//std::cout << "move selected item(s) down" << std::endl;
 			break;
 
 		case WXK_F2:
 			{
 				long itemCur = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_FOCUSED);
-				std::cout << "item to edit: " << itemCur << std::endl;
+				//std::cout << "item to edit: " << itemCur << std::endl;
 				if (itemCur != -1)
 				{
 					m_listCtrl->EditLabel(itemCur);
 				}
 			}
 			break;
-
+		case WXK_ADD:
+			wxLogDebug(wxT("Add key pressed"));
+			break;
 		default:
 			event.Skip();
 	}
@@ -252,28 +301,38 @@ void SongBookWnd::OnListKeyDown(wxListEvent& event)
 
 void SongBookWnd::OnMoveUp(wxCommandEvent &event)
 {
-	wxGetApp().m_songBook.selectAll(false);
-	long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	while (item != -1)
-	{
-		wxGetApp().m_songBook.selectItem(item);
-		item = m_listCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	}
+	copySelectionToSongbook();
     wxGetApp().m_songBook.moveSelectedUp();
     Update();
 }
 
 void SongBookWnd::OnMoveDown(wxCommandEvent &event)
 {
-	wxGetApp().m_songBook.selectAll(false);
-	long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	while (item != -1)
-	{
-		wxGetApp().m_songBook.selectItem(item);
-		item = m_listCtrl->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	}
+	copySelectionToSongbook();
     wxGetApp().m_songBook.moveSelectedDown();
     Update();
 }
 
+void SongBookWnd::OnDeleteSelected(wxCommandEvent& event)
+{
+	wxLogDebug(wxT("Delete selected"));
+	copySelectionToSongbook();
+	wxGetApp().m_songBook.deleteSelected();
+	Update();
+}
 
+void SongBookWnd::OnPrintOn(wxCommandEvent& event)
+{
+	wxLogDebug(wxT("Print on for selected"));
+	copySelectionToSongbook();
+	wxGetApp().m_songBook.setPrintFlagForSelected(true);
+	Update();
+}
+
+void SongBookWnd::OnPrintOff(wxCommandEvent& event)
+{
+	wxLogDebug(wxT("Print off for selected"));
+	copySelectionToSongbook();
+	wxGetApp().m_songBook.setPrintFlagForSelected(false);
+	Update();
+}

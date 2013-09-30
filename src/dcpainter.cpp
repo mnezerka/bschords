@@ -397,7 +397,7 @@ wxRect TSetBlockStruct::getBoundingRect()
 	wxCoord height = m_lines.size() * lineHeight;
 
 	// width of all cells + width of all separators
-	wxCoord width = (numCellSize * 2) / numMinSize * numMaxLineSize;
+	wxCoord width = (numCellSize * 1) / numMinSize * numMaxLineSize;
 	width += (numMaxLineSize + 1) * numSeparatorSize;
 
 	result.SetWidth(width);
@@ -435,7 +435,8 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 	if (blockRect.GetWidth() > mColRect.GetWidth())
 	{
 		//clippingDetected = true;
-		std::cout << "problem with horizontal clipping found" << std::endl;
+		//wxLogDebug(wxT("Problem with horizontal clipping found"));
+		// TODO: process clipping
 	}
 
 	// check if we have enough of horizontal space to draw block
@@ -453,7 +454,6 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 		}
 		else
 		{
-			std::cout << "TSetPage -> not enougth space on this page" << std::endl;
 			return(ADD_PAGE_FULL);
 		}
 	}
@@ -585,7 +585,7 @@ void TSetDCPainter::onEnd()
 
 }
 
-void TSetDCPainter::onText(const std::wstring& text)
+void TSetDCPainter::onText(const std::wstring& text, const bschordpro::RawPos &pos)
 {
 	// create new text line item
 	TSetLineItem *item = new TSetLineItem();
@@ -604,7 +604,7 @@ void TSetDCPainter::onText(const std::wstring& text)
 		m_posXChord = m_posX;
 }
 
-void TSetDCPainter::onChord(const std::wstring& chord)
+void TSetDCPainter::onChord(const std::wstring& chord, const bschordpro::RawPos &pos)
 {
 	// check if we are not overlapping already typeset chord item
 	if (m_posXChord > m_posX)
@@ -625,7 +625,7 @@ void TSetDCPainter::onChord(const std::wstring& chord)
 	m_posXChord += item->m_bRect.GetWidth();
 }
 
-void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::wstring& value)
+void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::wstring& value, const bschordpro::RawPos &pos)
 {
 	//m_dc.SetFont(*fontTitle_);
 	if (command == bschordpro::CMD_TITLE)
@@ -698,7 +698,7 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 	}
 }
 
-void TSetDCPainter::onLine(const std::wstring& line)
+void TSetDCPainter::onLine(const std::wstring& line, const bschordpro::RawPos &pos)
 {
 	// for tab and struct, capture block directly
 	if (m_curBlock != NULL)

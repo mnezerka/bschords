@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 // definition of chord pro format tokens
 namespace bschordpro
@@ -19,6 +20,14 @@ namespace bschordpro
 		CMD_NONE
 	};
 
+	struct RawPos {
+		unsigned int mPos;
+		unsigned int mLen;
+		RawPos(unsigned int pos = 0, unsigned int len = 0) : mPos(pos), mLen(len) { };
+		void setPos(unsigned int pos, unsigned int len) { mPos = pos; mLen = len; };
+		friend std::wostream& operator<<(std::wostream& os, const RawPos& p) { os << L"(" << p.mPos << L", " << p.mLen << L")"; return os; };
+		friend std::ostream& operator<<(std::ostream& os, const RawPos& p) { os << "(" << p.mPos << ", " << p.mLen << ")"; return os; };
+	};
 	// interface (abstract class) for all chord pro parsing listeners
 	class EventHandler
 	{
@@ -32,13 +41,13 @@ namespace bschordpro
 			// called at the end of parsed line
 			virtual void onLineEnd() = 0;
 			// called when command is found
-			virtual void onCommand(const CommandType command, const std::wstring& value) = 0;
+			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos) = 0;
 			// called for each chord on line
-			virtual void onChord(const std::wstring& chord) = 0;
+			virtual void onChord(const std::wstring& chord, const RawPos &pos) = 0;
 			// called for each text fragment on line (separators are spaces and chords)
-			virtual void onText(const std::wstring& text) = 0;
+			virtual void onText(const std::wstring& text, const RawPos &pos) = 0;
 			// called for preformatted line (e.g. inside tab section)
-			virtual void onLine(const std::wstring& line) = 0;
+			virtual void onLine(const std::wstring& line, const RawPos &pos) = 0;
 	};
 
 	// example implementation for simple text output
@@ -50,10 +59,10 @@ namespace bschordpro
 			virtual void onEnd() {};
 			virtual void onLineBegin();
 			virtual void onLineEnd();
-			virtual void onCommand(const CommandType command, const std::wstring& value);
-			virtual void onChord(const std::wstring& chord);
-			virtual void onText(const std::wstring& text);
-			virtual void onLine(const std::wstring& line);
+			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos);
+			virtual void onChord(const std::wstring& chord, const RawPos &pos);
+			virtual void onText(const std::wstring& text, const RawPos &pos);
+			virtual void onLine(const std::wstring& line, const RawPos &pos);
 		private:
 			std::wstring m_chordBuffer;
 			std::wstring m_textBuffer;
@@ -72,18 +81,29 @@ namespace bschordpro
 			// raw mode - no chords are parsed (used for tabs and other preformatted blocks)
 			bool m_rawMode;
 			EventHandler *m_eventHandler;
-			void parseLine(const std::wstring& s, unsigned int lineFrom, unsigned int lineLen);
-			void parseCommand(const std::wstring& cmd);
-			void parseChord(const std::wstring& chord);
-
+			void parseLine(const std::wstring& s, unsigned int lineFrom, unsigned int lineLen, unsigned int lineIndex);
+			void parseCommand(const std::wstring &strBuffer, const RawPos &p);
 	};
 
 	// class for song transpositions
-	class Transposer
+	class Transposer: public EventHandler
 	{
 		public:
-			static std::wstring transpose(std::wstring &song, int distance);
-			static std::wstring transposeChord(std::wstring &chord, int distance);
+			Transposer() : mTransposeLines(false) {};
+			std::wstring transpose(std::wstring &song, int distance);
+			std::wstring transposeText(std::wstring &text, int distance);
+
+			virtual void onBegin() {};
+			virtual void onEnd() {};
+			virtual void onLineBegin() {};
+			virtual void onLineEnd() {};
+			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos);
+			virtual void onChord(const std::wstring& chord, const RawPos &pos);
+			virtual void onText(const std::wstring& text, const RawPos &pos) {};
+			virtual void onLine(const std::wstring& line, const RawPos &pos);
+		private:
+			bool mTransposeLines;
+			std::vector<RawPos> mTransposedFragments;
 	};
 }
 

@@ -24,6 +24,8 @@ namespace bschords
 			    void OnBeginDrag(wxListEvent& event);
 			    void OnBeginLabelEdit(wxListEvent& event);
 				void OnEndLabelEdit(wxListEvent& event);
+				void OnContextMenu(wxContextMenuEvent& event);
+
         private:
 			wxListItemAttr mAttr;
 
@@ -43,6 +45,7 @@ namespace bschords
 		private:
 			//SongBookTreeCtrl *m_treeCtrl;
 			SongBookListCtrl *m_listCtrl;
+			void copySelectionToSongbook();
 			void OnSize(wxSizeEvent& event);
 			void OnSongBookItemActivated(wxListEvent& event);
 			void OnSongBookItemRightClick(wxListEvent& event);
@@ -51,6 +54,9 @@ namespace bschords
 			void OnListKeyDown(wxListEvent& event);
 			void OnMoveUp(wxCommandEvent &event);
 			void OnMoveDown(wxCommandEvent &event);
+			void OnDeleteSelected(wxCommandEvent& event);
+			void OnPrintOn(wxCommandEvent& event);
+			void OnPrintOff(wxCommandEvent& event);
 
 		DECLARE_EVENT_TABLE()
 	};

@@ -20,6 +20,7 @@
 #include <wx/aui/aui.h>
 #include <wx/dirctrl.h>
 #include <wx/stc/stc.h>
+#include <wx/log.h>
 
 #include "app.h"
 #include "previewwnd.h"
@@ -49,6 +50,8 @@ namespace bschords
 
 		private:
 			PreviewWnd *m_preview;
+			wxTextCtrl *mLogTextCtrl;
+			wxLogTextCtrl *mLogWindow;
 			//wxStyledTextCtrl *m_songContent;
 			wxGenericDirCtrl* m_dirCtrl;
 			SongBookWnd *m_songBookWnd;
@@ -115,6 +118,8 @@ namespace bschords
 			void OnEraseBackground(wxEraseEvent& event) { event.Skip(); };
 			void OnSize(wxSizeEvent& event) { event.Skip(); };
 			void OnPaneClose(wxAuiManagerEvent& evt);
+
+			void OnChangeFontsSize(wxCommandEvent& event);
 
 			DECLARE_EVENT_TABLE()
 	};

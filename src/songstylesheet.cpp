@@ -85,7 +85,7 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 			m_fonts[i] = *wxNORMAL_FONT;
 			if (nativeFontInfo.size() > 0)
 			{
-				std::cout << i << "native: " << nativeFontInfo.mb_str(wxConvUTF8) << std::endl;
+				//std::cout << i << "native: " << nativeFontInfo.mb_str(wxConvUTF8) << std::endl;
 				m_fonts[i].SetNativeFontInfo(nativeFontInfo);
 			}
 		}
@@ -121,12 +121,12 @@ void SongStyleSheet::SaveToConfig(wxConfig *config)
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)
     {
-        std::cout << i << " user desc: " << m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
+        //std::cout << i << " user desc: " << m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
         wxString nativeFontInfo = m_fonts[i].GetNativeFontInfoDesc();
         wxString key(_("stylesheet/fonts/"));
         key += SongStyleSheet::getFontName(i);
         config->Write(key, nativeFontInfo);
-        std::cout << nativeFontInfo.c_str() << std::endl;
+        //std::cout << nativeFontInfo.c_str() << std::endl;
     }
 }
 

@@ -27,6 +27,7 @@ http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
 */
 
+// TODO: show warning when overwriting existing file
 // TODO: songboook - parse info from items in list (e.g. Title, Subtitle, commments, etc.)
 // TODO: additional song properties in songbook - comment, chordpro prefix (inserted after title), postfix (at the bottom)
 // TODO: separate section for song title (especially in case of multicolumn stylesheet)

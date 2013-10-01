@@ -4,9 +4,26 @@
 
 The Chordpro format is used for the notation of lyrics with chords in plain text format.
 
+A ChordPro data file is a simple text file, which is interpreted line by line. Line endings should obey the rules of the platform. Lines that start with a '#' symbol are ignored. Lines that start with { and end with } (curly brackets or braces) are directives. They are used to pass instructions to the program that processes the data. 
+
 == Chords == 
 
 Chords are delimited by square brackets ('[' and ']'). Sharp is indicated by a '#' (hash) and flat by a 'b' (lowercase 'B').
+
+== Song lines ==
+
+Lines that are not directives are song lines. They contain the lyrics of the song. Between the lyrics the chords are specified between '[' and ']' (square brackets). Chords should immediately precede the syllable of text they apply to. For example:
+
+{{{
+    Swing [D]low, sweet [G]chari[D]ot,
+}}}
+
+When processed, this results in:
+
+{{{
+          D          G    D
+	Swing low, sweet chariot,
+}}}
 
 == Directives ==
 

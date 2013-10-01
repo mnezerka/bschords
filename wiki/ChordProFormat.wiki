@@ -15,19 +15,19 @@ Chords are delimited by square brackets ('[' and ']'). Sharp is indicated by a '
 Lines that are not directives are song lines. They contain the lyrics of the song. Between the lyrics the chords are specified between '[' and ']' (square brackets). Chords should immediately precede the syllable of text they apply to. For example:
 
 {{{
-    Swing [D]low, sweet [G]chari[D]ot,
+Swing [D]low, sweet [G]chari[D]ot,
 }}}
 
 When processed, this results in:
 
 {{{
-          D          G    D
-	Swing low, sweet chariot,
+      D          G    D
+Swing low, sweet chariot,
 }}}
 
 == Directives ==
 
-Directives are written within curly brackets {}. Following set of directives is recoginzed by bschords application (upper or lower case is not significant):
+Directives are written within curly brackets '{' and '}'. Following set of directives is recoginzed by bschords application (upper or lower case is not significant):
 
  * {title: title string} ({t:string}) - Specifies the title of the song. The title is used to sort the songs in the user interface. It usually appears at the top of the song, and may be repeated if the song overflows onto a new column. 
  * {subtitle: subtitle string} ({su:string}) - Specifies a subtitle for the song. This string will be usually visible printed close to the song title.
@@ -38,4 +38,3 @@ Directives are written within curly brackets {}. Following set of directives is 
  * {end_of_tab} ({eot}) - Marks the end of the guitar tab section.
  * {guitar_comment: string} ({gc:string}) - Prints the string following the colon as a comment. This comment will only be printed if chords are also printed; it should be used for comments to performers, or for other notes that are unneccessary for lyrics-only song sheets (or projection).
  * {new_page} ({np}) - This directive will cause a "cell break" in the Two and Four Discrete Cells per Page printing modes, and a column break in the Two Flowing Columns printing mode. It will cause a physical page break otherwise. It has no effect in the Text and HTML File output destinations. 
-

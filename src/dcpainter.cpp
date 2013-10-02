@@ -86,7 +86,7 @@ void TSetBlockText::draw()
 		{
 			m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_CHORDS]);
 			for (size_t i = 0; i < line->m_chordItems.size(); i++)
-				m_painter->m_dc.DrawText(*line->m_chordItems[i]->txt, pos.x + lineOffset + line->m_chordItems[i]->m_bRect.GetLeft(), posY);
+				m_painter->m_dc.DrawText(line->m_chordItems[i]->getText(), pos.x + lineOffset + line->m_chordItems[i]->m_bRect.GetLeft(), posY);
 			if ((hasChords() && m_painter->m_ss->m_equalLineHeights) || (line->m_chordItems.size() > 0))
 			{
 				posY += m_painter->m_dc.GetCharHeight();
@@ -106,7 +106,7 @@ void TSetBlockText::draw()
 		// typeset text line (text items)
 		m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
 		for (size_t i = 0; i < line->m_textItems.size(); i++)
-			m_painter->m_dc.DrawText(*line->m_textItems[i]->txt, pos.x + lineOffset + line->m_textItems[i]->m_bRect.GetLeft(), posY);
+			m_painter->m_dc.DrawText(line->m_textItems[i]->getText(), pos.x + lineOffset + line->m_textItems[i]->m_bRect.GetLeft(), posY);
 		if (line->m_textItems.size() > 0)
 			posY += m_painter->m_dc.GetCharHeight();
 	}
@@ -195,16 +195,19 @@ bool TSetBlockVerse::hasNumbering()
 
 // ------- TSetBlockTitle  ----------------------------------------------------------
 
-void TSetBlockTitle::draw()
+void TSetBlockSingleLine::draw()
 {
 	// typeset chord line (chord items)
-	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
-	m_painter->m_dc.DrawText(*m_title->txt, mPos.x, mPos.y);
+	m_painter->m_dc.SetFont(mFont);
+	m_painter->m_dc.DrawText(mLine.getText(), mPos.x, mPos.y);
 }
 
-wxRect TSetBlockTitle::getBoundingRect()
+wxRect TSetBlockSingleLine::getBoundingRect()
 {
-	return m_title->m_bRect;
+	m_painter->m_dc.SetFont(mFont);
+	mLine.m_bRect.SetSize(m_painter->m_dc.GetTextExtent(mLine.getText()));
+	mLine.m_bRect.SetPosition(wxPoint(0, 0));
+	return mLine.m_bRect;
 }
 
 // ------- TSetBlockTab  ----------------------------------------------------------
@@ -432,12 +435,7 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 
 	// check if there is enough horizontal space for block to be drawn
 	// in current column
-	if (blockRect.GetWidth() > mColRect.GetWidth())
-	{
-		//clippingDetected = true;
-		//wxLogDebug(wxT("Problem with horizontal clipping found"));
-		// TODO: process clipping
-	}
+	block->setMaxWidth(mColRect.GetWidth());
 
 	// check if we have enough of horizontal space to draw block
 	if (mPos.y + blockRect.GetHeight() > mPageRect.GetBottom())
@@ -465,9 +463,7 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 	m_blocks.push_back(block);
 
 	// move page typesetting cursor
-	mPos.y += block->getBoundingRect().GetHeight();
-
-	//std::cout << "addBlock - block height: " << block->getBoundingRect().GetHeight() << ", new pos.y: " << mPos.y << std::endl;
+	mPos.y += blockRect.GetHeight();
 
 	return(ADD_OK);
 }
@@ -491,26 +487,37 @@ void TSetPage::draw()
     {
         TSetBlock *block = m_blocks[blockIx];
 
+        wxRect blockRect = block->getBoundingRect();
+		wxPoint blockPos = block->getPosition();
+
+		wxRect clipRect(blockRect);
+		clipRect.SetLeftTop(blockPos);
+		if (blockRect.GetWidth() > block->getMaxWidth())
+			clipRect.SetWidth(block->getMaxWidth());
+
+		mPainter->m_dc.SetClippingRegion(clipRect);
+
 		// draw bounding box
         if (mPainter->m_drawTsetBlocks)
 			block->drawBoundingRect();
 
+		// draw clipping warning
+        if (clipRect.GetWidth() != blockRect.GetWidth())
+        {
+			std::cout << "clipping" << std::endl;
+			//std::cout << r.GetLeft() << " " << r.GetTop() << " " << r.GetRight() << " " << r.GetBottom() << std::endl;
+			//std::cout << c.GetLeft() << " " << c.GetTop() << " " << c.GetRight() << " " << c.GetBottom() << std::endl;
+            // draw bounding rect^M
+            wxPen pen(wxColor(255, 50, 50), 5);
+            mPainter->m_dc.SetPen(pen);
+            mPainter->m_dc.DrawLine(clipRect.GetRight(), clipRect.GetTop(), clipRect.GetRight(), clipRect.GetBottom());
+        }
 		//std::cout << "drawing block " << blockIx << " of type " << block->getType() << " height " << block->getBoundingRect().GetHeight() << " y: " << block->getPosition().y << std::endl;
 		// draw block content
         block->draw();
 
-        // draw warning
-        /*if (clippingDetected)^M
-        //{^M
-            // draw bounding rect^M
-            wxPen pen(wxColor(255, 0, 0), 5);^M
-            m_dc.SetPen(pen);^M
-            m_dc.DrawLine(colRect.GetRight(), pos.y, colRect.GetRight(), pos.y + blockRect.GetHeight());^M
-            m_stat.m_clippings++;^M
-        }*/
-
+		mPainter->m_dc.DestroyClippingRegion();
     }
-
 }
 
 // ------- TSetDCPainter -------------------------------------------------------------
@@ -578,11 +585,6 @@ void TSetDCPainter::onEnd()
 		addBlock(m_curBlock);
 		m_curBlock = NULL;
 	}
-
-	//cout << "OnBegin" << endl;
-
-	// loop over pages
-
 }
 
 void TSetDCPainter::onText(const std::wstring& text, const bschordpro::RawPos &pos)
@@ -590,9 +592,9 @@ void TSetDCPainter::onText(const std::wstring& text, const bschordpro::RawPos &p
 	// create new text line item
 	TSetLineItem *item = new TSetLineItem();
 	m_isLineEmpty = false;
-	item->txt = new wxString(text);
+	item->setText(text);
     m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
-	item->m_bRect.SetSize(m_dc.GetTextExtent(*item->txt));
+	item->m_bRect.SetSize(m_dc.GetTextExtent(item->getText()));
 	item->m_bRect.SetPosition(wxPoint(m_posX, 0));
 	m_curLine->m_textItems.push_back(item);
 
@@ -615,9 +617,9 @@ void TSetDCPainter::onChord(const std::wstring& chord, const bschordpro::RawPos 
 	m_isLineEmpty = false;
     m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_CHORDS]);
 	// append one space for separation from next typeset chord
-	item->txt = new wxString(chord);
-	item->txt->Append(_(" "));
-	item->m_bRect.SetSize(m_dc.GetTextExtent(*item->txt));
+	item->setText(chord);
+	item->appendText(_(" "));
+	item->m_bRect.SetSize(m_dc.GetTextExtent(item->getText()));
 	item->m_bRect.SetPosition(wxPoint(m_posXChord, 0));
 	m_curLine->m_chordItems.push_back(item);
 
@@ -627,6 +629,31 @@ void TSetDCPainter::onChord(const std::wstring& chord, const bschordpro::RawPos 
 
 void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::wstring& value, const bschordpro::RawPos &pos)
 {
+	// check if we are inside some block and block must be closed before new command
+	if (m_curBlock != NULL)
+		switch (command)
+		{
+			// close block
+			case bschordpro::CMD_TITLE:
+			case bschordpro::CMD_SUBTITLE:
+			case bschordpro::CMD_CHORUS_START:
+			case bschordpro::CMD_TAB_START:
+			case bschordpro::CMD_STRUCT_START:
+			case bschordpro::CMD_NEW_SONG:
+			case bschordpro::CMD_COMMENT:
+				addBlock(m_curBlock);
+				m_curBlock = NULL;
+				break;
+			// dont' close block
+			case bschordpro::CMD_CHORUS_END:
+			case bschordpro::CMD_TAB_END:
+			case bschordpro::CMD_STRUCT_END:
+			case bschordpro::CMD_COLUMNS:
+			case bschordpro::CMD_NONE:
+			default:
+				;
+		}
+
 	//m_dc.SetFont(*fontTitle_);
 	if (command == bschordpro::CMD_TITLE)
     {
@@ -637,14 +664,22 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 			m_curBlock = NULL;
     	}
 
-		TSetLineItem *item = new TSetLineItem();
-		m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
-		item->txt = new wxString(value);
-		item->m_bRect.SetSize(m_dc.GetTextExtent(*item->txt));
-		item->m_bRect.SetPosition(wxPoint(0, 0));
-
-		TSetBlockTitle *block = new TSetBlockTitle(this);
-		block->m_title = item;
+		TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_TITLE, wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
+		block->setTxt(value);
+		addBlock(block);
+		m_curBlock = NULL;
+	}
+	else if (command == bschordpro::CMD_SUBTITLE)
+    {
+		TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_SUBTITLE, wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE_SUB]);
+		block->setTxt(value);
+		addBlock(block);
+		m_curBlock = NULL;
+	}
+	else if (command == bschordpro::CMD_COMMENT)
+    {
+		TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_COMMENT, wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+		block->setTxt(value);
 		addBlock(block);
 		m_curBlock = NULL;
 	}

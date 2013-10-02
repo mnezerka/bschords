@@ -392,8 +392,8 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 
 	// create log window
 	mLogTextCtrl = new wxTextCtrl(this, -1, wxEmptyString, wxPoint (0, 250), wxSize (700, 100), wxTE_MULTILINE);
-	mLogWindow = new wxLogTextCtrl(mLogTextCtrl);
-	mLogWindow->SetActiveTarget(mLogWindow);
+	//mLogWindow = new wxLogTextCtrl(mLogTextCtrl);
+	//mLogWindow->SetActiveTarget(mLogWindow);
     m_auiMgr.AddPane(mLogTextCtrl, wxAuiPaneInfo().Name(_("log")).Caption(wxT("Log")).Right().CloseButton(false).MinSize(200, wxDefaultCoord));
 
 	// load perspective

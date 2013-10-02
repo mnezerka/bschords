@@ -19,42 +19,43 @@ enum {
     BS_FONT_LAST
 };
 
+/** \brief Class encapsulates all properties related to visual representation of song or songbook */
 class SongStyleSheet
 {
 	public:
-		// songs for block types
+		///fonts for block types
 		wxFont m_fonts[BS_FONT_LAST];
-		// page size in milimeters
+		/// page size in milimeters
 		wxSize m_pageSize;
-		// top margin
+		/// top margin
 		wxCoord m_marginTop;
-		// left margin
+		/// left margin
 		wxCoord m_marginLeft;
-		// bottom margin
+		/// bottom margin
 		wxCoord m_marginBottom;
-		// right margin
+		/// right margin
 		wxCoord m_marginRight;
-		// indentation of chorus blocks
+		/// indentation of chorus blocks
 		wxCoord m_indentChorus;
-		// nember of columns
+		/// nember of columns
 		int m_cols;
-		// space between two adjacent lines in block
+		/// space between two adjacent lines in block
 		int m_lineSpacing;
-		// space between chord and text
+		/// space between chord and text
 		int m_chordLineSpacing;
-		// automatic verse numbering
+		/// automatic verse numbering
 		bool m_verseNumbering;
-		// show chords
+		/// show chords
 		bool m_showChords;
-		// show subtitles
+		/// show subtitles
 		bool m_showSubtitles;
-		// show tab sections
+		/// show tab sections
 		bool m_showTabs;
-		// show structure sections
+		/// show structure sections
 		bool m_showStructs;
-		// print chord lines even if no chord is present (same line spacing for whole verse/chorus)
+		/// print chord lines even if no chord is present (same line spacing for whole verse/chorus)
 		bool m_equalLineHeights;
-		// force new page for song (starting with song title)
+		/// force new page for song (starting with song title)
 		bool m_songNewPage;
 
 		SongStyleSheet();

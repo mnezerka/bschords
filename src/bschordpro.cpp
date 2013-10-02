@@ -3,7 +3,9 @@
 using namespace bschordpro;
 
 static const wchar_t *cmdTitle 				= L"title";
+static const wchar_t *cmdTitleShort 		= L"t";
 static const wchar_t *cmdSubtitle			= L"subtitle";
+static const wchar_t *cmdSubtitleShort		= L"su";
 static const wchar_t *cmdChorusStart		= L"start_of_chorus";
 static const wchar_t *cmdChorusStartShort	= L"soc";
 static const wchar_t *cmdChorusEnd			= L"end_of_chorus";
@@ -16,6 +18,12 @@ static const wchar_t *cmdStructStart		= L"start_of_struct";
 static const wchar_t *cmdStructStartShort	= L"sos";
 static const wchar_t *cmdStructEnd			= L"end_of_struct";
 static const wchar_t *cmdStructEndShort		= L"eos";
+static const wchar_t *cmdColumns			= L"columns";
+static const wchar_t *cmdColumnsShort		= L"col";
+static const wchar_t *cmdNewSong			= L"new_song";
+static const wchar_t *cmdNewSongShort		= L"ns";
+static const wchar_t *cmdComment			= L"comment";
+static const wchar_t *cmdCommentShort		= L"c";
 
 /*
 
@@ -257,12 +265,15 @@ void Parser::parseCommand(const std::wstring &strBuffer, const RawPos &p)
 {
     //wcout << L"parsing >" << cmd << L"<" << endl;
     std::wstring cmd = strBuffer.substr(p.mPos, p.mLen);
+
+    // trim right whitespace
     size_t cmdEnd = cmd.find_last_not_of(L' ');
 
+	// default values for command id and command value
     std::wstring cmdId(L"");
     std::wstring cmdVal(L"");
 
-    // look for optional command value
+    // look for command value which
     size_t sepPos = cmd.find_first_of(L':');
 
     //cout << "seppos is " << sepPos << endl;
@@ -276,7 +287,7 @@ void Parser::parseCommand(const std::wstring &strBuffer, const RawPos &p)
             size_t first = cmd.find_first_not_of(L' ', 0);
             size_t last = cmd.find_last_not_of(L' ', sepPos - 1);
             // set command id only if not empty
-            if (last != std::wstring::npos && first < last)
+            if (last != std::wstring::npos && first <= last)
             {
                 //cout << first <<  " " << last << endl;
                 cmdId.assign(cmd, first, last - first + 1);
@@ -297,10 +308,12 @@ void Parser::parseCommand(const std::wstring &strBuffer, const RawPos &p)
 	// strip command
     else
     {
+			// trim left white space
             size_t first = cmd.find_first_not_of(L' ', 0);
+            // trim right white space
             size_t last = cmd.find_last_not_of(L' ');
             // set command id only if not empty
-            if (last != std::wstring::npos && first < last)
+            if (last != std::wstring::npos && first <= last)
             {
                 //cout << first <<  " " << last << endl;
                 cmdId.assign(cmd, first, last - first + 1);
@@ -338,10 +351,17 @@ void Parser::parseCommand(const std::wstring &strBuffer, const RawPos &p)
 			cmdType = CMD_CHORUS_START;
 		else if (cmdId == ::cmdChorusEnd || cmdId == ::cmdChorusEndShort)
 			cmdType = CMD_CHORUS_END;
-		else if (cmdId == ::cmdTitle)
+		else if (cmdId == ::cmdTitle || cmdId == ::cmdTitleShort)
 			cmdType = CMD_TITLE;
-		else if (cmdId == ::cmdSubtitle)
+		else if (cmdId == ::cmdSubtitle || cmdId == ::cmdSubtitleShort)
 			cmdType = CMD_SUBTITLE;
+		else if (cmdId == ::cmdNewSong || cmdId == ::cmdNewSongShort)
+			cmdType = CMD_NEW_SONG;
+		else if (cmdId == ::cmdColumns || cmdId == ::cmdColumnsShort)
+			cmdType = CMD_NEW_SONG;
+		else if (cmdId == ::cmdComment || cmdId == ::cmdCommentShort)
+			cmdType = CMD_COMMENT;
+
 
         m_eventHandler->onCommand(cmdType, cmdVal, p);
     }

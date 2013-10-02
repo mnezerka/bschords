@@ -19,6 +19,7 @@
 #include <wx/print.h>
 #include "songstylesheet.h"
 #include "songbook.h"
+#include "mainwnd.h"
 
 /*
 ChordPro links:
@@ -32,7 +33,6 @@ http://en.wikipedia.org/wiki/Chord_%28software%29
 // TODO: additional song properties in songbook - comment, chordpro prefix (inserted after title), postfix (at the bottom)
 // TODO: separate section for song title (especially in case of multicolumn stylesheet)
 // TODO: song directives (e.g. request for 2 cols)
-// TODO: each block should remember it's clipping status
 
 namespace bschords
 {
@@ -75,13 +75,16 @@ namespace bschords
 			// current songbook
 			bschords::SongBook m_songBook;
 
+
 			virtual bool OnInit();
 			virtual int OnExit();
-			//virtual wxLog* CreateLogTarget();
+			virtual wxLog* CreateLogTarget();
 
 		private:
 			//std::list<SongStylesheet> m_styleSheets;
 
+			// main window
+			//MainWnd *mFrame;
 	};
 }
 

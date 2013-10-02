@@ -18,10 +18,15 @@ namespace bschords
 
 	struct TSetLineItem
 	{
-		wxString *txt;
-		wxRect m_bRect;
+		public:
+			wxRect m_bRect;
+			virtual ~TSetLineItem() { };
+			wxString getText() { return mText; };
+			void setText(const wxString &text) { mText = text; };
+			void appendText(const wxString &text) { mText += text; };
+		private:
+			wxString mText;
 
-		virtual ~TSetLineItem() { if (txt) delete txt; };
 	};
 
 	struct TSetLine
@@ -38,24 +43,43 @@ namespace bschords
 
 	struct TSetBlock
 	{
+		/// painter used for drawing block
 		TSetDCPainter *m_painter;
-		// index of block of the same type (e.g. for verse numbering)
+
+		/// index of block of the same type (e.g. for verse numbering)
 		unsigned int m_pos;
 
-		// physical position of block on page
+		/// physical position of the block on the page
 		wxPoint mPos;
 
-		enum TBlockType { BLTYPE_NONE, BLTYPE_TEXT, BLTYPE_CHORUS, BLTYPE_HSPACE, BLTYPE_TITLE, BLTYPE_TAB, BLTYPE_STRUCT, BLTYPE_VERSE };
+		/// type of the block
+		enum TBlockType {
+			BLTYPE_NONE,
+			BLTYPE_TEXT,
+			BLTYPE_CHORUS,
+			BLTYPE_HSPACE,
+			BLTYPE_TITLE,
+			BLTYPE_SUBTITLE,
+			BLTYPE_COMMENT,
+			BLTYPE_TAB,
+			BLTYPE_STRUCT,
+			BLTYPE_VERSE };
 
-		TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos) { };
+		TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos), mMaxWidth(0) { };
 		virtual ~TSetBlock() { }
 		virtual void setPosition(wxPoint p) { mPos = p; }
 		virtual wxPoint getPosition() { return mPos; };
 		virtual void draw() {};
 		virtual void drawBoundingRect();
 		virtual wxRect getBoundingRect() { return wxRect(0, 0, 0, 0); };
+		void setMaxWidth(wxCoord width) { mMaxWidth = width; };
+		wxCoord getMaxWidth() { return mMaxWidth; };
 		virtual TBlockType getType() { return BLTYPE_NONE; };
 		virtual bool isVisible() { return true; };
+
+		private:
+			/// detection of block clipping, setting this flag to true causes drawing of visual "clipping alarm"
+			wxCoord mMaxWidth;
 	};
 
 	struct TSetBlockHSpace : public TSetBlock
@@ -66,13 +90,21 @@ namespace bschords
 		virtual wxRect getBoundingRect();
 	};
 
-	struct TSetBlockTitle : public TSetBlock
+	struct TSetBlockSingleLine : public TSetBlock
 	{
-		TSetLineItem* m_title;
-		TSetBlockTitle(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos), m_title(NULL) { };
-		virtual ~TSetBlockTitle() { delete m_title; }
+		TSetLineItem mLine;
+		TBlockType mType;
+		wxFont mFont;
+
+		TSetBlockSingleLine(
+			TSetDCPainter *painter,
+			TBlockType type,
+			wxFont font,
+			unsigned int pos = 0) : TSetBlock(painter, pos), mType(type), mFont(font) { };
+		virtual ~TSetBlockSingleLine() { }
+		virtual void setTxt(wxString text) { mLine.setText(text); };
 		virtual void draw();
-		virtual TBlockType getType() { return BLTYPE_TITLE; };
+		virtual TBlockType getType() { return mType; };
 		virtual wxRect getBoundingRect();
 	};
 

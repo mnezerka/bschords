@@ -20,7 +20,7 @@
 
 
 #include "app.h"
-#include "mainwnd.h"
+
 
 using namespace bschords;
 
@@ -93,8 +93,11 @@ bool App::OnInit()
 
 	//-----------------------------------------------------------------
 	// open main window (frame)
-    MainWnd* frame = new MainWnd(0L, _("BSChords"));
-    frame->Show();
+    MainWnd *mFrame = new MainWnd(0L, _("BSChords"));
+    mFrame->Show();
+
+	// initialize logging
+	wxLog::SetActiveTarget(new wxLogStderr());
 
     return true;
 }
@@ -119,9 +122,9 @@ int App::OnExit()
     return wxApp::OnExit();
 }
 
-/*wxLog* App::CreateLogTarget()
+wxLog* App::CreateLogTarget()
 {
-	//return new wxLogStderr();
+	return new wxLogStderr();
 }
-*/
+
 

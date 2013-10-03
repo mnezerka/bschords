@@ -483,6 +483,33 @@ void Transposer::onLine(const std::wstring& line, const RawPos &pos)
 		mTransposedFragments.push_back(pos);
 }
 
+// ------------------------------------- InfoReader ---------------------------------
+
+void InfoReader::parse()
+{
+	// parse song to get all commands
+	Parser p(this);
+	p.parse(mSource);
+	mParsed = true;
+}
+
+void InfoReader::onCommand(const CommandType command, const std::wstring& value, const RawPos &pos)
+{
+	switch(command)
+	{
+		case CMD_TITLE:
+			mTitle = value;
+			break;
+		case CMD_SUBTITLE:
+			mSubTitle = value;
+			break;
+		default:
+			;
+	}
+}
+
+// ------------------------------------- Test ---------------------------------------
+
 #ifdef _TEST
 // example implementation for simple text output
 class EventHandlerX1 : public EventHandler

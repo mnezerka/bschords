@@ -60,8 +60,8 @@ class SongStyleSheet
 
 		SongStyleSheet();
 		virtual ~SongStyleSheet();
-		void LoadFromConfig(const wxConfig *config);
-		void SaveToConfig(wxConfig *config);
+		void LoadFromConfig(const wxConfigBase *config);
+		void SaveToConfig(wxConfigBase *config);
 		static wxString getFontName(unsigned int index);
 
 	protected:

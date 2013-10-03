@@ -57,6 +57,7 @@ namespace bschords
 			void OnDeleteSelected(wxCommandEvent& event);
 			void OnPrintOn(wxCommandEvent& event);
 			void OnPrintOff(wxCommandEvent& event);
+			void OnSongbookProperties(wxCommandEvent& event);
 
 		DECLARE_EVENT_TABLE()
 	};

@@ -28,6 +28,10 @@ http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
 */
 
+// TODO: colors for fonts
+// TODO: songbook: background image to be stretched
+// TODO: songbook: title page with songbook name, etc.
+// TODO: songbook: contents both with and without page numbers
 // TODO: show warning when overwriting existing file
 // TODO: songboook - parse info from items in list (e.g. Title, Subtitle, commments, etc.)
 // TODO: additional song properties in songbook - comment, chordpro prefix (inserted after title), postfix (at the bottom)

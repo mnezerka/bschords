@@ -495,7 +495,7 @@ void TSetPage::draw()
 		if (blockRect.GetWidth() > block->getMaxWidth())
 			clipRect.SetWidth(block->getMaxWidth());
 
-		mPainter->m_dc.SetClippingRegion(clipRect);
+		//mPainter->m_dc.SetClippingRegion(clipRect);
 
 		// draw bounding box
         if (mPainter->m_drawTsetBlocks)
@@ -512,11 +512,10 @@ void TSetPage::draw()
             mPainter->m_dc.SetPen(pen);
             mPainter->m_dc.DrawLine(clipRect.GetRight(), clipRect.GetTop(), clipRect.GetRight(), clipRect.GetBottom());
         }
-		//std::cout << "drawing block " << blockIx << " of type " << block->getType() << " height " << block->getBoundingRect().GetHeight() << " y: " << block->getPosition().y << std::endl;
 		// draw block content
         block->draw();
 
-		mPainter->m_dc.DestroyClippingRegion();
+		//mPainter->m_dc.DestroyClippingRegion();
     }
 }
 

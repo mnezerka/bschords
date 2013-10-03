@@ -23,6 +23,7 @@
 #include <wx/artprov.h>
 #include <wx/fontdlg.h>
 #include <wx/valgen.h>
+#include <wx/wfstream.h>
 
 #define CTRL_BORDER 3
 //typedef struct
@@ -33,6 +34,8 @@ BEGIN_EVENT_TABLE(SongStyleSheetDlg, wxDialog)
     EVT_CLOSE(SongStyleSheetDlg::OnClose)
     EVT_BUTTON(idBtnQuit, SongStyleSheetDlg::OnQuit)
     EVT_BUTTON(idBtnSelFont, SongStyleSheetDlg::OnSelFont)
+    EVT_BUTTON(idBtnLoad, SongStyleSheetDlg::OnLoad)
+    EVT_BUTTON(idBtnSave, SongStyleSheetDlg::OnSave)
 END_EVENT_TABLE()
 
 SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongStyleSheet *styleSheet)
@@ -48,8 +51,7 @@ SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongS
 
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-    // create buttons
-    wxSizer* btnSizer = CreateButtonSizer(wxOK | wxCANCEL);
+
 
 	wxNotebook* m_bookCtrl = new wxNotebook(this, wxID_ANY); //, wxDefaultPosition, wxDefaultSize, wxWS_EX_VALIDATE_RECURSIVELY);
 
@@ -64,6 +66,11 @@ SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongS
 	// static line
 	wxStaticLine * staticLine1 = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
 	mainSizer->Add(staticLine1, 0, wxALL | wxEXPAND, 5);
+
+    // create buttons
+    wxSizer* btnSizer = CreateButtonSizer(wxOK | wxCANCEL);
+    btnSizer->Add(new wxButton(this, idBtnLoad, wxT("Load...")));
+    btnSizer->Add(new wxButton(this, idBtnSave, wxT("Save...")));
 
 	// sizing stuff
 	mainSizer->Add(btnSizer, 0, wxALL, 3);
@@ -288,20 +295,43 @@ void SongStyleSheetDlg::OnSelFont(wxCommandEvent &event)
     }
 }
 
+void SongStyleSheetDlg::OnLoad(wxCommandEvent &event)
+{
+	wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open Stylesheet File"), wxT("d:/"), _(""), _("*.ini"), wxOPEN, wxDefaultPosition);
+	if (openFileDialog->ShowModal() == wxID_OK )
+	{
+		wxFileInputStream stream(openFileDialog->GetPath());
+		wxFileConfig *config = new wxFileConfig(stream);
+		m_styleSheet->LoadFromConfig(config);
+		delete(config);
+		TransferDataToWindow();
+	}
+}
+
+void SongStyleSheetDlg::OnSave(wxCommandEvent &event)
+{
+
+	wxFileOutputStream stream(wxT("d:/bschords_stylesheet.ini"));
+	wxFileConfig *config = new wxFileConfig();
+	m_styleSheet->SaveToConfig(config);
+	config->Save(stream);
+	delete(config);
+}
+
 bool SongStyleSheetDlg::TransferDataToWindow()
 {
-    m_pageWidth << m_styleSheet->m_pageSize.GetWidth();
-    m_pageHeight << m_styleSheet->m_pageSize.GetHeight();
+    m_pageWidth = wxString::Format(wxT("%d"), m_styleSheet->m_pageSize.GetWidth());
+    m_pageHeight = wxString::Format(wxT("%d"), m_styleSheet->m_pageSize.GetHeight());
 
-	m_marginLeft << m_styleSheet->m_marginLeft;
-	m_marginTop << m_styleSheet->m_marginTop;
-	m_marginRight << m_styleSheet->m_marginRight;
-	m_marginBottom << m_styleSheet->m_marginBottom;
+	m_marginLeft = wxString::Format(wxT("%d"), m_styleSheet->m_marginLeft);
+	m_marginTop = wxString::Format(wxT("%d"), m_styleSheet->m_marginTop);
+	m_marginRight = wxString::Format(wxT("%d"), m_styleSheet->m_marginRight);
+	m_marginBottom = wxString::Format(wxT("%d"), m_styleSheet->m_marginBottom);
 
-	m_cols << m_styleSheet->m_cols;
-	m_lineSpacing << m_styleSheet->m_lineSpacing;
-	m_lineChordSpacing << m_styleSheet->m_chordLineSpacing;
-	m_indentChorus << m_styleSheet->m_indentChorus;
+	m_cols = wxString::Format(wxT("%d"), m_styleSheet->m_cols);
+	m_lineSpacing = wxString::Format(wxT("%d"), m_styleSheet->m_lineSpacing);
+	m_lineChordSpacing = wxString::Format(wxT("%d"), m_styleSheet->m_chordLineSpacing);
+	m_indentChorus = wxString::Format(wxT("%d"), m_styleSheet->m_indentChorus);
 
     bool result = wxDialog::TransferDataToWindow();
 

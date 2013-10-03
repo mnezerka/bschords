@@ -36,21 +36,21 @@ namespace bschordpro
 	{
 		public:
 			// called on begin of parsed document
-			virtual void onBegin() = 0;
+			virtual void onBegin() {};
 			// called after document is parsed
-			virtual void onEnd() = 0;
+			virtual void onEnd() {};
 			// called at the beginning of parsed line
-			virtual void onLineBegin() = 0;
+			virtual void onLineBegin() {};
 			// called at the end of parsed line
-			virtual void onLineEnd() = 0;
+			virtual void onLineEnd() {};
 			// called when command is found
-			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos) = 0;
+			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos) {};
 			// called for each chord on line
-			virtual void onChord(const std::wstring& chord, const RawPos &pos) = 0;
+			virtual void onChord(const std::wstring& chord, const RawPos &pos) {};
 			// called for each text fragment on line (separators are spaces and chords)
-			virtual void onText(const std::wstring& text, const RawPos &pos) = 0;
+			virtual void onText(const std::wstring& text, const RawPos &pos) {};
 			// called for preformatted line (e.g. inside tab section)
-			virtual void onLine(const std::wstring& line, const RawPos &pos) = 0;
+			virtual void onLine(const std::wstring& line, const RawPos &pos) {};
 	};
 
 	// example implementation for simple text output
@@ -58,8 +58,6 @@ namespace bschordpro
 	{
 		public:
 			EventHandlerTxt();
-			virtual void onBegin() {};
-			virtual void onEnd() {};
 			virtual void onLineBegin();
 			virtual void onLineEnd();
 			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos);
@@ -96,17 +94,29 @@ namespace bschordpro
 			std::wstring transpose(std::wstring &song, int distance);
 			std::wstring transposeText(std::wstring &text, int distance);
 
-			virtual void onBegin() {};
-			virtual void onEnd() {};
-			virtual void onLineBegin() {};
-			virtual void onLineEnd() {};
 			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos);
 			virtual void onChord(const std::wstring& chord, const RawPos &pos);
-			virtual void onText(const std::wstring& text, const RawPos &pos) {};
 			virtual void onLine(const std::wstring& line, const RawPos &pos);
 		private:
 			bool mTransposeLines;
 			std::vector<RawPos> mTransposedFragments;
+	};
+
+	class InfoReader: public EventHandler
+	{
+		public:
+			InfoReader(const std::wstring &s) : mSource(s), mParsed(false) {};
+			std::wstring getTitle() { if (!mParsed) parse(); return mTitle; };
+			std::wstring getSubTitle() { if (!mParsed) parse(); return mSubTitle; };
+
+		private:
+			const std::wstring &mSource;
+			std::wstring mTitle;
+			std::wstring mSubTitle;
+			bool mParsed;
+
+			void parse();
+			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos);
 	};
 }
 

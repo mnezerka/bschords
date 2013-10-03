@@ -71,9 +71,11 @@ namespace bschords
 			void SetEditMode(bool newEditMode);
 
 			void SaveFile();
+			void CloseFile();
+
 			void OpenSongBook(const wxString filePath);
 			void SaveSongBook();
-			void CloseFile();
+			void CloseSongbook();
 			void UpdateTitle();
 			void updateEditorStyles();
 
@@ -97,6 +99,8 @@ namespace bschords
 			void OnSongInsert(wxCommandEvent& event);
 			void OnSongAddToSongbook(wxCommandEvent& event);
 			void OnSongTranspose(wxCommandEvent& event);
+
+			void OnSongbookProperties(wxCommandEvent& event);
 
 			void OnClose(wxCloseEvent& event);
 			void OnQuit(wxCommandEvent& event);

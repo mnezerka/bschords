@@ -32,9 +32,9 @@
 #include "mainwnd.h"
 #include "preferencesdlg.h"
 #include "songstylesheetdlg.h"
+#include "songbookdlg.h"
 //#include "bschordsicon.xpm"
 #include "dcpainter.h"
-#include "song.h"
 
 using namespace bschords;
 
@@ -124,6 +124,8 @@ enum
 	idMenuSongTrnDown6,
 	idMenuSongTrnDown7,
 
+	idMenuSongbookProperties,
+
 	idFSBrowserAddToSongbook,
 
 	ID_COMBO_CHORD,
@@ -190,6 +192,8 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(idMenuSongTrnDown5, MainWnd::OnSongTranspose)
 	EVT_MENU(idMenuSongTrnDown6, MainWnd::OnSongTranspose)
 	EVT_MENU(idMenuSongTrnDown7, MainWnd::OnSongTranspose)
+
+	EVT_MENU(idMenuSongbookProperties, MainWnd::OnSongbookProperties)
 
 	EVT_MENU(idActionFontsUp, MainWnd::OnChangeFontsSize)
 	EVT_MENU(idActionFontsDown, MainWnd::OnChangeFontsSize)
@@ -265,8 +269,6 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	songMenu->AppendSeparator();
 	songMenu->Append(idMenuSongAddToSongbook, _("Add to songbook"), _("Add item to current songbook"));
 
-	//songMenu->Append(wxID_ANY, _("Trans&pose.."), _("Transpose song chords to different key"));
-
 	wxMenu* songTransposeMenu = new wxMenu(_T(""));
 	songTransposeMenu->Append(idMenuSongTrnDown7, wxT("-7 (perfect fifth)"), _("Transpose song 7 half steps down"));
 	songTransposeMenu->Append(idMenuSongTrnDown6, wxT("-6 (diminished fifth)"), _("Transpose song 6 half steps dowm"));
@@ -286,7 +288,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	mbar->Append(songMenu, _("&Song"));
 
 	wxMenu* songbookMenu = new wxMenu(_T(""));
-	songbookMenu->Append(wxID_ANY, _("&Songbook properties..."), _("Song book properties"));
+	songbookMenu->Append(idMenuSongbookProperties, _("&Songbook properties..."), _("Song book properties"));
 	mbar->Append(songbookMenu, _("Song&book"));
 
 	wxMenu* helpMenu = new wxMenu(_T(""));
@@ -555,7 +557,7 @@ void MainWnd::OnFileSaveSongBookAs(wxCommandEvent& event)
 
 void MainWnd::OnFileCloseSongBook(wxCommandEvent& event)
 {
-
+	CloseSongbook();
 }
 
 
@@ -1247,6 +1249,7 @@ void MainWnd::SaveSongBook()
 void MainWnd::OpenSongBook(const wxString filePath)
 {
 	// TODO Check if old songbook needs to be saved
+	CloseSongbook();
 
 	wxFileName fileName(filePath);
 
@@ -1266,6 +1269,21 @@ void MainWnd::OpenSongBook(const wxString filePath)
 
 	wxGetApp().m_songBook.loadFromXmlFile(fileName.GetFullPath());
 
+	m_songBookWnd->Update();
+}
+
+void MainWnd::CloseSongbook()
+{
+	if (wxGetApp().m_songBook.isModified())
+	{
+		if (wxMessageBox(_("Do you want to save Songbook changes?"), wxMessageBoxCaptionStr, wxYES_NO | wxCENTRE | wxICON_ASTERISK) == wxYES)
+		{
+			SaveSongBook();
+		}
+	}
+
+	wxGetApp().m_songBook.empty();
+	m_songBookPath.Empty();
 	m_songBookWnd->Update();
 }
 
@@ -1348,6 +1366,19 @@ void MainWnd::OnChangeFontsSize(wxCommandEvent& event)
 		int fontSize = wxGetApp().m_styleSheet.m_fonts[i].GetPointSize();
 		wxGetApp().m_styleSheet.m_fonts[i].SetPointSize(fontSize + incStep);
     }
+    m_preview->Refresh();
+	m_preview->Update();
+}
+
+void MainWnd::OnSongbookProperties(wxCommandEvent& event)
+{
+	SongbookDlg* dlg = new SongbookDlg(0L, _("Songbook properties"), wxGetApp().m_songBook);
+
+	if (dlg->ShowModal() == wxID_OK)
+    {
+		;
+    }
+    dlg->Destroy();
 }
 
 // ----------------------------------------------------------------------------

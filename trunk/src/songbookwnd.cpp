@@ -8,6 +8,7 @@
 #include "songbook.h"
 #include "songbookwnd.h"
 #include "mainwnd.h"
+#include "songbookdlg.h"
 
 //#include "res/song.xpm"
 //#include "res/songbook.xpm"
@@ -18,43 +19,23 @@ TODO: SongBook: add buttons for moving items
 TODO: SongBook: allow editing of section names
 */
 
-using namespace bschords;
-
-// menu and control ids
-enum
+namespace bschords
 {
-	idSongBookListCtrlId = 1000
-};
-
-// --------------- SongBookWnd -------------------------------------------------
-
-/*BEGIN_EVENT_TABLE(SongBookTreeCtrl, wxTreeCtrl)
-	EVT_TREE_BEGIN_DRAG(idSongBookTreeCtrlId, SongBookTreeCtrl::OnBeginDrag)
-    EVT_TREE_END_DRAG(idSongBookTreeCtrlId, SongBookTreeCtrl::OnEndDrag)
-    // EVT_TREE_ITEM_MENU is the preferred event for creating context menus
-    // on a tree control, because it includes the point of the click or item,
-    // meaning that no additional placement calculations are required.
-    EVT_TREE_ITEM_MENU(idSongBookTreeCtrlId, SongBookTreeCtrl::OnItemMenu)
-	EVT_TREE_BEGIN_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnBeginLabelEdit)
-    EVT_TREE_END_LABEL_EDIT(idSongBookTreeCtrlId, SongBookTreeCtrl::OnEndLabelEdit)
-    EVT_TREE_DELETE_ITEM(idSongBookTreeCtrlId, SongBookTreeCtrl::OnDeleteItem)
-	EVT_TREE_ITEM_ACTIVATED(idSongBookTreeCtrlId, SongBookTreeCtrl::OnItemActivated)
-END_EVENT_TABLE()
-
-IMPLEMENT_DYNAMIC_CLASS(SongBookTreeCtrl, wxTreeCtrl)*/
 
 // --------------- SongBookWnd -------------------------------------------------
 
 enum
 {
-	ID_SONG_LIST = 1000,
+	idSongBookListCtrlId = 1000,
+	ID_SONG_LIST,
 	ID_BTN_NEW_SECTION,
 	ID_BTN_REMOVE,
 	ID_BTN_UP,
 	ID_BTN_DOWN,
 	idActionDeleteSelected,
 	idActionPrintOn,
-	idActionPrintOff
+	idActionPrintOff,
+	idActionSongbookProperties
 };
 
 BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
@@ -68,6 +49,7 @@ BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
 	EVT_MENU(idActionDeleteSelected, SongBookWnd::OnDeleteSelected)
 	EVT_MENU(idActionPrintOn, SongBookWnd::OnPrintOn)
 	EVT_MENU(idActionPrintOff, SongBookWnd::OnPrintOff)
+	EVT_MENU(idActionSongbookProperties, SongBookWnd::OnSongbookProperties)
 END_EVENT_TABLE()
 
 BEGIN_EVENT_TABLE(SongBookListCtrl, wxListCtrl)
@@ -119,7 +101,7 @@ void SongBookListCtrl::OnContextMenu(wxContextMenuEvent& event)
     menu.Append(idActionPrintOn, _T("&Enable printing for selected items"));
     menu.Append(idActionPrintOff, _T("&Disable printing for selected items"));
     menu.AppendSeparator();
-    menu.Append(wxID_EXIT, _T("E&xit"));
+    menu.Append(idActionSongbookProperties, _T("Songbook Properties..."));
 
     PopupMenu(&menu, point.x, point.y);
 }
@@ -336,3 +318,16 @@ void SongBookWnd::OnPrintOff(wxCommandEvent& event)
 	wxGetApp().m_songBook.setPrintFlagForSelected(false);
 	Update();
 }
+
+void SongBookWnd::OnSongbookProperties(wxCommandEvent& event)
+{
+	SongbookDlg* dlg = new SongbookDlg(0L, _("Songbook properties"), wxGetApp().m_songBook);
+
+	if (dlg->ShowModal() == wxID_OK)
+    {
+		;
+    }
+    dlg->Destroy();
+}
+
+} // namespace

@@ -43,7 +43,9 @@ class SongStyleSheetDlg: public wxDialog
         enum
         {
             idBtnQuit = 1000,
-            idBtnSelFont
+            idBtnSelFont,
+            idBtnLoad,
+            idBtnSave
         };
         wxStaticText* m_staticText1;
         wxStaticLine* m_staticline1;
@@ -58,6 +60,8 @@ class SongStyleSheetDlg: public wxDialog
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnSelFont(wxCommandEvent &event);
+        void OnLoad(wxCommandEvent &event);
+        void OnSave(wxCommandEvent &event);
 
 		wxPanel* CreatePageSetupPage(wxWindow* parent);
         wxPanel* CreateFontsPage(wxWindow* parent);

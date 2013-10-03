@@ -69,6 +69,7 @@ namespace bschords
 			virtual void readFromXmlNode(wxXmlNode *node, wxString basePath);
 		private:
 			wxString mPath;
+			wxString mTitle;
 	};
 
 	// songbook (group of songs with attributes) representation
@@ -92,9 +93,24 @@ namespace bschords
 			void moveSelectedUp();
 			void moveSelectedDown();
 			void setPrintFlagForSelected(bool printFlag);
+
+			void setName(const wxString &name) { mName = name; mModified = true; }
+			wxString getName() { return mName; }
+			void setDescription(const wxString &description) { mDescription = description; mModified = true; }
+			wxString getDescription() { return mDescription; }
+			bool isModified() { return mModified; }
 		private:
 			std::list<SongBookItem *> m_items;
 			wxString m_basePath;
+
+			/// songbook name
+			wxString mName;
+
+			/// songbook description
+			wxString mDescription;
+
+			/// flag indicating unsaved changes
+			bool mModified;
 	};
 }
 

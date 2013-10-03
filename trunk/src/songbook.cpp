@@ -10,6 +10,7 @@
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
 
+#include "bschordpro.h"
 #include "songbook.h"
 
 using namespace bschords;
@@ -47,8 +48,32 @@ SongBookSong::SongBookSong(wxString path)
 
 wxString SongBookSong::getTitle()
 {
-	wxFileName filePath(mPath);
-	return filePath.GetName();
+	if (mTitle.Length() > 0)
+		return mTitle;
+
+	wxString contents;
+
+    wxFile file(mPath, wxFile::read);
+    if (file.IsOpened())
+    {
+        // get the file size (assume it is not huge file...)
+        ssize_t len = (ssize_t)file.Length();
+
+        if (len > 0)
+        {
+            wxMemoryBuffer buffer(len+1);
+            bool success = (file.Read(buffer.GetData(), len) == len);
+            if (success) {
+                ((char*)buffer.GetData())[len] = 0;
+                contents = wxString(buffer, wxConvUTF8, len);
+            }
+        }
+    }
+
+	std::wstring toParse(contents.wc_str());
+	bschordpro::InfoReader infoReader(toParse);
+	mTitle = infoReader.getTitle();
+	return mTitle;
 }
 
 wxString SongBookSong::getPath()
@@ -117,6 +142,9 @@ wxXmlNode* SongBookSong::createXmlNode(wxString basePath)
 
 SongBook::SongBook()
 {
+	mName = wxT("Songbook");
+	mDescription = wxT("");
+	mModified = false;
 	empty();
 }
 
@@ -174,6 +202,7 @@ void SongBook::addItem(SongBookItem *item)
 		return;
 
 	m_items.push_back(item);
+	mModified = true;
 }
 
 void SongBook::deleteSelected()
@@ -191,14 +220,24 @@ void SongBook::deleteSelected()
 		else
 			it++;
 	}
+	mModified = true;
 }
 
 void SongBook::saveToXmlFile(wxString path, wxString rootPath)
 {
 	wxXmlDocument doc;
 	wxXmlNode *rootNode = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, wxT("songbook"));
+	wxXmlProperty *prop = new wxXmlProperty(wxT("name"), mName);
+	rootNode->AddProperty(prop);
 
-	wxXmlNode *lastChild = NULL;
+	// create description node
+	wxXmlNode *descriptionNode = new wxXmlNode(rootNode, wxXML_ELEMENT_NODE, wxT("description"));
+	wxXmlNode *descriptionNodeText = new wxXmlNode(descriptionNode, wxXML_TEXT_NODE, wxEmptyString);
+	descriptionNodeText->SetContent(mDescription);
+	descriptionNode->AddChild(descriptionNodeText);
+	rootNode->AddChild(descriptionNode);
+
+	wxXmlNode *lastChild = descriptionNode;
 	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
 	{
 		wxXmlNode *itemNode = (*it)->createXmlNode(m_basePath);
@@ -214,6 +253,8 @@ void SongBook::saveToXmlFile(wxString path, wxString rootPath)
 
 	if (!doc.Save(path))
 		wxMessageBox(_("Error saving songbook"));
+	else
+		mModified = false;
 }
 
 void SongBook::loadFromXmlFile(wxString path)
@@ -230,10 +271,20 @@ void SongBook::loadFromXmlFile(wxString path)
 	if (rootNode->GetName() != wxT("songbook"))
 		return;
 
+	// get songbook name
+	mName = rootNode->GetPropVal(wxT("name"), wxT("Songbook"));
+
 	wxXmlNode *c = rootNode->GetChildren();
 	while (c)
 	{
-		if (c->GetName() == wxT("song"))
+		if (c->GetName() == wxT("description"))
+		{
+			wxXmlNode *t = c->GetChildren();
+			if (t && t->GetType() == wxXML_TEXT_NODE)
+				mDescription = t->GetContent();
+
+		}
+		else if (c->GetName() == wxT("song"))
 		{
 			SongBookSong *s = new SongBookSong(c, m_basePath);
 			m_items.push_back(s);
@@ -245,6 +296,7 @@ void SongBook::loadFromXmlFile(wxString path)
 		}
 		c = c->GetNext();
 	}
+	mModified = false;
 }
 
 unsigned int SongBook::getCount()
@@ -276,8 +328,11 @@ wxString SongBook::getContents()
 void SongBook::setItemTitle(unsigned int index, wxString title)
 {
 	SongBookItem *item = getItem(index);
-	if (item)
-		item->setTitle(title);
+	if (!item)
+		return;
+
+	item->setTitle(title);
+	mModified = true;
 }
 
 void SongBook::selectAll(bool select)
@@ -320,6 +375,7 @@ void SongBook::moveSelectedUp()
 		}
 		it++;
 	}
+	mModified = true;
 }
 
 void SongBook::moveSelectedDown()
@@ -358,6 +414,8 @@ void SongBook::moveSelectedDown()
 		}
 		it--;
 	}
+
+	mModified = true;
 }
 
 void SongBook::setPrintFlagForSelected(bool printFlag)

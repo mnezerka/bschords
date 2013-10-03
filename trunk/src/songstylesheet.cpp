@@ -1,30 +1,11 @@
 #include <iostream>
 #include "songstylesheet.h"
 #include <wx/arrstr.h>
+#include <wx/xml/xml.h>
 
 // page size
 #define SIZE_A4_WIDTH 210
 #define SIZE_A4_HEIGHT 297
-
-
-
-//fontNames.Add(wxT("Titlex"));
-/*
-fontNames.Add(wxT("Subtitle"));
-fontNames.Add(wxT("Text"));
-fontNames.Add(wxT("Chords"));
-fontNames.Add(wxT("Tab"));*/
-
-/*
-static const wxString fontNames[] =
-{
-    wxT("Titlex"),
-    wxT("Subtitle"),
-    wxT("Text"),
-    wxT("Chords"),
-    wxT("Tab")
-};
-*/
 
 SongStyleSheet::SongStyleSheet()
 {
@@ -47,7 +28,7 @@ SongStyleSheet::~SongStyleSheet()
 	//dtor
 }
 
-void SongStyleSheet::LoadFromConfig(const wxConfig *config)
+void SongStyleSheet::LoadFromConfig(const wxConfigBase *config)
 {
 	// load stylesheets
 	if (config->Exists(_("/stylesheet/")))
@@ -92,7 +73,7 @@ void SongStyleSheet::LoadFromConfig(const wxConfig *config)
 	}
 }
 
-void SongStyleSheet::SaveToConfig(wxConfig *config)
+void SongStyleSheet::SaveToConfig(wxConfigBase *config)
 {
 	// save page size
 	config->Write(_("stylesheet/page/width"), m_pageSize.GetWidth());

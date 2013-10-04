@@ -43,9 +43,10 @@ namespace bschords
 			SongBookSection(wxXmlNode *node, wxString basePath) : SongBookItem() { readFromXmlNode(node, basePath); };
 			SongBookSection(wxString title) : mTitle(title) { };
 			virtual ~SongBookSection() { };
+			virtual bool isPrintable() { return true; };
 			virtual wxString getTitle() { return (mTitle); };
 			virtual void setTitle(wxString title) { mTitle = title; };
-			virtual wxString getContents() { return wxT(""); };
+			virtual wxString getContents();
 			virtual wxString getPath() { return wxT(""); };
 			virtual wxXmlNode *createXmlNode(wxString basePath);
 			virtual void readFromXmlNode(wxXmlNode *node, wxString basePath);

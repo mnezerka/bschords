@@ -119,7 +119,9 @@ wxString SongStyleSheet::getFontName(unsigned int index)
 		wxT("Text"),
 		wxT("Chords"),
 		wxT("Tab"),
-		wxT("Structure")
+		wxT("Structure"),
+		wxT("Main Page Title"),
+		wxT("Section Title")
 	};
 
 	wxString result(wxT(""));

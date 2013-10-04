@@ -74,7 +74,7 @@ wxPanel* SongbookDlg::CreateGeneralPage(wxWindow* parent)
     wxBoxSizer* nameStaticBoxSizer = new wxStaticBoxSizer(nameStaticBox, wxVERTICAL );
     topSizer->Add(nameStaticBoxSizer, 0, wxGROW|wxALL, 0);
     mNameCtrl = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize);
-	nameStaticBoxSizer->Add(mNameCtrl);
+	nameStaticBoxSizer->Add(mNameCtrl, 0, wxALL | wxEXPAND);
 
 	// description
 	wxStaticBox* descStaticBox = new wxStaticBox(panel, wxID_ANY, _("Sonbook Description"));

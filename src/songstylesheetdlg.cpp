@@ -39,19 +39,15 @@ BEGIN_EVENT_TABLE(SongStyleSheetDlg, wxDialog)
 END_EVENT_TABLE()
 
 SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongStyleSheet *styleSheet)
-    : wxDialog(dlg, -1, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER), m_styleSheet(styleSheet)
+    : wxDialog(dlg, -1, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
 {
 	SetExtraStyle(wxWS_EX_VALIDATE_RECURSIVELY);
 
-    // copy font information from application
-    for (int i = 0; i < BS_FONT_LAST; i++)
-    {
-         m_fonts[i] = wxGetApp().m_styleSheet.m_fonts[i];
-    }
+	// create copy of style sheet data
+	mStyleSheet = *styleSheet;
+
 
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
-
-
 
 	wxNotebook* m_bookCtrl = new wxNotebook(this, wxID_ANY); //, wxDefaultPosition, wxDefaultSize, wxWS_EX_VALIDATE_RECURSIVELY);
 
@@ -206,7 +202,7 @@ wxPanel* SongStyleSheetDlg::CreateFontsPage(wxWindow* parent)
     for (int i = 0; i < BS_FONT_LAST; i++)
     {
         fontTextTitles[i] = new wxStaticText(fontsPreviewPanel, wxID_ANY, SongStyleSheet::getFontName(i));
-        fontTextTitles[i]->SetFont(m_fonts[i]);
+        fontTextTitles[i]->SetFont(mStyleSheet.m_fonts[i]);
         fontsPreviewPanelSizer->Add(fontTextTitles[i], 0, wxALL | wxALIGN_CENTER, 10);
     }
     fontsPreviewPanel->SetSizer(fontsPreviewPanelSizer);
@@ -237,13 +233,13 @@ wxPanel* SongStyleSheetDlg::CreateContentPage(wxWindow* parent)
     wxBoxSizer* vchStaticBoxSizer = new wxStaticBoxSizer(vchStaticBox, wxVERTICAL);
     col0->Add(vchStaticBoxSizer, 0, wxGROW|wxALL, 5);
 
-	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show chords"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showChords)), 1, wxEXPAND | wxALL, 5);
-	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show subtitles"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showSubtitles)), 1, wxEXPAND | wxALL, 5);
-	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show tabs"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showTabs)), 1, wxEXPAND | wxALL, 5);
-	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show song structure sections"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_showStructs)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show chords"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_showChords)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show subtitles"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_showSubtitles)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show tabs"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_showTabs)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show song structure sections"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_showStructs)), 1, wxEXPAND | wxALL, 5);
 
-	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Verse numbering"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_verseNumbering)), 1, wxEXPAND | wxALL, 5);
-	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Equal line heights (text lines without chords have equal height as lines chords)"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_equalLineHeights)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Verse numbering"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_verseNumbering)), 1, wxEXPAND | wxALL, 5);
+	vchStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Equal line heights (text lines without chords have equal height as lines chords)"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_equalLineHeights)), 1, wxEXPAND | wxALL, 5);
 
 	// --------------------------------------------------------------------------------------
 	// songbook
@@ -251,7 +247,7 @@ wxPanel* SongStyleSheetDlg::CreateContentPage(wxWindow* parent)
     wxBoxSizer* sbkStaticBoxSizer = new wxStaticBoxSizer(sbkStaticBox, wxVERTICAL);
     col0->Add(sbkStaticBoxSizer, 0, wxGROW|wxALL, 5);
 
-	sbkStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Force new page for each song"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_styleSheet->m_songNewPage)), 1, wxEXPAND | wxALL, 5);
+	sbkStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Force new page for each song"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_songNewPage)), 1, wxEXPAND | wxALL, 5);
 
 	// --------------------------------------------------------------------------------------
    	// global stuff
@@ -279,30 +275,28 @@ void SongStyleSheetDlg::OnSelFont(wxCommandEvent &event)
     int fontIx = fontSelType->GetSelection();
     if (fontIx != wxNOT_FOUND && fontIx >= 0 && fontIx < BS_FONT_LAST)
     {
-        //std::cout << "selected item is " << fontIx << std::endl;
-
         // fonts stuff
         wxFontData fontData;
-        fontData.SetInitialFont(m_fonts[fontIx]);
+        fontData.SetInitialFont(mStyleSheet.m_fonts[fontIx]);
         //data.SetColour(canvasTextColour);
         wxFontDialog dialog(this, &fontData);
         if (dialog.ShowModal() == wxID_OK)
         {
             wxFontData retData = dialog.GetFontData();
-            m_fonts[fontIx] = retData.GetChosenFont();
-            fontTextTitles[fontIx]->SetFont(m_fonts[fontIx]);
+            mStyleSheet.m_fonts[fontIx] = retData.GetChosenFont();
+            fontTextTitles[fontIx]->SetFont(mStyleSheet.m_fonts[fontIx]);
         }
     }
 }
 
 void SongStyleSheetDlg::OnLoad(wxCommandEvent &event)
 {
-	wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open Stylesheet File"), wxT("d:/"), _(""), _("*.ini"), wxOPEN, wxDefaultPosition);
+	wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open stylesheet file"), wxEmptyString, wxEmptyString, wxT("*.sst"), wxOPEN, wxDefaultPosition);
 	if (openFileDialog->ShowModal() == wxID_OK )
 	{
 		wxFileInputStream stream(openFileDialog->GetPath());
 		wxFileConfig *config = new wxFileConfig(stream);
-		m_styleSheet->LoadFromConfig(config);
+		mStyleSheet.LoadFromConfig(config);
 		delete(config);
 		TransferDataToWindow();
 	}
@@ -310,28 +304,32 @@ void SongStyleSheetDlg::OnLoad(wxCommandEvent &event)
 
 void SongStyleSheetDlg::OnSave(wxCommandEvent &event)
 {
+	wxFileDialog* saveDlg = new wxFileDialog(this, _("Save stylesheet file"), wxEmptyString, wxEmptyString, wxT("*.sst"), wxSAVE, wxDefaultPosition);
 
-	wxFileOutputStream stream(wxT("d:/bschords_stylesheet.ini"));
-	wxFileConfig *config = new wxFileConfig();
-	m_styleSheet->SaveToConfig(config);
-	config->Save(stream);
-	delete(config);
+	if (saveDlg->ShowModal() == wxID_OK )
+	{
+		wxFileOutputStream stream(saveDlg->GetPath());
+		wxFileConfig *config = new wxFileConfig();
+		mStyleSheet.SaveToConfig(config);
+		config->Save(stream);
+		delete(config);
+	}
 }
 
 bool SongStyleSheetDlg::TransferDataToWindow()
 {
-    m_pageWidth = wxString::Format(wxT("%d"), m_styleSheet->m_pageSize.GetWidth());
-    m_pageHeight = wxString::Format(wxT("%d"), m_styleSheet->m_pageSize.GetHeight());
+    m_pageWidth = wxString::Format(wxT("%d"), mStyleSheet.m_pageSize.GetWidth());
+    m_pageHeight = wxString::Format(wxT("%d"), mStyleSheet.m_pageSize.GetHeight());
 
-	m_marginLeft = wxString::Format(wxT("%d"), m_styleSheet->m_marginLeft);
-	m_marginTop = wxString::Format(wxT("%d"), m_styleSheet->m_marginTop);
-	m_marginRight = wxString::Format(wxT("%d"), m_styleSheet->m_marginRight);
-	m_marginBottom = wxString::Format(wxT("%d"), m_styleSheet->m_marginBottom);
+	m_marginLeft = wxString::Format(wxT("%d"), mStyleSheet.m_marginLeft);
+	m_marginTop = wxString::Format(wxT("%d"), mStyleSheet.m_marginTop);
+	m_marginRight = wxString::Format(wxT("%d"), mStyleSheet.m_marginRight);
+	m_marginBottom = wxString::Format(wxT("%d"), mStyleSheet.m_marginBottom);
 
-	m_cols = wxString::Format(wxT("%d"), m_styleSheet->m_cols);
-	m_lineSpacing = wxString::Format(wxT("%d"), m_styleSheet->m_lineSpacing);
-	m_lineChordSpacing = wxString::Format(wxT("%d"), m_styleSheet->m_chordLineSpacing);
-	m_indentChorus = wxString::Format(wxT("%d"), m_styleSheet->m_indentChorus);
+	m_cols = wxString::Format(wxT("%d"), mStyleSheet.m_cols);
+	m_lineSpacing = wxString::Format(wxT("%d"), mStyleSheet.m_lineSpacing);
+	m_lineChordSpacing = wxString::Format(wxT("%d"), mStyleSheet.m_chordLineSpacing);
+	m_indentChorus = wxString::Format(wxT("%d"), mStyleSheet.m_indentChorus);
 
     bool result = wxDialog::TransferDataToWindow();
 
@@ -347,18 +345,18 @@ bool SongStyleSheetDlg::TransferDataFromWindow()
 {
 	bool result = wxDialog::TransferDataFromWindow();
 
-	m_styleSheet->m_pageSize.SetWidth(wxAtoi(m_pageWidth));
-	m_styleSheet->m_pageSize.SetHeight(wxAtoi(m_pageHeight));
+	mStyleSheet.m_pageSize.SetWidth(wxAtoi(m_pageWidth));
+	mStyleSheet.m_pageSize.SetHeight(wxAtoi(m_pageHeight));
 
-	m_styleSheet->m_marginLeft = wxAtoi(m_marginLeft);
-	m_styleSheet->m_marginTop = wxAtoi(m_marginTop);
-	m_styleSheet->m_marginRight = wxAtoi(m_marginRight);
-	m_styleSheet->m_marginBottom = wxAtoi(m_marginBottom);
+	mStyleSheet.m_marginLeft = wxAtoi(m_marginLeft);
+	mStyleSheet.m_marginTop = wxAtoi(m_marginTop);
+	mStyleSheet.m_marginRight = wxAtoi(m_marginRight);
+	mStyleSheet.m_marginBottom = wxAtoi(m_marginBottom);
 
-	m_styleSheet->m_cols = wxAtoi(m_cols);
-	m_styleSheet->m_lineSpacing = wxAtoi(m_lineSpacing);
-	m_styleSheet->m_chordLineSpacing = wxAtoi(m_lineChordSpacing);
-	m_styleSheet->m_indentChorus = wxAtoi(m_indentChorus);
+	mStyleSheet.m_cols = wxAtoi(m_cols);
+	mStyleSheet.m_lineSpacing = wxAtoi(m_lineSpacing);
+	mStyleSheet.m_chordLineSpacing = wxAtoi(m_lineChordSpacing);
+	mStyleSheet.m_indentChorus = wxAtoi(m_indentChorus);
 
 	return result;
 }

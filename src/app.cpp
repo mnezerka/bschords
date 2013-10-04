@@ -69,6 +69,9 @@ IMPLEMENT_APP(App);
 
 bool App::OnInit()
 {
+	// initialize image handlers (for JPG, PNG, ... support)
+	wxInitAllImageHandlers();
+
 	// load and initialize configuration data
 	config = new wxConfig(_("BSChords"));
 

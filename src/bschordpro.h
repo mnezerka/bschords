@@ -35,21 +35,23 @@ namespace bschordpro
 	class EventHandler
 	{
 		public:
-			// called on begin of parsed document
+			/// called on begin of parsed document
 			virtual void onBegin() {};
-			// called after document is parsed
+			/// called after document is parsed
 			virtual void onEnd() {};
-			// called at the beginning of parsed line
+			/// called at the beginning of parsed line
 			virtual void onLineBegin() {};
-			// called at the end of parsed line
+			/// called at the end of parsed line
 			virtual void onLineEnd() {};
-			// called when command is found
+			/// called when command is found
 			virtual void onCommand(const CommandType command, const std::wstring& value, const RawPos &pos) {};
-			// called for each chord on line
+			/// called when unknown (unsupported) command is found
+			virtual void onCommandUnknown(const std::wstring &cmd, const std::wstring &value, const RawPos &pos) {};
+			/// called for each chord on line
 			virtual void onChord(const std::wstring& chord, const RawPos &pos) {};
-			// called for each text fragment on line (separators are spaces and chords)
+			/// called for each text fragment on line (separators are spaces and chords)
 			virtual void onText(const std::wstring& text, const RawPos &pos) {};
-			// called for preformatted line (e.g. inside tab section)
+			/// called for preformatted line (e.g. inside tab section)
 			virtual void onLine(const std::wstring& line, const RawPos &pos) {};
 	};
 

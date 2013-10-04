@@ -470,9 +470,17 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 
 void TSetPage::draw()
 {
+
+	//my_toucan_scaled_normal = wxBitmap(image.Scale(110,90,wxIMAGE_QUALITY_NORMAL));
+    //my_toucan_scaled_high = wxBitmap(image.Scale(110,90,wxIMAGE_QUALITY_HIGH));
+
+
 	// draw white (paper) background
 	mPainter->m_dc.DrawRectangle(0, 0, mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetWidth()) , mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetHeight()));
 	mPainter->m_dc.SetBackgroundMode(wxTRANSPARENT);
+
+	if (mPainter->mBitmapBackground)
+		mPainter->m_dc.DrawBitmap(*(mPainter->mBitmapBackground), 0, 0);
 
 	// draw gray border to see typesetting area (margins)
 	if (mPainter->m_drawTsetMargins)
@@ -523,7 +531,7 @@ void TSetPage::draw()
 
 TSetDCPainter::TSetDCPainter(wxDC& dc, float scale)
 	: m_drawTsetBlocks(false), m_drawTsetMargins(false), m_ss(NULL), m_dc(dc), m_posX(0), m_posXChord(0),
-	m_eMHeight(0),m_verseCounter(0), m_section(SECTION_NONE), m_isLineEmpty(true), m_scale(scale), m_curBlock(NULL)
+	m_eMHeight(0),m_verseCounter(0), m_section(SECTION_NONE), m_isLineEmpty(true), m_scale(scale), m_curBlock(NULL), mBitmapBackground(NULL)
 {
 	//m_dcPPI = dc.GetPPI();
 	//cout << "DC Painter PPI: (" << m_dcPPI.GetWidth() << "x" << m_dcPPI.GetHeight() << ")" << endl;
@@ -540,6 +548,7 @@ TSetDCPainter::~TSetDCPainter()
 		delete m_pages.back();
 		m_pages.pop_back();
 	}
+	delete(mBitmapBackground);
 }
 
 wxCoord TSetDCPainter::getDeviceX(int numMM)
@@ -559,7 +568,7 @@ wxCoord TSetDCPainter::getDeviceY(int numMM)
 
 void TSetDCPainter::onBegin()
 {
-	//cout << "OnBegin" << endl;
+	wxLogDebug(wxT("TSetDCPainter::OnBegin()"));
 
 	// prepare rectangle representation of "drawable" page space (paper - margins)
 	//wxPoint pos(getDeviceX(m_ss->m_marginLeft), getDeviceY(m_ss->m_marginTop));
@@ -574,6 +583,14 @@ void TSetDCPainter::onBegin()
 	m_curPage = new TSetPage(this, mPageRect);
 	m_pages.push_back(m_curPage);
 	m_stat.m_pages++;
+
+	wxImage img;
+	bool loadOk = img.LoadFile(wxT("d:\\tree_bg_xxx.png"));
+	if (loadOk)
+	{
+		wxLogDebug(wxT("Image loaded with result %d"), loadOk);
+		mBitmapBackground = new wxBitmap(img.Scale(getDeviceX(m_ss->m_pageSize.GetWidth()), getDeviceX(m_ss->m_pageSize.GetHeight()), wxIMAGE_QUALITY_HIGH));
+	}
 }
 
 void TSetDCPainter::onEnd()
@@ -729,6 +746,40 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 			m_curBlock = NULL;
 		}
 		// else igonre end of chorus command
+	}
+}
+
+void TSetDCPainter::onCommandUnknown(const std::wstring &cmdId, const std::wstring &value, const bschordpro::RawPos &pos)
+{
+	std::wcout << L"Unknown command " << cmdId << " -> " << value << std::endl;
+
+	if (cmdId == L"bschords_section")
+	{
+		// check if we are inside some block and block must be closed before new command
+		if (m_curBlock != NULL)
+		addBlock(m_curBlock);
+		m_curBlock = NULL;
+
+		// force page break
+		AddPageBreak();
+
+		TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_SECTION_TITLE, wxGetApp().m_styleSheet.m_fonts[BS_FONT_SECTION_TITLE]);
+		block->setTxt(value);
+		addBlock(block);
+	}
+	else if (cmdId == L"bschords_title_page")
+	{
+		// check if we are inside some block and block must be closed before new command
+		if (m_curBlock != NULL)
+		addBlock(m_curBlock);
+		m_curBlock = NULL;
+
+		// force page break
+		AddPageBreak();
+
+		TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_MAIN_PAGE_TITLE, wxGetApp().m_styleSheet.m_fonts[BS_FONT_MAIN_TITLE]);
+		block->setTxt(value);
+		addBlock(block);
 	}
 }
 

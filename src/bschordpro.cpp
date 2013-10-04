@@ -362,8 +362,10 @@ void Parser::parseCommand(const std::wstring &strBuffer, const RawPos &p)
 		else if (cmdId == ::cmdComment || cmdId == ::cmdCommentShort)
 			cmdType = CMD_COMMENT;
 
-
-        m_eventHandler->onCommand(cmdType, cmdVal, p);
+		if (cmdType == CMD_NONE)
+			m_eventHandler->onCommandUnknown(cmdId, cmdVal, p);
+		else
+			m_eventHandler->onCommand(cmdType, cmdVal, p);
     }
 }
 

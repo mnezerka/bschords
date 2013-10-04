@@ -243,18 +243,6 @@
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
-		<Unit filename="src/song.cpp">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
-		<Unit filename="src/song.h">
-			<Option target="debug_win" />
-			<Option target="release_win" />
-			<Option target="debug_linux" />
-			<Option target="release_linux" />
-		</Unit>
 		<Unit filename="src/songbook.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />
@@ -268,6 +256,18 @@
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 			<Option target="cli_debug_linux" />
+		</Unit>
+		<Unit filename="src/songbookdlg.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/songbookdlg.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
 		</Unit>
 		<Unit filename="src/songbookwnd.cpp">
 			<Option target="debug_win" />

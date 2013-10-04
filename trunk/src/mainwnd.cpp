@@ -742,17 +742,14 @@ void MainWnd::OnPreferences(wxCommandEvent &event)
 
 void MainWnd::OnStyleSheet(wxCommandEvent &event)
 {
-	SongStyleSheetDlg* dlg = new SongStyleSheetDlg(0L, _("Song Stylesheet Preferences"), &wxGetApp().m_styleSheet);
-	//dlg->m_pageWidth << wxGetApp().m_styleSheet.m_pageSize.GetWidth();
+	SongStyleSheetDlg* dlg = new SongStyleSheetDlg(0L, _("Stylesheet Preferences"), &wxGetApp().m_styleSheet);
 
 	if (dlg->ShowModal() == wxID_OK)
     {
-        // copy font information from preferences to application
-        for (int i = 0; i < BS_FONT_LAST; i++)
-        {
-            //std::cout << i << " native info: " << dlg->m_fonts[i].GetNativeFontInfoDesc().mb_str(wxConvUTF8) << std::endl;
-            wxGetApp().m_styleSheet.m_fonts[i] = dlg->m_fonts[i];
-        }
+		// copy settings from dialog into application stylesheet
+		wxGetApp().m_styleSheet = dlg->mStyleSheet;
+
+		// update preview window
 		m_preview->Refresh();
 		m_preview->Update();
     }
@@ -761,7 +758,6 @@ void MainWnd::OnStyleSheet(wxCommandEvent &event)
 
 void MainWnd::OnViewPane(wxCommandEvent& event)
 {
-	wxLogDebug(wxT("OnViewPane"));
 	wxMenuBar *mBar = GetMenuBar();
 
 	switch (event.GetId())
@@ -877,16 +873,24 @@ void MainWnd::OnAbout(wxCommandEvent &event)
 
 void MainWnd::OnSongContentChange(wxCommandEvent& event)
 {
+	wxLogDebug(wxT("MainWnd::OnSongContentChange()::enter"));
+
 	UpdateTitle();
-	m_preview->Refresh();
-	m_preview->Update();
+	//m_preview->Refresh();
+	//m_preview->Update();
+
+	wxLogDebug(wxT("MainWnd::OnSongContentChange()::leave"));
 }
 
 void MainWnd::OnSongEditorChange(wxStyledTextEvent& event)
 {
+	wxLogDebug(wxT("MainWnd::OnSongEditorChange()::enter"));
+
 	UpdateTitle();
-	m_preview->Refresh();
-	m_preview->Update();
+	//m_preview->Refresh();
+	//m_preview->Update();
+
+	wxLogDebug(wxT("MainWnd::OnSongEditorChange()::leave"));
 }
 
 /*
@@ -1111,6 +1115,8 @@ void MainWnd::OnFSBrowserItemMenu(wxTreeEvent& event)
 
 void MainWnd::OpenFile(const wxString filePath)
 {
+	wxLogDebug(wxT("MainWnd::OpenFile()::enter"));
+
 	CloseFile();
 
 	wxFileName fileName(filePath);
@@ -1160,8 +1166,11 @@ void MainWnd::OpenFile(const wxString filePath)
             m_songContent->SetText(contents);
             m_songContent->EmptyUndoBuffer();
             m_songContent->SetSavePoint();
+           	m_preview->Refresh();
+			m_preview->Update();
         }
     }
+    	wxLogDebug(wxT("MainWnd::OpenFile()::leave"));
 }
 
 void MainWnd::CloseFile()
@@ -1178,6 +1187,8 @@ void MainWnd::CloseFile()
 	m_songContent->EmptyUndoBuffer();
 	m_songContent->SetSavePoint();
 	UpdateTitle();
+	m_preview->Refresh();
+	m_preview->Update();
 }
 
 void MainWnd::SaveFile()
@@ -1215,6 +1226,8 @@ void MainWnd::SaveFile()
 		{
 			m_songContent->SetSavePoint();
 			UpdateTitle();
+			m_preview->Refresh();
+			m_preview->Update();
 		}
 	}
 }

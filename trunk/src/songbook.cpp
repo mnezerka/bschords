@@ -39,6 +39,11 @@ wxXmlNode* SongBookSection::createXmlNode(wxString basePath)
 	return sectionNode;
 }
 
+wxString SongBookSection::getContents()
+{
+	return (wxT("{bschords_section: ") + mTitle + wxT("}"));
+}
+
 /* ------------------- SongBookSong --------------------------------------- */
 SongBookSong::SongBookSong(wxString path)
 {
@@ -307,6 +312,13 @@ unsigned int SongBook::getCount()
 wxString SongBook::getContents()
 {
 	wxString result;
+
+	result.Append(wxT("{bschords_title_page: "));
+	result.Append(mName);
+	//result.Append(wxT(":"));
+	//result.Append(mDescription);
+	result.Append(wxT("}\n"));
+
 	unsigned int i = 0;
 	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
 	{

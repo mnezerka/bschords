@@ -16,6 +16,8 @@ enum {
     BS_FONT_CHORDS,
     BS_FONT_TAB,
     BS_FONT_STRUCT,
+    BS_FONT_MAIN_TITLE,
+    BS_FONT_SECTION_TITLE,
     BS_FONT_LAST
 };
 
@@ -59,7 +61,7 @@ class SongStyleSheet
 		bool m_songNewPage;
 
 		SongStyleSheet();
-		virtual ~SongStyleSheet();
+		~SongStyleSheet();
 		void LoadFromConfig(const wxConfigBase *config);
 		void SaveToConfig(wxConfigBase *config);
 		static wxString getFontName(unsigned int index);

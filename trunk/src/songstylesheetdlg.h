@@ -27,7 +27,7 @@ class SongStyleSheetDlg: public wxDialog
         SongStyleSheetDlg(wxDialog *dlg, const wxString& title, SongStyleSheet *styleSheet);
         bool TransferDataToWindow();
         bool TransferDataFromWindow();
-        wxFont m_fonts[BS_FONT_LAST];
+        //wxFont m_fonts[BS_FONT_LAST];
         wxString m_pageWidth;
         wxString m_pageHeight;
         wxString m_marginLeft;
@@ -38,6 +38,7 @@ class SongStyleSheetDlg: public wxDialog
         wxString m_cols;
         wxString m_lineSpacing;
         wxString m_lineChordSpacing;
+		SongStyleSheet mStyleSheet;
 
     protected:
         enum
@@ -54,9 +55,8 @@ class SongStyleSheetDlg: public wxDialog
         wxStaticText *fontTextTitles[BS_FONT_LAST];
         wxComboBox *fontSelType;
 
-    private:
-		SongStyleSheet *m_styleSheet;
 
+    private:
         void OnClose(wxCloseEvent& event);
         void OnQuit(wxCommandEvent& event);
         void OnSelFont(wxCommandEvent &event);

@@ -63,7 +63,9 @@ namespace bschords
 			BLTYPE_COMMENT,
 			BLTYPE_TAB,
 			BLTYPE_STRUCT,
-			BLTYPE_VERSE };
+			BLTYPE_VERSE,
+			BLTYPE_SECTION_TITLE,
+			BLTYPE_MAIN_PAGE_TITLE };
 
 		TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos), mMaxWidth(0) { };
 		virtual ~TSetBlock() { }
@@ -210,6 +212,7 @@ namespace bschords
 			virtual void onLineBegin();
 			virtual void onLineEnd();
 			virtual void onCommand(const bschordpro::CommandType command, const std::wstring& value, const bschordpro::RawPos &pos);
+			virtual void onCommandUnknown(const std::wstring &cmdId, const std::wstring &value, const bschordpro::RawPos &pos);
 			virtual void onChord(const std::wstring& chord, const bschordpro::RawPos &pos);
 			virtual void onText(const std::wstring& text, const bschordpro::RawPos &pos);
 			virtual void onLine(const std::wstring& line, const bschordpro::RawPos &pos);
@@ -243,6 +246,7 @@ namespace bschords
 			TSetPage *m_curPage;
 			TSetLine *m_curLine;
 			TSetStat m_stat;
+			wxBitmap *mBitmapBackground;
 		private:
 			//TSetStat m_stat;
 			wxRect mPageRect;

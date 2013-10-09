@@ -59,6 +59,12 @@ class SongStyleSheet
 		bool m_equalLineHeights;
 		/// force new page for song (starting with song title)
 		bool m_songNewPage;
+		/// show (print) songbook title page
+		bool m_songbookTitlePage;
+		/// show (print) songbook section pages
+		bool m_songbookSectionPages;
+		/// show (print) songbook table of contents
+		bool m_songbookToc;
 
 		SongStyleSheet();
 		~SongStyleSheet();

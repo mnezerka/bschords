@@ -10,10 +10,127 @@
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
 
+#include "app.h"
 #include "bschordpro.h"
 #include "songbook.h"
 
 using namespace bschords;
+
+/* ------------------- SongBookWriterHtml --------------------------------------- */
+
+class SongBookWriterHtml : public bschordpro::EventHandler
+{
+	public:
+		SongBookWriterHtml(SongBook *songbook) : mSongbook(songbook) { };
+		void write(const wxString &path);
+	private:
+		SongBook *mSongbook;
+		wxFile mFile;
+		std::vector<std::wstring> mLineChordBuffer;
+		std::vector<std::wstring> mLineTextBuffer;
+
+		virtual void onBegin();
+		virtual void onEnd();
+		virtual void onLineBegin();
+		virtual void onLineEnd();
+		virtual void onCommand(const bschordpro::CommandType command, const std::wstring& value, const bschordpro::RawPos &pos);
+		//virtual void onCommandUnknown(const std::wstring &cmd, const std::wstring &value, const RawPos &pos) {};
+		virtual void onChord(const std::wstring& chord, const bschordpro::RawPos &pos);
+		virtual void onText(const std::wstring& text, const bschordpro::RawPos &pos);
+		//virtual void onLine(const std::wstring& line, const RawPos &pos) {};
+};
+
+void SongBookWriterHtml::onBegin()
+{
+    if (!mFile.IsOpened())
+		return;
+	mFile.Write(wxT("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-strict.dtd\">"));
+	mFile.Write(wxT("<html>\n"));
+	mFile.Write(wxT("  <head>\n"));
+	mFile.Write(wxT("    <meta charset=\"UTF-8\" />\n"));
+	mFile.Write(wxString::Format(wxT("    <title>Songbook: %s</title>\n"), mSongbook->getName().wc_str()), wxConvUTF8);
+	mFile.Write(wxT("  </head>\n"));
+	mFile.Write(wxT("<body>\n"));
+
+	if (wxGetApp().m_styleSheet.m_songbookTitlePage)
+		mFile.Write(wxString::Format(wxT("<h1>%s</h1>\n"), mSongbook->getName().wc_str()), wxConvUTF8);
+}
+
+void SongBookWriterHtml::onEnd()
+{
+    if (!mFile.IsOpened())
+		return;
+
+	mFile.Write(wxT("</body>\n"));
+	mFile.Write(wxT("</html>\n"));
+}
+
+void SongBookWriterHtml::onLineBegin()
+{
+	mLineChordBuffer.clear();
+	mLineTextBuffer.clear();
+}
+
+void SongBookWriterHtml::onLineEnd()
+{
+	mFile.Write(wxT("<table>\n"));
+	if (mLineChordBuffer.size() > 0)
+	{
+		mFile.Write(wxT("  <tr>\n"));
+		for (std::vector<std::wstring>::iterator it = mLineChordBuffer.begin(); it != mLineChordBuffer.end(); it++)
+			mFile.Write(wxString::Format(wxT("<th>%s</th>"), (*it).c_str()), wxConvUTF8);
+		mFile.Write(wxT("  </tr>\n"));
+	}
+	mFile.Write(wxT("  <tr>\n"));
+	for (std::vector<std::wstring>::iterator it = mLineTextBuffer.begin(); it != mLineTextBuffer.end(); it++)
+		mFile.Write(wxString::Format(wxT("<td>%s</td>"), (*it).c_str()), wxConvUTF8);
+	mFile.Write(wxT("  </tr>\n"));
+	mFile.Write(wxT("</table>\n"));
+}
+
+void SongBookWriterHtml::onChord(const std::wstring& chord, const bschordpro::RawPos &pos)
+{
+	//if (mLineChordBuffer.Empty())
+	mLineChordBuffer.push_back(chord);
+
+	//mFile.Write(wxString::Format(wxT("<td>%s</td>\n"), chord.c_str()), wxConvUTF8);
+}
+
+void SongBookWriterHtml::onText(const std::wstring& text, const bschordpro::RawPos &pos)
+{
+	mLineTextBuffer.push_back(text);
+	while (mLineChordBuffer.size() < mLineTextBuffer.size())
+		mLineChordBuffer.push_back(L"");
+	//mFile.Write(wxString::Format(wxT("<td>%s</td>\n"), text.c_str()), wxConvUTF8);
+}
+
+void SongBookWriterHtml::onCommand(const bschordpro::CommandType command, const std::wstring& value, const bschordpro::RawPos &pos)
+{
+	if (command == bschordpro::CMD_TITLE)
+    {
+    	mFile.Write(wxString::Format(wxT("<h2>%s</h2>\n"), value.c_str()), wxConvUTF8);
+	}
+	else if (command == bschordpro::CMD_SUBTITLE)
+    {
+    	mFile.Write(wxString::Format(wxT("<h3>%s</h3>\n"), value.c_str()), wxConvUTF8);
+	}
+}
+
+
+
+void SongBookWriterHtml::write(const wxString &path)
+{
+	wxLogDebug(wxT("export songbook to html"));
+
+	mFile.Open(path, wxFile::write);
+
+	//wxString contents = mSongbook.getContents();
+	bschordpro::Parser p(this);
+	p.parse(mSongbook->getContents().wc_str());
+
+	mFile.Close();
+}
+
 
 
 /* ------------------- SongBookItem --------------------------------------- */
@@ -22,6 +139,11 @@ SongBookItem::~SongBookItem()
 
 }
 /* ------------------- SongBookSection ------------------------------------ */
+
+bool SongBookSection::isPrintable()
+{
+	return wxGetApp().m_styleSheet.m_songbookSectionPages;
+}
 
 void SongBookSection::readFromXmlNode(wxXmlNode *node, wxString basePath)
 {
@@ -41,7 +163,10 @@ wxXmlNode* SongBookSection::createXmlNode(wxString basePath)
 
 wxString SongBookSection::getContents()
 {
-	return (wxT("{bschords_section: ") + mTitle + wxT("}"));
+	if (wxGetApp().m_styleSheet.m_songbookSectionPages)
+		return (wxT("{bschords_section: ") + mTitle + wxT("}"));
+	else
+		return (wxT(""));
 }
 
 /* ------------------- SongBookSong --------------------------------------- */
@@ -313,11 +438,14 @@ wxString SongBook::getContents()
 {
 	wxString result;
 
-	result.Append(wxT("{bschords_title_page: "));
-	result.Append(mName);
-	//result.Append(wxT(":"));
-	//result.Append(mDescription);
-	result.Append(wxT("}\n"));
+	if (wxGetApp().m_styleSheet.m_songbookTitlePage)
+	{
+		result.Append(wxT("{bschords_title_page: "));
+		result.Append(mName);
+		//result.Append(wxT(":"));
+		//result.Append(mDescription);
+		result.Append(wxT("}\n"));
+	}
 
 	unsigned int i = 0;
 	for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
@@ -437,4 +565,11 @@ void SongBook::setPrintFlagForSelected(bool printFlag)
 		if ((*it)->isSelected())
 			(*it)->setPrintFlag(printFlag);
 	}
+}
+
+void SongBook::exportHtml(const wxString path)
+{
+	SongBookWriterHtml writer(this);
+	writer.write(wxT("d:\\export.html"));
+
 }

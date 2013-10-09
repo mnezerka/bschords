@@ -45,6 +45,26 @@ wxRect TSetBlockHSpace::getBoundingRect()
 	return result;
 }
 
+// ------- TSetBlockToc  --------------------------------------------------------
+
+wxRect TSetBlockToc::getBoundingRect()
+{
+	wxRect result;
+
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+	result.SetHeight(m_painter->m_dc.GetCharHeight());
+	result.SetWidth(60);
+
+	return result;
+}
+
+void TSetBlockToc::draw()
+{
+	// typeset chord line (chord items)
+	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+	m_painter->m_dc.DrawText(wxT("Contents"), mPos.x, mPos.y);
+}
+
 // ------- TSetBlockText  ----------------------------------------------------------
 bool TSetBlockText::hasChords()
 {
@@ -272,6 +292,22 @@ std::vector< std::vector<TSetStructItem> > TSetBlockStruct::prepare()
 	for (size_t lineIx = 0; lineIx < m_lines.size(); lineIx++)
 	{
 		wxString *line = m_lines[lineIx];
+
+		// ignore empty lines
+		if (line->Length() == 0)
+		{
+			result[lineIx].push_back(TSetStructItem(*line, -1));
+			continue;
+		}
+
+		// ignore lines that are not struct
+		if (line->GetChar(0) != wxChar('/'))
+		{
+			result[lineIx].push_back(TSetStructItem(*line, -1));
+			continue;
+		}
+
+		// configure tokenizer - set separator and string to be tokenized
 		tkBars.SetString(*line, wxT("/"), wxTOKEN_RET_EMPTY);
 		// loop over bars
 		while (tkBars.HasMoreTokens())
@@ -331,6 +367,10 @@ void TSetBlockStruct::getSizeParams(std::vector< std::vector<TSetStructItem> > i
 		float numLineSize = 0;
 		for (std::vector<TSetStructItem>::iterator it = (*lineIt).begin(); it != (*lineIt).end(); it++)
 		{
+			// skip non struct items
+			if ((*it).mSize == -1)
+				continue;
+
 			size_t l = (*it).mChord.Length();
 			if (l > maxChord.Length())
 				maxChord = (*it).mChord;
@@ -341,7 +381,7 @@ void TSetBlockStruct::getSizeParams(std::vector< std::vector<TSetStructItem> > i
 		if (numLineSize > numMaxLineSize)
 			numMaxLineSize = numLineSize;
 	}
-	numCellSize = m_painter->m_dc.GetTextExtent(maxChord).GetWidth() + m_painter->m_dc.GetCharWidth() * 2;
+	numCellSize = m_painter->m_dc.GetTextExtent(maxChord).GetWidth() + m_painter->m_dc.GetCharWidth();
 }
 
 void TSetBlockStruct::draw()
@@ -360,8 +400,19 @@ void TSetBlockStruct::draw()
 	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_STRUCT]);
 	for (std::vector< std::vector<TSetStructItem> >::iterator lineIt = st.begin(); lineIt != st.end(); lineIt++)
 	{
+		bool lineHasCells = false;
 		for (std::vector<TSetStructItem>::iterator it = (*lineIt).begin(); it != (*lineIt).end(); it++)
 		{
+			// draw non struct item and finish line
+			if ((*it).mSize == -1)
+			{
+				m_painter->m_dc.DrawText((*it).mChord, pos);
+				lineHasCells = false;
+				break;
+			}
+
+			lineHasCells = true;
+
 			// draw separator
 			if (numLinePos == (long)numLinePos)
 			{
@@ -373,7 +424,8 @@ void TSetBlockStruct::draw()
 			numLinePos += (*it).mSize;
 		}
 		// draw last separator
-		m_painter->m_dc.DrawText(wxChar('/'), pos);
+		if (lineHasCells)
+			m_painter->m_dc.DrawText(wxChar('/'), pos);
 
 		// move graphic cursor to next line
 		pos.x = mPos.x;
@@ -476,11 +528,16 @@ void TSetPage::draw()
 
 
 	// draw white (paper) background
+	mPainter->m_dc.SetBackgroundMode(wxSOLID);
 	mPainter->m_dc.DrawRectangle(0, 0, mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetWidth()) , mPainter->getDeviceX(mPainter->m_ss->m_pageSize.GetHeight()));
 	mPainter->m_dc.SetBackgroundMode(wxTRANSPARENT);
 
 	if (mPainter->mBitmapBackground)
-		mPainter->m_dc.DrawBitmap(*(mPainter->mBitmapBackground), 0, 0);
+	{
+		//mPainter->m_dc.SetBackground(wxWHITE_BRUSH);
+		mPainter->m_dc.DrawBitmap(*(mPainter->mBitmapBackground), 0, 0, true);
+	}
+
 
 	// draw gray border to see typesetting area (margins)
 	if (mPainter->m_drawTsetMargins)
@@ -568,8 +625,6 @@ wxCoord TSetDCPainter::getDeviceY(int numMM)
 
 void TSetDCPainter::onBegin()
 {
-	wxLogDebug(wxT("TSetDCPainter::OnBegin()"));
-
 	// prepare rectangle representation of "drawable" page space (paper - margins)
 	//wxPoint pos(getDeviceX(m_ss->m_marginLeft), getDeviceY(m_ss->m_marginTop));
 	wxRect pageRect(
@@ -585,10 +640,10 @@ void TSetDCPainter::onBegin()
 	m_stat.m_pages++;
 
 	wxImage img;
-	bool loadOk = img.LoadFile(wxT("d:\\tree_bg_xxx.png"));
+	bool loadOk = img.LoadFile(wxT("d:\\images\\backgrounds\\foggy_forest_bg.jpg"));
 	if (loadOk)
 	{
-		wxLogDebug(wxT("Image loaded with result %d"), loadOk);
+		//wxLogDebug(wxT("Image loaded with result %d, hasAlpha=%d"), loadOk, img.HasAlpha());
 		mBitmapBackground = new wxBitmap(img.Scale(getDeviceX(m_ss->m_pageSize.GetWidth()), getDeviceX(m_ss->m_pageSize.GetHeight()), wxIMAGE_QUALITY_HIGH));
 	}
 }
@@ -781,6 +836,23 @@ void TSetDCPainter::onCommandUnknown(const std::wstring &cmdId, const std::wstri
 		block->setTxt(value);
 		addBlock(block);
 	}
+	else if (cmdId == L"bschords_toc")
+	{
+		// check if we are inside some block and block must be closed before new command
+		if (m_curBlock != NULL)
+		addBlock(m_curBlock);
+		m_curBlock = NULL;
+
+		// force page break
+		AddPageBreak();
+
+		TSetBlockToc *block = new TSetBlockToc(this);
+
+
+
+		addBlock(block);
+	}
+
 }
 
 void TSetDCPainter::onLine(const std::wstring& line, const bschordpro::RawPos &pos)

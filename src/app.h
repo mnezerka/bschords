@@ -28,6 +28,8 @@ http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
 */
 
+// TODO: new block type for inserting images into song)
+// TODO: fix bitmap reloading and scaling for each draw
 // TODO: colors for fonts
 // TODO: songbook: contents both with and without page numbers
 // TODO: show warning when overwriting existing file

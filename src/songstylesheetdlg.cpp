@@ -248,6 +248,9 @@ wxPanel* SongStyleSheetDlg::CreateContentPage(wxWindow* parent)
     col0->Add(sbkStaticBoxSizer, 0, wxGROW|wxALL, 5);
 
 	sbkStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Force new page for each song"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_songNewPage)), 1, wxEXPAND | wxALL, 5);
+	sbkStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show (print) table of contents"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_songbookToc)), 1, wxEXPAND | wxALL, 5);
+	sbkStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show (print) title page"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_songbookTitlePage)), 1, wxEXPAND | wxALL, 5);
+	sbkStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show (print) section pages"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.m_songbookSectionPages)), 1, wxEXPAND | wxALL, 5);
 
 	// --------------------------------------------------------------------------------------
    	// global stuff

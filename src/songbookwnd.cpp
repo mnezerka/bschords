@@ -43,7 +43,7 @@ BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
 	EVT_BUTTON(ID_BTN_NEW_SECTION, SongBookWnd::OnNewSection)
 	EVT_BUTTON(ID_BTN_UP, SongBookWnd::OnMoveUp)
 	EVT_BUTTON(ID_BTN_DOWN, SongBookWnd::OnMoveDown)
-	EVT_LIST_ITEM_ACTIVATED(ID_SONG_LIST, SongBookWnd::OnSongBookItemActivated)
+	EVT_LIST_ITEM_ACTIVATED(idSongBookListCtrlId, SongBookWnd::OnSongBookItemActivated)
 	EVT_LIST_ITEM_RIGHT_CLICK(ID_SONG_LIST, SongBookWnd::OnSongBookItemRightClick)
 	EVT_LIST_KEY_DOWN(ID_SONG_LIST, SongBookWnd::OnListKeyDown)
 	EVT_MENU(idActionDeleteSelected, SongBookWnd::OnDeleteSelected)
@@ -216,7 +216,6 @@ void SongBookWnd::Update()
 
 void SongBookWnd::OnSongBookItemActivated(wxListEvent& event)
 {
-    //std::cout << "item activated" << event.GetIndex() << event.ShouldPropagate() << std::endl;
     SongBookItem *item = wxGetApp().m_songBook.getItem(event.GetIndex());
     if (item)
     {

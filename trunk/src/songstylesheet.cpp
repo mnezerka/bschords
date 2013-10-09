@@ -21,6 +21,9 @@ SongStyleSheet::SongStyleSheet()
 	m_chordLineSpacing = 0;
 	m_cols = 1;
 	m_songNewPage = true;
+	m_songbookTitlePage = true;;
+	m_songbookSectionPages = true;
+	m_songbookToc = true;
 }
 
 SongStyleSheet::~SongStyleSheet()
@@ -56,6 +59,9 @@ void SongStyleSheet::LoadFromConfig(const wxConfigBase *config)
 		m_showStructs = config->Read(_("stylesheet/content/show-structs"), m_showStructs);
 		m_equalLineHeights = config->Read(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
 		m_songNewPage = config->Read(_("stylesheet/content/song-new-page"), m_songNewPage);
+		m_songbookTitlePage = config->Read(_("stylesheet/content/songbook-title-page"), m_songbookTitlePage);
+		m_songbookSectionPages = config->Read(_("stylesheet/content/songbook-section-pages"), m_songbookSectionPages);
+		m_songbookToc = config->Read(_("stylesheet/content/songbook-toc"), m_songbookToc);
 
 		// read fonts
 		for (int i = 0; i < BS_FONT_LAST; i++)
@@ -98,6 +104,9 @@ void SongStyleSheet::SaveToConfig(wxConfigBase *config)
 	config->Write(_("stylesheet/content/show-structs"), m_showStructs);
 	config->Write(_("stylesheet/content/equal-line-heights"), m_equalLineHeights);
 	config->Write(_("stylesheet/content/song-new-page"), m_songNewPage);
+	config->Write(_("stylesheet/content/songbook-title-page"), m_songbookTitlePage);
+	config->Write(_("stylesheet/content/songbook-section-pages"), m_songbookSectionPages);
+	config->Write(_("stylesheet/content/songbook-toc"), m_songbookToc);
 
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)

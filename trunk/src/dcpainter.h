@@ -65,7 +65,8 @@ namespace bschords
 			BLTYPE_STRUCT,
 			BLTYPE_VERSE,
 			BLTYPE_SECTION_TITLE,
-			BLTYPE_MAIN_PAGE_TITLE };
+			BLTYPE_MAIN_PAGE_TITLE,
+			BLTYPE_TOC };
 
 		TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos), mMaxWidth(0) { };
 		virtual ~TSetBlock() { }
@@ -107,6 +108,15 @@ namespace bschords
 		virtual void setTxt(wxString text) { mLine.setText(text); };
 		virtual void draw();
 		virtual TBlockType getType() { return mType; };
+		virtual wxRect getBoundingRect();
+	};
+
+	struct TSetBlockToc : public TSetBlock
+	{
+		TSetBlockToc(TSetDCPainter *painter, unsigned int pos = 0) : TSetBlock(painter, pos) { };
+		virtual ~TSetBlockToc() { }
+		virtual void draw();
+		virtual TBlockType getType() { return BLTYPE_TOC; };
 		virtual wxRect getBoundingRect();
 	};
 

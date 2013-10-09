@@ -43,7 +43,7 @@ namespace bschords
 			SongBookSection(wxXmlNode *node, wxString basePath) : SongBookItem() { readFromXmlNode(node, basePath); };
 			SongBookSection(wxString title) : mTitle(title) { };
 			virtual ~SongBookSection() { };
-			virtual bool isPrintable() { return true; };
+			virtual bool isPrintable();
 			virtual wxString getTitle() { return (mTitle); };
 			virtual void setTitle(wxString title) { mTitle = title; };
 			virtual wxString getContents();
@@ -100,6 +100,7 @@ namespace bschords
 			void setDescription(const wxString &description) { mDescription = description; mModified = true; }
 			wxString getDescription() { return mDescription; }
 			bool isModified() { return mModified; }
+			void exportHtml(const wxString path);
 		private:
 			std::list<SongBookItem *> m_items;
 			wxString m_basePath;

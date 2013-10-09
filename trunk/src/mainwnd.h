@@ -95,6 +95,7 @@ namespace bschords
 			void OnFilePrintSongBook(wxCommandEvent& event);
 			void OnFilePrintPreviewSongBook(wxCommandEvent& event);
 			void OnFilePageSetup(wxCommandEvent& event);
+			void OnFileExportSongbook(wxCommandEvent& event);
 
 			void OnSongInsert(wxCommandEvent& event);
 			void OnSongAddToSongbook(wxCommandEvent& event);

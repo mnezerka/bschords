@@ -98,6 +98,11 @@ enum
 	idMenuFilePrintSongbook,
 	idMenuFilePrintPreviewSongbook,
 
+	idMenuFileSongExportHtml,
+	idMenuFileSongExportAscii,
+	idMenuFileSongbookExportHtml,
+	idMenuFileSongbookExportAscii,
+
 	idMenuViewFileBrowser,
 	idMenuViewEditor,
 	idMenuViewSongPreview,
@@ -162,6 +167,7 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(idMenuFilePrintSongbook, MainWnd::OnFilePrintSongBook)
 	EVT_MENU(idMenuFilePrintPreviewSongbook, MainWnd::OnFilePrintPreviewSongBook)
 	EVT_MENU(wxID_PRINT_SETUP, MainWnd::OnFilePageSetup)
+	EVT_MENU(idMenuFileSongbookExportHtml, MainWnd::OnFileExportSongbook)
 	EVT_MENU(idMenuQuit, MainWnd::OnQuit)
 	EVT_MENU(idMenuPreferences, MainWnd::OnPreferences)
 	EVT_MENU(ID_MENU_STYLESHEET, MainWnd::OnStyleSheet)
@@ -223,7 +229,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	wxMenu* fileMenu = new wxMenu(_T(""));
 	fileMenu->Append(wxID_NEW, _("&New song"), _("Create a new song file"));
 	fileMenu->Append(wxID_OPEN, _("&Open song..."), _("Open a song file"));
-	fileMenu->Append(wxID_SAVE, _("&Save song"), _("Save the active song file"));
+	fileMenu->Append(wxID_SAVE, _("&Save song\tCtrl-S"), _("Save the active song file"));
 	fileMenu->Append(wxID_SAVEAS, _("Save song &as..."), _("Save the active song under different a name"));
 	fileMenu->Append(wxID_CLOSE, _("&Close song"), _("Close song file"));
 	fileMenu->AppendSeparator();
@@ -235,15 +241,29 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
 	fileMenu->Append(idMenuFileCloseSongBook, _("Close songbook"), _("Close songbook file"));
 	fileMenu->AppendSeparator();
 
-	fileMenu->Append(ID_MENU_FILE_EXPORT, _("&Export to PDF ..."), _("Export song file to PDF"));
-	fileMenu->AppendSeparator();
+	//fileMenu->Append(ID_MENU_FILE_EXPORT, _("&Export file to PDF ..."), _("Export song file to PDF"));
+	//fileMenu->Append(idMenuFileSongbookExport, _("&Export file to HTML ..."), _("Export song file to PDF"));
+
 	fileMenu->Append(wxID_PRINT_SETUP, _("Page setup..."), _("Page setup for printing"));
     fileMenu->Append(wxID_PRINT, _("&Print..."), _("Print"));
     fileMenu->Append(wxID_PREVIEW, _("Print Pre&view"), _("Preview"));
+    fileMenu->AppendSeparator();
+
     fileMenu->Append(idMenuFilePrintSongbook, _("Print Songbook ..."), _("Print"));
     fileMenu->Append(idMenuFilePrintPreviewSongbook, _("Songbook Print Preview"), _("Preview"));
 	fileMenu->AppendSeparator();
-	fileMenu->Append(wxID_ANY, _("Song &information..."), _("Close song file"));
+
+    wxMenu* songExportMenu = new wxMenu(_T(""));
+    songExportMenu->Append(idMenuFileSongExportHtml, wxT("HTML..."), _("Export songbook to HTML"));
+	songExportMenu->Append(idMenuFileSongExportAscii, wxT("ASCII..."), _("Export songbook to ASCII"));
+	fileMenu->AppendSubMenu(songExportMenu, _("Export song"), _("Export song"));
+
+    wxMenu* songbookExportMenu = new wxMenu(_T(""));
+	songbookExportMenu->Append(idMenuFileSongbookExportHtml, wxT("HTML..."), _("Export songbook to HTML"));
+	songbookExportMenu->Append(idMenuFileSongbookExportAscii, wxT("ASCII..."), _("Export songbook to ASCII"));
+	fileMenu->AppendSubMenu(songbookExportMenu, _("Export songbook"), _("Export songbook"));
+	fileMenu->AppendSeparator();
+
 	fileMenu->Append(idMenuQuit, _("&Quit\tAlt-F4"), _("Quit the application"));
 	mbar->Append(fileMenu, _("&File"));
 
@@ -696,6 +716,14 @@ void MainWnd::OnFilePageSetup(wxCommandEvent& event)
 
 	(*wxGetApp().m_printData) = pageSetupDialog.GetPageSetupDialogData().GetPrintData();
 	(*wxGetApp().m_pageSetupData) = pageSetupDialog.GetPageSetupDialogData();
+}
+
+void MainWnd::OnFileExportSongbook(wxCommandEvent& event)
+{
+	if (event.GetId() == idMenuFileSongbookExportHtml)
+	{
+		wxGetApp().m_songBook.exportHtml(wxT("d://export.html"));
+	}
 }
 
 void MainWnd::OnQuit(wxCommandEvent &event)

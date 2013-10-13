@@ -33,7 +33,7 @@
 #include "preferencesdlg.h"
 #include "songstylesheetdlg.h"
 #include "songbookdlg.h"
-//#include "bschordsicon.xpm"
+#include "bschordsicon.xpm"
 #include "dcpainter.h"
 
 using namespace bschords;

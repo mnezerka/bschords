@@ -281,6 +281,18 @@
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
+		<Unit filename="src/songdlg.cpp">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
+		<Unit filename="src/songdlg.h">
+			<Option target="debug_win" />
+			<Option target="release_win" />
+			<Option target="debug_linux" />
+			<Option target="release_linux" />
+		</Unit>
 		<Unit filename="src/songstylesheet.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />

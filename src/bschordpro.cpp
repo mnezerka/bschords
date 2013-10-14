@@ -49,14 +49,14 @@ void EventHandlerTxt::onLineBegin()
 void EventHandlerTxt::onLineEnd()
 {
     if (m_chordBuffer.find_first_not_of(L' ') != std::wstring::npos)
-        std::wcout << std::endl << m_chordBuffer << std::endl;
+        mOutput << std::endl << m_chordBuffer << std::endl;
 
-    std::wcout << m_textBuffer << std::endl;
+    mOutput << m_textBuffer << std::endl;
 }
 
 void EventHandlerTxt::onCommand(const CommandType command, const std::wstring& value, const RawPos &pos)
 {
-    std::wcout << L"command: " << command << L" with value: " << value;
+    mOutput << L"command: " << command << L" with value: " << value;
 }
 
 void EventHandlerTxt::onChord(const std::wstring& chord, const RawPos &pos)
@@ -84,6 +84,11 @@ void EventHandlerTxt::onLine(const std::wstring& line, const RawPos &pos)
     m_textBuffer.append(line);
 }
 
+std::wstring EventHandlerTxt::getOutput()
+{
+    std::wstring result = mOutput.str();
+    return result;
+}
 //////////////////////////////////////////////////////////////////////////////
 void Parser::parse(const std::wstring& s)
 {
@@ -531,21 +536,23 @@ class EventHandlerX1 : public EventHandler
 int main(int argc, char **argv)
 {
 	//EventHandler x;
-	//EventHandlerTxt y;
+	EventHandlerTxt y;
 	EventHandlerX1 x;
 	//x.onLine("ahoj");
 
 	//Parser p(&y);
-	//Parser p(&y);
-	Parser p(&x);
+	Parser p(&y);
+	//Parser p(&x);
 
     //p.parse("{title: Song1}");
-    //p.parse(L"[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
+    p.parse(L"{title: Test Song}\n\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]up and down\n[Em]Fol[D]low a [C]star, [Em]search the [D]world around\n[Em]Hold [D]to a [C]dream, [Em]carry it [D]close to me\n[G]I'm frozen in time, you alone can set me [D]free");
     //p.parse(L"\nHold to a dream, carry it up and down\nFollow a star, search the world around\nHold to a dream, carry it close to me\nI'm frozen in time, you alone can set me free");
 	//p.parse(L"ahoj\nmiso\njani");
 
+    std::wcout << y.getOutput() << std::endl;
     //p.parse("x\ny\nz");
 
+    /*
     std::wstring in(L"s[C]w[Dm]e\n"
 		L"Text taky\n"
 		L"{sos}\n"
@@ -556,6 +563,7 @@ int main(int argc, char **argv)
 	std::wcout << in << std::endl;
 	Transposer t;
 	std::wcout << t.transpose(in, 1) << std::endl;
+    */
 
 	return 0;
 }

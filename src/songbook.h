@@ -29,18 +29,22 @@ namespace bschords
 			virtual wxString getTitle() = 0;
 			virtual void setTitle(wxString title) = 0;
 			virtual wxString getContents() = 0;
-			virtual wxXmlNode *createXmlNode(wxString basePath) = 0;
-			virtual void readFromXmlNode(wxXmlNode *node, wxString basePath) = 0;
+			wxString getComment() { return (mComment); };
+			void setComment(wxString comment) { mComment = comment; };
+			virtual wxXmlNode *createXmlNode(const wxString basePath) = 0;
+			virtual void readFromXmlNode(wxXmlNode *node);
+			virtual void writeToXmlNode(wxXmlNode *node);
 		private:
 			bool mSelected;
 			bool mPrintFlag;
 			int mTransposeStep;
+			wxString mComment;
 	};
 
 	class SongBookSection: public SongBookItem
 	{
 		public:
-			SongBookSection(wxXmlNode *node, wxString basePath) : SongBookItem() { readFromXmlNode(node, basePath); };
+			SongBookSection(wxXmlNode *node) : SongBookItem() { readFromXmlNode(node); };
 			SongBookSection(wxString title) : mTitle(title) { };
 			virtual ~SongBookSection() { };
 			virtual bool isPrintable();
@@ -48,8 +52,9 @@ namespace bschords
 			virtual void setTitle(wxString title) { mTitle = title; };
 			virtual wxString getContents();
 			virtual wxString getPath() { return wxT(""); };
-			virtual wxXmlNode *createXmlNode(wxString basePath);
-			virtual void readFromXmlNode(wxXmlNode *node, wxString basePath);
+			virtual wxXmlNode *createXmlNode(const wxString basePath);
+			virtual void readFromXmlNode(wxXmlNode *node);
+			virtual void writeToXmlNode(wxXmlNode *node);
 		private:
 			wxString mTitle;
 	};
@@ -58,7 +63,7 @@ namespace bschords
 	{
 		public:
 			SongBookSong(wxString path);
-			SongBookSong(wxXmlNode *node, wxString basePath) : SongBookItem() { readFromXmlNode(node, basePath); };
+			SongBookSong(wxXmlNode *node) : SongBookItem() { readFromXmlNode(node); };
 			virtual ~SongBookSong() { };
 			virtual bool isPrintable() { return true; };
 			virtual bool isTransposeable() { return true; };
@@ -66,8 +71,9 @@ namespace bschords
 			virtual void setTitle(wxString title) { };
 			wxString getPath();
 			wxString getContents();
-			virtual wxXmlNode *createXmlNode(wxString basePath);
-			virtual void readFromXmlNode(wxXmlNode *node, wxString basePath);
+			virtual wxXmlNode *createXmlNode(const wxString basePath);
+			virtual void readFromXmlNode(wxXmlNode *node);
+			virtual void writeToXmlNode(wxXmlNode *node);
 		private:
 			wxString mPath;
 			wxString mTitle;
@@ -101,6 +107,7 @@ namespace bschords
 			wxString getDescription() { return mDescription; }
 			bool isModified() { return mModified; }
 			void exportHtml(const wxString path);
+			void exportTxt(const wxString path);
 		private:
 			std::list<SongBookItem *> m_items;
 			wxString m_basePath;

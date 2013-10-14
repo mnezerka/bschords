@@ -9,6 +9,7 @@
 #include "songbookwnd.h"
 #include "mainwnd.h"
 #include "songbookdlg.h"
+#include "songdlg.h"
 
 //#include "res/song.xpm"
 //#include "res/songbook.xpm"
@@ -35,7 +36,8 @@ enum
 	idActionDeleteSelected,
 	idActionPrintOn,
 	idActionPrintOff,
-	idActionSongbookProperties
+	idActionSongbookProperties,
+	idActionSongProperties
 };
 
 BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
@@ -57,6 +59,8 @@ BEGIN_EVENT_TABLE(SongBookListCtrl, wxListCtrl)
     EVT_LIST_BEGIN_LABEL_EDIT(ID_SONG_LIST, SongBookListCtrl::OnBeginLabelEdit)
     EVT_LIST_END_LABEL_EDIT(ID_SONG_LIST, SongBookListCtrl::OnEndLabelEdit)
     EVT_CONTEXT_MENU(SongBookListCtrl::OnContextMenu)
+    EVT_RIGHT_DOWN(SongBookListCtrl::OnRightClick)
+	EVT_MENU(idActionSongProperties, SongBookListCtrl::OnSongProperties)
 END_EVENT_TABLE()
 
 /* ---------------- SongBookListCtrl-------------------------------- */
@@ -97,15 +101,41 @@ void SongBookListCtrl::OnContextMenu(wxContextMenuEvent& event)
     //ShowContextMenu(point);
     wxMenu menu;
 
-    menu.Append(idActionDeleteSelected, _T("&Delete selected items"));
-    menu.Append(idActionPrintOn, _T("&Enable printing for selected items"));
-    menu.Append(idActionPrintOff, _T("&Disable printing for selected items"));
+    menu.Append(idActionDeleteSelected, _T("Delete selected items"));
+    menu.Append(idActionPrintOn, _T("Enable printing for selected items"));
+    menu.Append(idActionPrintOff, _T("Disable printing for selected items"));
     menu.AppendSeparator();
-    menu.Append(idActionSongbookProperties, _T("Songbook Properties..."));
+    menu.Append(idActionSongProperties, _T("Item properties..."));
+    menu.AppendSeparator();
+    menu.Append(idActionSongbookProperties, _T("Songbook properties..."));
 
     PopupMenu(&menu, point.x, point.y);
 }
 
+void SongBookListCtrl::OnRightClick(wxMouseEvent& event)
+{
+    int flags;
+    long subitem;
+    mActiveItem = HitTest(event.GetPosition(), flags, &subitem);
+    wxLogDebug(wxT("Setting Active Item to %ld"), mActiveItem);
+    event.Skip();
+}
+
+void SongBookListCtrl::OnSongProperties(wxCommandEvent& event)
+{
+    if (mActiveItem == -1)
+        return;
+
+    SongBookItem* item = wxGetApp().m_songBook.getItem(mActiveItem);
+
+	SongDlg* dlg = new SongDlg(0L, _("Song Properties"), *item);
+
+	if (dlg->ShowModal() == wxID_OK)
+    {
+		;
+    }
+    dlg->Destroy();
+}
 /* ---------------- SongBookWnd ----------------------------------- */
 
 SongBookWnd::SongBookWnd(wxWindow *parent, wxWindowID id)

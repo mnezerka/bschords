@@ -168,6 +168,7 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 	EVT_MENU(idMenuFilePrintPreviewSongbook, MainWnd::OnFilePrintPreviewSongBook)
 	EVT_MENU(wxID_PRINT_SETUP, MainWnd::OnFilePageSetup)
 	EVT_MENU(idMenuFileSongbookExportHtml, MainWnd::OnFileExportSongbook)
+	EVT_MENU(idMenuFileSongbookExportAscii, MainWnd::OnFileExportSongbook)
 	EVT_MENU(idMenuQuit, MainWnd::OnQuit)
 	EVT_MENU(idMenuPreferences, MainWnd::OnPreferences)
 	EVT_MENU(ID_MENU_STYLESHEET, MainWnd::OnStyleSheet)
@@ -720,9 +721,14 @@ void MainWnd::OnFilePageSetup(wxCommandEvent& event)
 
 void MainWnd::OnFileExportSongbook(wxCommandEvent& event)
 {
-	if (event.GetId() == idMenuFileSongbookExportHtml)
+	switch (event.GetId())
 	{
-		wxGetApp().m_songBook.exportHtml(wxT("d://export.html"));
+	    case idMenuFileSongbookExportHtml:
+            wxGetApp().m_songBook.exportHtml(wxT("d://export.html"));
+            break;
+        case idMenuFileSongbookExportAscii:
+            wxGetApp().m_songBook.exportTxt(wxT("d://export.txt"));
+            break;
 	}
 }
 

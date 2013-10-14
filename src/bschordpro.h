@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <vector>
 
 // definition of chord pro format tokens
@@ -66,9 +67,11 @@ namespace bschordpro
 			virtual void onChord(const std::wstring& chord, const RawPos &pos);
 			virtual void onText(const std::wstring& text, const RawPos &pos);
 			virtual void onLine(const std::wstring& line, const RawPos &pos);
+			std::wstring getOutput();
 		private:
 			std::wstring m_chordBuffer;
 			std::wstring m_textBuffer;
+			std::wstringstream mOutput;
 	};
 
 	// parser for chordpro format

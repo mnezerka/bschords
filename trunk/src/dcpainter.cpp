@@ -45,26 +45,6 @@ wxRect TSetBlockHSpace::getBoundingRect()
 	return result;
 }
 
-// ------- TSetBlockToc  --------------------------------------------------------
-
-wxRect TSetBlockToc::getBoundingRect()
-{
-	wxRect result;
-
-	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
-	result.SetHeight(m_painter->m_dc.GetCharHeight());
-	result.SetWidth(60);
-
-	return result;
-}
-
-void TSetBlockToc::draw()
-{
-	// typeset chord line (chord items)
-	m_painter->m_dc.SetFont(wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
-	m_painter->m_dc.DrawText(wxT("Contents"), mPos.x, mPos.y);
-}
-
 // ------- TSetBlockText  ----------------------------------------------------------
 bool TSetBlockText::hasChords()
 {
@@ -808,6 +788,7 @@ void TSetDCPainter::onCommandUnknown(const std::wstring &cmdId, const std::wstri
 {
 	std::wcout << L"Unknown command " << cmdId << " -> " << value << std::endl;
 
+
 	if (cmdId == L"bschords_section")
 	{
 		// check if we are inside some block and block must be closed before new command
@@ -836,23 +817,32 @@ void TSetDCPainter::onCommandUnknown(const std::wstring &cmdId, const std::wstri
 		block->setTxt(value);
 		addBlock(block);
 	}
-	else if (cmdId == L"bschords_toc")
+	else if (cmdId == L"bschords_toc_begin")
 	{
 		// check if we are inside some block and block must be closed before new command
 		if (m_curBlock != NULL)
 		addBlock(m_curBlock);
-		m_curBlock = NULL;
 
-		// force page break
-		AddPageBreak();
-
-		TSetBlockToc *block = new TSetBlockToc(this);
-
-
-
+        // force page break
+        AddPageBreak();
+        TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_TOC_TITLE, wxGetApp().m_styleSheet.m_fonts[BS_FONT_SECTION_TITLE]);
+        block->setTxt(wxT("Contents"));
+        addBlock(block);
+        addBlock(new TSetBlockHSpace(this));
+	}
+	else if (cmdId == L"bschords_toc_end")
+	{
+        ; // do nothing
+	}
+	else if (cmdId == L"bschords_toc_item")
+	{
+		// check if we are inside some block and block must be closed before new command
+		if (m_curBlock != NULL)
+            wxLogError(wxT("toc item inside block"));
+		TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_TOC_ITEM, wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+		block->setTxt(value);
 		addBlock(block);
 	}
-
 }
 
 void TSetDCPainter::onLine(const std::wstring& line, const bschordpro::RawPos &pos)

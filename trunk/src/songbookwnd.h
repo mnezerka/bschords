@@ -20,14 +20,17 @@ namespace bschords
 				const wxWindowID id,
 				const wxPoint& pos,
 				const wxSize& size,
-				long style): wxListCtrl(parent, id, pos, size, style),   mAttr(*wxBLUE, *wxLIGHT_GREY, wxNullFont) { };
+				long style): wxListCtrl(parent, id, pos, size, style),   mAttr(*wxBLUE, *wxLIGHT_GREY, wxNullFont), mActiveItem(-1) { };
 			    void OnBeginDrag(wxListEvent& event);
 			    void OnBeginLabelEdit(wxListEvent& event);
 				void OnEndLabelEdit(wxListEvent& event);
 				void OnContextMenu(wxContextMenuEvent& event);
+                void OnRightClick(wxMouseEvent& event);
+				void OnSongProperties(wxCommandEvent& event);
 
         private:
 			wxListItemAttr mAttr;
+            long mActiveItem;
 
 		DECLARE_NO_COPY_CLASS(SongBookListCtrl)
 		DECLARE_EVENT_TABLE()

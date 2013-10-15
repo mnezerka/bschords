@@ -1,10 +1,10 @@
-
-#ifdef WX_PRECOMP
-#include "wx_pch.h"
-#endif
+/**
+ * \file
+ * \author  michal.nezerka@gmail.com
+ * \brief   Implementation of Songbook class and all related classes (e.g. SongBookSong)
+ */
 
 #include <iostream>
-
 #include <vector>
 #include <wx/textfile.h>
 #include <wx/filename.h>
@@ -14,7 +14,8 @@
 #include "bschordpro.h"
 #include "songbook.h"
 
-using namespace bschords;
+namespace bschords
+{
 
 /* ------------------- SongBookWriterHtml --------------------------------------- */
 
@@ -767,3 +768,5 @@ void SongBook::exportTxt(const wxString path)
 	SongbookWriterTxt writer(this);
 	writer.write(path);
 }
+
+} // namespace

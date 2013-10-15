@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Song Preview Window Implementation
+ */
+
 #include <wx/dc.h>
 #include <wx/dir.h>
 #include <wx/richtext/richtextbuffer.h>

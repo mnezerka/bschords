@@ -1,3 +1,8 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Implementation of DCPainter class responsible for drawing song(s) to various Device Contexts
+ */
 
 #include <wx/tokenzr.h>
 

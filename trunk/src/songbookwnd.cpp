@@ -1,9 +1,12 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Songbook Window Implementation
+ */
+
 #include <iostream>
-
 #include <wx/imaglist.h>
-
 #include <wx/filename.h>
-
 #include "app.h"
 #include "songbook.h"
 #include "songbookwnd.h"

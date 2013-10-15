@@ -1,9 +1,14 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Songbook Definition
+ *
+ * Definition of Songbook class and all related classes (e.g. SongBookSong)
+ */
+
 #ifndef SONGBOOK_H
 #define SONGBOOK_H
 
-#ifndef WX_PRECOMP
-    #include <wx/wx.h>
-#endif
 
 #include <list>
 #include <wx/xml/xml.h>

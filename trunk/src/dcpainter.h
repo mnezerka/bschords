@@ -1,9 +1,11 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Definition of DCPainter class responsible for drawing song(s) to various Device Contexts
+ */
+
 #ifndef BSCHORDSDCPAINTER_H
 #define BSCHORDSDCPAINTER_H
-
-#ifndef WX_PRECOMP
-    #include <wx/wx.h>
-#endif
 
 #include <vector>
 #include "bschordpro.h"

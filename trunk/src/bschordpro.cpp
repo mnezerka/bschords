@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Implementation of various classes related to ChordPro format processing
+ */
+
 #include "bschordpro.h"
 
 using namespace bschordpro;
@@ -38,57 +44,6 @@ CR+LF: Microsoft Windows, DEC TOPS-10, RT-11 and most other early non-Unix and n
 
 */
 
-EventHandlerTxt::EventHandlerTxt() { }
-
-void EventHandlerTxt::onLineBegin()
-{
-    m_chordBuffer.erase();
-    m_textBuffer.erase();
-}
-
-void EventHandlerTxt::onLineEnd()
-{
-    if (m_chordBuffer.find_first_not_of(L' ') != std::wstring::npos)
-        mOutput << std::endl << m_chordBuffer << std::endl;
-
-    mOutput << m_textBuffer << std::endl;
-}
-
-void EventHandlerTxt::onCommand(const CommandType command, const std::wstring& value, const RawPos &pos)
-{
-    mOutput << L"command: " << command << L" with value: " << value;
-}
-
-void EventHandlerTxt::onChord(const std::wstring& chord, const RawPos &pos)
-{
-    m_chordBuffer.append(chord);
-    m_chordBuffer.append(L" ");
-}
-
-void EventHandlerTxt::onText(const std::wstring& text, const RawPos &pos)
-{
-    m_textBuffer.append(text);
-
-    int diff = m_textBuffer.length() - m_chordBuffer.length();
-
-    if (diff > 0)
-        m_chordBuffer.append(diff, L' ');
-    else
-    {
-        m_textBuffer.append(-1 * diff, L' ');
-    }
-}
-
-void EventHandlerTxt::onLine(const std::wstring& line, const RawPos &pos)
-{
-    m_textBuffer.append(line);
-}
-
-std::wstring EventHandlerTxt::getOutput()
-{
-    std::wstring result = mOutput.str();
-    return result;
-}
 //////////////////////////////////////////////////////////////////////////////
 void Parser::parse(const std::wstring& s)
 {
@@ -389,13 +344,10 @@ std::wstring Transposer::transpose(std::wstring &song, int distance)
 	{
 		result += song.substr(lastPos, (*it).mPos - lastPos);
 		std::wstring toTranspose = song.substr((*it).mPos, (*it).mLen);
-		//std::wcout << "Transpose " << *it << " " << lastPos << " " << ((*it).mPos - lastPos) << std::endl;
 		result += transposeText(toTranspose, distance);
 		lastPos = (*it).mPos + (*it).mLen;
 	}
 	result += song.substr(lastPos);
-
-	//std::wstring newChord = Transposer::transposeChord(chordBuffer, distance);
 
 	return result;
 }
@@ -467,11 +419,9 @@ void Transposer::onCommand(const CommandType command, const std::wstring& value,
 	switch (command)
 	{
 		case CMD_STRUCT_START:
-			//std::wcout << "transposer - struct start" << std::endl;
 			mTransposeLines = true;
 			break;
 		case CMD_STRUCT_END:
-			//std::wcout << "transposer - struct end" << std::endl;
 			mTransposeLines = false;
 			break;
 		default:

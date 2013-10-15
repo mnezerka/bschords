@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Song Preview Window Definition
+ */
+
 #ifndef BSCHORDSPREVIEW_H
 #define BSCHORDSPREVIEW_H
 

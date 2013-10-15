@@ -2,9 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="bschords" />
+		<Option title="BSChords" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option show_notes="0">
+			<notes>
+				<![CDATA[Application for typesetting songs and songbooks]]>
+			</notes>
+		</Option>
 		<Build>
 			<Target title="debug_win">
 				<Option output="bin/debug/bschords" prefix_auto="1" extension_auto="1" />
@@ -330,10 +335,10 @@
 			<DoxyBlocks>
 				<comment_style block="0" line="0" />
 				<doxyfile_project />
-				<doxyfile_build />
+				<doxyfile_build extract_all="1" extract_private="1" extract_static="1" />
 				<doxyfile_warnings />
 				<doxyfile_output />
-				<doxyfile_dot />
+				<doxyfile_dot class_diagrams="1" />
 				<general />
 			</DoxyBlocks>
 		</Extensions>

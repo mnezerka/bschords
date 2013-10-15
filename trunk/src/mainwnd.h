@@ -1,18 +1,11 @@
-/***************************************************************
- * Name:      bschordsMain.h
- * Purpose:   Defines Application Frame
- * Author:     ()
- * Created:   2012-12-01
- * Copyright:  ()
- * License:
- **************************************************************/
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Application Frame Definition
+ */
 
 #ifndef BSCHORDSMAIN_H
 #define BSCHORDSMAIN_H
-
-#ifndef WX_PRECOMP
-    #include <wx/wx.h>
-#endif
 
 #include <wx/textctrl.h>
 #include <wx/richtext/richtextctrl.h>

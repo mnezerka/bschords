@@ -1,23 +1,19 @@
-/***************************************************************
- * Name:      xxxMain.h
- * Purpose:   Defines Application Frame
- * Author:     ()
- * Created:   2012-12-08
- * Copyright:  ()
- * License:
- **************************************************************/
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Preferences Dialog Definition
+ */
 
 #ifndef BSCHORDSPREFERENCES_H
 #define BSCHORDSPREFERENCES_H
-
-#ifndef WX_PRECOMP
-    #include <wx/wx.h>
-#endif
 
 #include <wx/button.h>
 #include <wx/statline.h>
 
 #include "app.h"
+
+namespace bschords
+{
 
 class PreferencesDlg: public wxDialog
 {
@@ -57,4 +53,7 @@ class PreferencesDlg: public wxDialog
         DECLARE_EVENT_TABLE()
 };
 
+} // namespace
+
 #endif // BSCHORDSPREFERENCES_H
+

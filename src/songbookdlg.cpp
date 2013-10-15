@@ -1,22 +1,10 @@
-/***************************************************************
- * Name:      xxxMain.cpp
- * Purpose:   Code for Application Frame
- * Author:     ()
- * Created:   2012-12-08
- * Copyright:  ()
- * License:
- **************************************************************/
-
-#ifdef WX_PRECOMP
-#include "wx_pch.h"
-#endif
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif //__BORLANDC__
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Songbook Properties Dialog Implementation
+ */
 
 #include <iostream>
-
 #include <wx/treebook.h>
 #include <wx/imaglist.h>
 #include <wx/artprov.h>

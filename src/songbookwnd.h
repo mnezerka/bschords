@@ -1,3 +1,9 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Songbook Window Definition
+ */
+
 #ifndef SONGBOOKWND_H
 #define SONGBOOKWND_H
 

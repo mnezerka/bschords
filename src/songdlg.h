@@ -1,11 +1,8 @@
-/***************************************************************
- * Name:      xxxMain.h
- * Purpose:   Defines Application Frame
- * Author:     ()
- * Created:   2012-12-08
- * Copyright:  ()
- * License:
- **************************************************************/
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Song Properties Dialog Definition
+ */
 
 #ifndef BSCHORDS_SONGDLG_H
 #define BSCHORDS_SONGDLG_H

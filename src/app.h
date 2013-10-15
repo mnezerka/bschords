@@ -1,11 +1,8 @@
-/***************************************************************
- * Name:      bschordsApp.h
- * Purpose:   Defines Application Class
- * Author:     ()
- * Created:   2012-12-01
- * Copyright:  ()
- * License:
- **************************************************************/
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Application Class Definition
+ */
 
 #ifndef BSCHORDSAPP_H
 #define BSCHORDSAPP_H

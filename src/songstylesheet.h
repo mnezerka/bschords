@@ -1,13 +1,18 @@
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Song Stylesheet Definition
+ */
+
 #ifndef SONGSTYLESHEET_H
 #define SONGSTYLESHEET_H
-
-#ifndef WX_PRECOMP
-    #include <wx/wx.h>
-#endif
 
 #include <wx/fileconf.h>
 #include <wx/config.h>
 #include <wx/font.h>
+
+namespace bschords
+{
 
 enum {
     BS_FONT_TITLE,
@@ -77,5 +82,7 @@ class SongStyleSheet
 	private:
 
 };
+
+} // namespace
 
 #endif // SONGSTYLESHEET_H

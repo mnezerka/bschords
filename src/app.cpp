@@ -1,26 +1,13 @@
-/***************************************************************
- * Name:      bschordsApp.cpp
- * Purpose:   Code for Application Class
- * Author:     ()
- * Created:   2012-12-01
- * Copyright:  ()
- * License:
- **************************************************************/
-
-#ifdef WX_PRECOMP
-#include "wx_pch.h"
-#endif
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif //__BORLANDC__
+/**
+ * @file
+ * @author  michal.nezerka@gmail.com
+ * @brief   Application Class Implementation
+ */
 
 #include <iostream>
 #include <wx/stdpaths.h>
 
-
 #include "app.h"
-
 
 using namespace bschords;
 

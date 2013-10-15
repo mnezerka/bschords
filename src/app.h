@@ -1,7 +1,7 @@
 /**
  * @file
  * @author  michal.nezerka@gmail.com
- * @brief   Application Class Definition
+ * @brief   Application Class Declaration
  */
 
 #ifndef BSCHORDSAPP_H
@@ -36,57 +36,71 @@ http://en.wikipedia.org/wiki/Chord_%28software%29
 
 namespace bschords
 {
-	struct AppSettings
-	{
-		// path of the songs repository root
-		wxString m_rootPath;
 
-		// font for song editor
-		wxFont m_editorFont;
+/** \brief Structure which encapsulates all application configuration parameters */
+struct AppSettings
+{
+    /// Path of the songs repository root
+    wxString m_rootPath;
 
-		// colors for song editor
-		wxColor m_editorColorText;
-		wxColor m_editorColorChords;
-		wxColor m_editorColorCommands;
+    /// Font for song editor
+    wxFont m_editorFont;
 
-		AppSettings();
-		void LoadFromConfig(wxConfig *config);
-		void SaveToConfig(wxConfig *config);
-	};
+    /// Colors for song editor text
+    wxColor m_editorColorText;
 
-	class App : public wxApp
-	{
-		public:
-			// current application configuration
-			wxConfig *config;
+    /// Colors for song editor chords
+    wxColor m_editorColorChords;
 
-			// global print data, to remember settings during the session
-			wxPrintData *m_printData;
+    /// Colors for song editor commands
+    wxColor m_editorColorCommands;
 
-			// global page setup data
-			wxPageSetupDialogData* m_pageSetupData;
+    /// Ctor
+    AppSettings();
 
-			// current stylesheet
-			SongStyleSheet m_styleSheet;
+    /// Load configuration data from Config class
+    void LoadFromConfig(wxConfig *config);
 
-			// application settings
-			AppSettings *m_settings;
+    /// Save configuration data to Config class
+    void SaveToConfig(wxConfig *config);
+};
 
-			// current songbook
-			bschords::SongBook m_songBook;
+/** \brief Application class singleton */
+class App : public wxApp
+{
+public:
+    /// Current application configuration
+    wxConfig *config;
 
+    /// Global print data, to remember settings during the session
+    wxPrintData *m_printData;
 
-			virtual bool OnInit();
-			virtual int OnExit();
-			virtual wxLog* CreateLogTarget();
+    /// Global page setup data
+    wxPageSetupDialogData* m_pageSetupData;
 
-		private:
-			//std::list<SongStylesheet> m_styleSheets;
+    /// Current stylesheet
+    SongStyleSheet m_styleSheet;
 
-			// main window
-			//MainWnd *mFrame;
-	};
-}
+    /// Application settings
+    AppSettings *m_settings;
+
+    /// Current songbook
+    bschords::SongBook m_songBook;
+
+    /// Called by wx framework on initialization of application
+    virtual bool OnInit();
+
+    /// Called by wx framework when application is closed
+    virtual int OnExit();
+
+    /// Called by wx framework when log target is created
+    virtual wxLog* CreateLogTarget();
+
+private:
+
+};
+
+} // namespace
 
 DECLARE_APP(bschords::App);
 

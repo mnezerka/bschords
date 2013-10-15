@@ -22,28 +22,28 @@ END_EVENT_TABLE()
 
 SongDlg::SongDlg(wxDialog *dlg, const wxString &title, SongBookItem& songbookItem) : wxDialog(dlg, -1, title), mSongbookItem(songbookItem)
 {
-	SetExtraStyle(wxWS_EX_VALIDATE_RECURSIVELY);
+    SetExtraStyle(wxWS_EX_VALIDATE_RECURSIVELY);
 
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
     // create buttons
     wxSizer* btnSizer = CreateButtonSizer(wxOK | wxCANCEL);
 
-	wxNotebook* m_bookCtrl = new wxNotebook(this, wxID_ANY); //, wxDefaultPosition, wxDefaultSize, wxWS_EX_VALIDATE_RECURSIVELY);
+    wxNotebook* m_bookCtrl = new wxNotebook(this, wxID_ANY); //, wxDefaultPosition, wxDefaultSize, wxWS_EX_VALIDATE_RECURSIVELY);
 
-	wxPanel* pageGeneral = CreateGeneralPage(m_bookCtrl);
-	wxPanel* pageView = CreateViewPage(m_bookCtrl);
-	m_bookCtrl->AddPage(pageGeneral, _("General"), true);
-	m_bookCtrl->AddPage(pageView, _("View"), false);
+    wxPanel* pageGeneral = CreateGeneralPage(m_bookCtrl);
+    wxPanel* pageView = CreateViewPage(m_bookCtrl);
+    m_bookCtrl->AddPage(pageGeneral, _("General"), true);
+    m_bookCtrl->AddPage(pageView, _("View"), false);
 
-	mainSizer->Add(m_bookCtrl, 0, wxALL | wxEXPAND, 5);
+    mainSizer->Add(m_bookCtrl, 0, wxALL | wxEXPAND, 5);
 
-	// static line
-	wxStaticLine * staticLine1 = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
-	mainSizer->Add(staticLine1, 0, wxALL | wxEXPAND, 5);
+    // static line
+    wxStaticLine * staticLine1 = new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
+    mainSizer->Add(staticLine1, 0, wxALL | wxEXPAND, 5);
 
-	// sizing stuff
-	mainSizer->Add(btnSizer, 0, wxALL, 3);
+    // sizing stuff
+    mainSizer->Add(btnSizer, 0, wxALL, 3);
 
     this->SetSizer(mainSizer);
     this->Layout();
@@ -57,12 +57,12 @@ wxPanel* SongDlg::CreateGeneralPage(wxWindow* parent)
     wxPanel* panel = new wxPanel(parent, wxID_ANY);
     wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
 
-	// description
-	wxStaticBox* descStaticBox = new wxStaticBox(panel, wxID_ANY, _("Song Comment"));
+    // description
+    wxStaticBox* descStaticBox = new wxStaticBox(panel, wxID_ANY, _("Song Comment"));
     wxBoxSizer* descStaticBoxSizer = new wxStaticBoxSizer(descStaticBox, wxVERTICAL );
     topSizer->Add(descStaticBoxSizer, 0, wxGROW|wxALL, 0);
     mCommentCtrl = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(400, 200), wxTE_MULTILINE);
-	descStaticBoxSizer->Add(mCommentCtrl);
+    descStaticBoxSizer->Add(mCommentCtrl);
 
     panel->SetSizer(topSizer);
     topSizer->Fit(panel);
@@ -98,11 +98,11 @@ bool SongDlg::TransferDataToWindow()
 
 bool SongDlg::TransferDataFromWindow()
 {
-	bool result = wxDialog::TransferDataFromWindow();
+    bool result = wxDialog::TransferDataFromWindow();
 
-	mSongbookItem.setComment(mCommentCtrl->GetValue());
+    mSongbookItem.setComment(mCommentCtrl->GetValue());
 
-	return result;
+    return result;
 }
 
 } // namespace bschords

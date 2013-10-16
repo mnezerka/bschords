@@ -92,7 +92,7 @@ struct TSetBlock
         BLTYPE_TOC_ITEM
     };
 
-    TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos), mMaxWidth(0) { };
+    TSetBlock(TSetDCPainter *painter, unsigned int pos = 0) : m_painter(painter), m_pos(pos), mMaxWidth(0), mNeedsFullWidth(false) { };
     virtual ~TSetBlock() { }
     virtual void setPosition(wxPoint p)
     {
@@ -120,14 +120,30 @@ struct TSetBlock
     {
         return BLTYPE_NONE;
     };
+
+    /** \brief Indicates if the block is visible and should be usef for typesetting */
     virtual bool isVisible()
     {
         return true;
     };
 
+    /** \brief Indicates if block needs full page width (e.g. title) for typesetting */
+    virtual bool needsFullWidth()
+    {
+        return mNeedsFullWidth;
+    };
+
+    void setNeedsFullWidth(bool needsFullWidth)
+    {
+        mNeedsFullWidth = needsFullWidth;
+    }
+
 private:
     /// detection of block clipping, setting this flag to true causes drawing of visual "clipping alarm"
     wxCoord mMaxWidth;
+
+    /// Indicates if block needs full page width (e.g. title) for typesetting
+    bool mNeedsFullWidth;
 };
 
 struct TSetBlockHSpace : public TSetBlock
@@ -290,12 +306,22 @@ public:
     void draw();
 
 private:
-    // list of vertical blocks
+    /// list of vertical blocks
     std::vector<TSetBlock*> m_blocks;
+
+    /// page rectangle
     wxRect mPageRect;
+
+    /// column rectangle (for number of columns equal to 1 is value same as of mPageRect)
     wxRect mColRect;
+
+    /// current typesetting position
     wxPoint mPos;
+
+    /// DCContext to be used for drawing
     TSetDCPainter *mPainter;
+
+    /// current typesetting column
     int mCol;
 };
 

@@ -478,18 +478,23 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
     if (blockRect.GetHeight() > mPageRect.GetHeight())
         return(ADD_PAGE_OVERSIZE);
 
-    // check if there is enough horizontal space for block to be drawn
-    // in current column
-    block->setMaxWidth(mColRect.GetWidth());
+    // shring full width block placed in other columnt than first one
+    if (block->needsFullWidth() && mCol > 0)
+        block->setNeedsFullWidth(false);
 
-    // check if we have enough of horizontal space to draw block
+    if (block->needsFullWidth())
+        block->setMaxWidth(mPageRect.GetWidth());
+    else
+        // check if there is enough horizontal space for block to be drawn
+        // in current column
+        block->setMaxWidth(mColRect.GetWidth());
+
+
+    // check if we have enough of vertical space to draw block
     if (mPos.y + blockRect.GetHeight() > mPageRect.GetBottom())
     {
-        //cout << "not enough space for block, pos.y: " << pos.y << " block height: " << blockHeight << endl;
-
-        if (mCol < mPainter->m_ss->m_cols - 1)
+        if (!block->needsFullWidth() || mCol < mPainter->m_ss->m_cols - 1)
         {
-            //cout << "starting new column" << endl;
             mCol++;
             mColRect.SetLeft(mColRect.GetLeft() + mColRect.GetWidth());
             mPos.x = mColRect.GetLeft();
@@ -509,6 +514,13 @@ TSetPage::TPageAddResult TSetPage::addBlock(TSetBlock *block)
 
     // move page typesetting cursor
     mPos.y += blockRect.GetHeight();
+
+    // shring page typesetting area after placing full width block
+    if (block->needsFullWidth())
+    {
+        mPageRect.SetTop(mPos.y);
+        mColRect.SetTop(mPos.y);
+    }
 
     return(ADD_OK);
 }
@@ -633,7 +645,7 @@ void TSetDCPainter::onBegin()
     m_stat.m_pages++;
 
     wxImage img;
-    bool loadOk = img.LoadFile(wxT("d:\\images\\backgrounds\\foggy_forest_bg.jpg"));
+    bool loadOk = img.LoadFile(m_ss->mBackgroundImagePath);
     if (loadOk)
     {
         //wxLogDebug(wxT("Image loaded with result %d, hasAlpha=%d"), loadOk, img.HasAlpha());
@@ -730,6 +742,7 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 
         TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_TITLE, wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE]);
         block->setTxt(value);
+        block->setNeedsFullWidth(true);
         addBlock(block);
         m_curBlock = NULL;
     }

@@ -147,7 +147,7 @@ private:
 class BSChordsPrintout: public wxPrintout
 {
 public:
-    BSChordsPrintout(MainWnd* frame, const wxString &contents, const wxString &title = _("My printout"))
+    BSChordsPrintout(MainWnd* frame, const wxString &contents, const wxString &title = wxT("My printout"))
         : wxPrintout(title), mContents(contents)
     {
         m_frame = frame;

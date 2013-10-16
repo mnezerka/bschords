@@ -94,6 +94,9 @@ bool App::OnInit()
 
 int App::OnExit()
 {
+    wxLogDebug(wxT("Exiting application"));
+
+
     //-----------------------------------------------------------------
     // save configuration data
 
@@ -103,9 +106,7 @@ int App::OnExit()
     // save settings
     m_settings->SaveToConfig(config);
     delete m_settings;
-
     delete config;
-
     delete m_printData;
     delete m_pageSetupData;
 

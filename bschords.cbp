@@ -16,6 +16,7 @@
 				<Option object_output="obj/debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-Wall" />
@@ -322,6 +323,7 @@
 			<Option target="debug_linux" />
 			<Option target="release_linux" />
 		</Unit>
+		<Unit filename="src/version.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

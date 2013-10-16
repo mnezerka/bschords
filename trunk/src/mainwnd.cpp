@@ -18,6 +18,7 @@
 #include <wx/printdlg.h>
 #include <wx/artprov.h>
 
+#include "version.h"
 #include "mainwnd.h"
 #include "preferencesdlg.h"
 #include "songstylesheetdlg.h"
@@ -232,16 +233,13 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     fileMenu->Append(idMenuFileCloseSongBook, _("Close songbook"), _("Close songbook file"));
     fileMenu->AppendSeparator();
 
-    //fileMenu->Append(ID_MENU_FILE_EXPORT, _("&Export file to PDF ..."), _("Export song file to PDF"));
-    //fileMenu->Append(idMenuFileSongbookExport, _("&Export file to HTML ..."), _("Export song file to PDF"));
-
     fileMenu->Append(wxID_PRINT_SETUP, _("Page setup..."), _("Page setup for printing"));
     fileMenu->Append(wxID_PRINT, _("&Print..."), _("Print"));
-    fileMenu->Append(wxID_PREVIEW, _("Print Pre&view"), _("Preview"));
+    fileMenu->Append(wxID_PREVIEW, _("Print Preview..."), _("Preview"));
     fileMenu->AppendSeparator();
 
     fileMenu->Append(idMenuFilePrintSongbook, _("Print Songbook ..."), _("Print"));
-    fileMenu->Append(idMenuFilePrintPreviewSongbook, _("Songbook Print Preview"), _("Preview"));
+    fileMenu->Append(idMenuFilePrintPreviewSongbook, _("Songbook Print Preview..."), _("Preview"));
     fileMenu->AppendSeparator();
 
     wxMenu* songExportMenu = new wxMenu(_T(""));
@@ -444,6 +442,18 @@ void MainWnd::OnClose(wxCloseEvent &event)
     // close open file (if any)
     CloseFile();
 
+    // close open songbook (if any)
+    CloseSongbook();
+
+    // store window size
+    int x, y;
+    GetSize(&x, &y);
+    wxGetApp().config->Write(_("/global/width"), x);
+    wxGetApp().config->Write(_("/global/height"), y);
+    GetPosition(&x, &y);
+    wxGetApp().config->Write(_("/global/left"), x);
+    wxGetApp().config->Write(_("/global/top"), y);
+
     Destroy();
 }
 
@@ -613,7 +623,7 @@ void MainWnd::OnFilePrint(wxCommandEvent& event)
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
 
     wxPrinter printer(& printDialogData);
-    BSChordsPrintout printout(this, m_songContent->GetText());
+    BSChordsPrintout printout(this, m_songContent->GetText(), wxT("ahoj"));
     if (!printer.Print(this, &printout, true /*prompt*/))
     {
         if (wxPrinter::GetLastError() == wxPRINTER_ERROR)
@@ -632,8 +642,8 @@ void MainWnd::OnFilePrintPreview(wxCommandEvent& event)
     // Pass two printout objects: for preview, and possible printing.
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
     wxPrintPreview *preview = new wxPrintPreview(
-        new BSChordsPrintout(this, m_songContent->GetText()),
-        new BSChordsPrintout(this, m_songContent->GetText()),
+        new BSChordsPrintout(this, m_songContent->GetText(), wxT("Song Preview")),
+        new BSChordsPrintout(this, m_songContent->GetText(), wxT("Song")),
         &printDialogData);
 
     if (!preview->IsOk())
@@ -643,7 +653,7 @@ void MainWnd::OnFilePrintPreview(wxCommandEvent& event)
         return;
     }
 
-    wxPreviewFrame *frame = new wxPreviewFrame(preview, this, wxT("Demo Print Preview"), wxPoint(100, 100), wxSize(600, 650));
+    wxPreviewFrame *frame = new wxPreviewFrame(preview, this, wxT("Song Print Preview"), wxPoint(100, 100), wxSize(600, 650));
     frame->Centre(wxBOTH);
     frame->Initialize();
     frame->Show();
@@ -657,7 +667,7 @@ void MainWnd::OnFilePrintSongBook(wxCommandEvent& event)
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
 
     wxPrinter printer(& printDialogData);
-    BSChordsPrintout printout(this, contents);
+    BSChordsPrintout printout(this, contents, wxGetApp().m_songBook.getName());
     if (!printer.Print(this, &printout, true /*prompt*/))
     {
         if (wxPrinter::GetLastError() == wxPRINTER_ERROR)
@@ -681,8 +691,8 @@ void MainWnd::OnFilePrintPreviewSongBook(wxCommandEvent& event)
     // Pass two printout objects: for preview, and possible printing.
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
     wxPrintPreview *preview = new wxPrintPreview(
-        new BSChordsPrintout(this, contents),
-        new BSChordsPrintout(this, contents),
+        new BSChordsPrintout(this, contents, wxGetApp().m_songBook.getName()),
+        new BSChordsPrintout(this, contents, wxGetApp().m_songBook.getName()),
         &printDialogData);
 
     if (!preview->IsOk())
@@ -692,7 +702,7 @@ void MainWnd::OnFilePrintPreviewSongBook(wxCommandEvent& event)
         return;
     }
 
-    wxPreviewFrame *frame = new wxPreviewFrame(preview, this, wxT("Demo Print Preview"), wxPoint(100, 100), wxSize(600, 650));
+    wxPreviewFrame *frame = new wxPreviewFrame(preview, this, wxGetApp().m_songBook.getName(), wxPoint(100, 100), wxSize(600, 650));
     frame->Centre(wxBOTH);
     frame->Initialize();
     frame->Show();
@@ -711,34 +721,30 @@ void MainWnd::OnFilePageSetup(wxCommandEvent& event)
 
 void MainWnd::OnFileExportSongbook(wxCommandEvent& event)
 {
+    wxFileName fileName(m_dirCtrl->GetPath());
+    wxString dir = fileName.GetPath();
+    wxString name = wxGetApp().m_songBook.getName().Lower();
+    name.Replace(wxT(" "), wxT("_"));
+    wxFileDialog *saveDlg = new wxFileDialog(this, wxT("Export songbook ss"), dir, name , wxT("*.*"), wxSAVE, wxDefaultPosition);
+
     switch (event.GetId())
     {
     case idMenuFileSongbookExportHtml:
-        wxGetApp().m_songBook.exportHtml(wxT("d://export.html"));
+        saveDlg->SetWildcard(wxT("*.html"));
+        if (saveDlg->ShowModal() == wxID_OK )
+            wxGetApp().m_songBook.exportHtml(saveDlg->GetPath());
         break;
     case idMenuFileSongbookExportAscii:
-        wxGetApp().m_songBook.exportTxt(wxT("d://export.txt"));
+        saveDlg->SetWildcard(wxT("*.txt"));
+        if (saveDlg->ShowModal() == wxID_OK )
+            wxGetApp().m_songBook.exportTxt(saveDlg->GetPath());
         break;
     }
 }
 
 void MainWnd::OnQuit(wxCommandEvent &event)
 {
-    // store window size
-    int x, y;
-    GetSize(&x, &y);
-
-    wxGetApp().config->Write(_("/global/width"), x);
-    wxGetApp().config->Write(_("/global/height"), y);
-
-    GetPosition(&x, &y);
-    wxGetApp().config->Write(_("/global/left"), x);
-    wxGetApp().config->Write(_("/global/top"), y);
-
-    //wxGetApp().m_settins->config->Write(_("/global/path"), m_dirCtrl->GetPath());
-    //wxGetApp().config->Write(_("/global/path"), m_dirCtrl->GetPath());
-
-    Destroy();
+    Close();
 }
 
 void MainWnd::OnPreferences(wxCommandEvent &event)
@@ -919,13 +925,15 @@ void MainWnd::OnSongTranspose(wxCommandEvent& event)
 
 void MainWnd::OnAbout(wxCommandEvent &event)
 {
-    wxString msg = wxbuildinfo(long_f);
-    msg.append(_("\n\nYet another application for typesetting song lyrics."));
-    msg.append(_("\n\nFor more information visit project web page at:\nhttps://code.google.com/p/bschords/"));
-    msg.append(_("\n\nAuthor: michal.nezerka@gmail.com"));
-    msg.append(_("\nhttp://blue.pavoucek.cz"));
+    wxString msg = wxT("BSChords\n\n");
+    msg += wxT("Yet another application for typesetting song lyrics.\n\n");
+    msg += wxString::Format(wxT("Version: %d.%d\n\n"), BSCHORDS_VERSION_MAJOR, BSCHORDS_VERSION_MINOR);
+    msg += wxbuildinfo(long_f);
+    msg += wxT("\n\nFor more information visit project web page at:\nhttps://code.google.com/p/bschords/");
+    msg += wxT("\n\nAuthor: michal.nezerka@gmail.com");
+    msg += wxT("\nhttp://blue.pavoucek.cz");
 
-    wxMessageBox(msg, _("BSChords Application"));
+    wxMessageBox(msg, _("About BSChords"));
 }
 
 void MainWnd::OnSongContentChange(wxCommandEvent& event)
@@ -1130,24 +1138,7 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
         {
             wxFileName fileName(data->m_path);
             fileName.MakeRelativeTo(wxGetApp().m_settings->m_rootPath);
-            //std::wcout << L"  relative file path is : " << fn.GetFullPath().wc_str() << std::endl;
-
             m_songBookWnd->addSongFile(data->m_path);
-
-            //wxXmlNode *rootNode = wxGetApp().m_songBook.getRootNode();
-            //wxXmlNode *songNode = new wxXmlNode(wxXML_ELEMENT_NODE, wxT("song"));
-            //wxXmlProperty *songPathProp = new wxXmlProperty(wxT("path"), fileName.GetFullPath());
-            //songNode->AddProperty(songPathProp);
-            /*if (wxXmlNode *child = rootNode->GetChildren())
-            {
-            	// look for last child
-            	while (child->GetNext())
-            		child = child->GetNext();
-            	child->SetNext(songNode);
-            }
-            else
-            	rootNode->AddChild(songNode);
-            */
             m_songBookWnd->Update();
         }
     }
@@ -1155,18 +1146,10 @@ void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 
 void MainWnd::OnFSBrowserItemMenu(wxTreeEvent& event)
 {
-    //wxTreeItemId itemId = event.GetItem();
-    //MyTreeItemData *item = itemId.IsOk() ? (MyTreeItemData *)GetItemData(itemId) : NULL;
     wxPoint clientpt = event.GetPoint();
-    //wxPoint screenpt = m_dirCtrl->ClientToScreen(clientpt);
-    //wxLogMessage(wxT("OnItemMenu for item \"%s\" at screen coords (%i, %i)"),
-    //             item ? item->GetDesc() : _T(""), screenpt.x, screenpt.y);
-
-#if wxUSE_MENUS
     wxMenu menu(_("menu title"));
     menu.Append(idFSBrowserAddToSongbook, wxT("&Add to songbook"));
     m_dirCtrl->PopupMenu(&menu, clientpt);
-#endif // wxUSE_MENUS
     event.Skip();
 }
 
@@ -1319,7 +1302,6 @@ void MainWnd::SaveSongBook()
 
 void MainWnd::OpenSongBook(const wxString filePath)
 {
-    // TODO Check if old songbook needs to be saved
     CloseSongbook();
 
     wxFileName fileName(filePath);

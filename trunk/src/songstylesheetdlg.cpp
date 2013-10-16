@@ -27,6 +27,7 @@ BEGIN_EVENT_TABLE(SongStyleSheetDlg, wxDialog)
     EVT_BUTTON(idBtnSelFont, SongStyleSheetDlg::OnSelFont)
     EVT_BUTTON(idBtnLoad, SongStyleSheetDlg::OnLoad)
     EVT_BUTTON(idBtnSave, SongStyleSheetDlg::OnSave)
+    EVT_BUTTON(idBtnSelBackgroundImagePath, SongStyleSheetDlg::OnSelBackgroundImagePath)
 END_EVENT_TABLE()
 
 SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongStyleSheet *styleSheet)
@@ -146,6 +147,21 @@ wxPanel* SongStyleSheetDlg::CreatePageSetupPage(wxWindow* parent)
     linesStaticBoxSizer->Add(linesSizer, 0, wxALL, 3);
 
     // --------------------------------------------------------------------------------------
+    // background image
+    wxStaticBox* bgImageStaticBox = new wxStaticBox(panel, wxID_ANY, wxT("Background image"));
+    wxBoxSizer* bgImageStaticBoxSizer = new wxStaticBoxSizer(bgImageStaticBox, wxVERTICAL);
+    item0->Add(bgImageStaticBoxSizer, 0, wxGROW|wxALL, 5);
+
+    bgImageStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, wxT("Image file path:")), 0, wxALL | wxEXPAND, 3);
+
+    wxBoxSizer *bgImagePathSizer = new wxBoxSizer(wxHORIZONTAL);
+    mBgImagePathCtrl = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&mStyleSheet.mBackgroundImagePath));
+    bgImagePathSizer->Add(mBgImagePathCtrl, 1, wxALL | wxEXPAND | wxCENTER);
+    bgImagePathSizer->AddSpacer(5);
+    bgImagePathSizer->Add(new wxButton(panel, idBtnSelBackgroundImagePath, wxT("..."), wxDefaultPosition, wxSize(30, wxDefaultCoord)), 0, wxALL | wxEXPAND | wxCENTER);
+    bgImageStaticBoxSizer->Add(bgImagePathSizer, 1, wxALL | wxEXPAND, 3);
+
+     // --------------------------------------------------------------------------------------
     // global stuff
     topSizer->Add( item0, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );
     topSizer->Add( item1, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );
@@ -307,6 +323,17 @@ void SongStyleSheetDlg::OnSave(wxCommandEvent &event)
         mStyleSheet.SaveToConfig(config);
         config->Save(stream);
         delete(config);
+    }
+}
+
+void SongStyleSheetDlg::OnSelBackgroundImagePath(wxCommandEvent& event)
+{
+    wxFileName fileName(mBgImagePathCtrl->GetValue());
+    wxString dir(fileName.GetPath());
+    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), fileName.GetPath(), fileName.GetName(), _("*.png"), wxOPEN, wxDefaultPosition);
+    if (openFileDialog->ShowModal() == wxID_OK )
+    {
+        mBgImagePathCtrl->SetValue(openFileDialog->GetPath());
     }
 }
 

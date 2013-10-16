@@ -54,7 +54,8 @@ protected:
         idBtnQuit = 1000,
         idBtnSelFont,
         idBtnLoad,
-        idBtnSave
+        idBtnSave,
+        idBtnSelBackgroundImagePath
     };
     wxStaticText* m_staticText1;
     wxStaticLine* m_staticline1;
@@ -69,10 +70,12 @@ private:
     void OnSelFont(wxCommandEvent &event);
     void OnLoad(wxCommandEvent &event);
     void OnSave(wxCommandEvent &event);
+    void OnSelBackgroundImagePath(wxCommandEvent &event);
 
     wxPanel* CreatePageSetupPage(wxWindow* parent);
     wxPanel* CreateFontsPage(wxWindow* parent);
     wxPanel* CreateContentPage(wxWindow* parent);
+    wxTextCtrl *mBgImagePathCtrl;
 
     DECLARE_EVENT_TABLE()
 };

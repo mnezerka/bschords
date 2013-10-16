@@ -25,14 +25,12 @@ http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
 */
 
-// TODO: new block type for inserting images into song)
 // TODO: fix bitmap reloading and scaling for each draw
-// TODO: colors for fonts
-// TODO: songbook: contents both with and without page numbers
-// TODO: show warning when overwriting existing file
-// TODO: additional song properties in songbook - comment, chordpro prefix (inserted after title), postfix (at the bottom)
-// TODO: separate section for song title (especially in case of multicolumn stylesheet)
-// TODO: song directives (e.g. request for 2 cols)
+// TODO: additional song properties in songbook - comment, chordpro prefix (inserted after title), postfix (at the bottom), columns, font size etc.
+// TODO: apply stylesheet to Txt and Html outputs (hiding or showning appropriate sections)
+// TODO: formatting of songbook sections when typesetting Contents
+// TODO: more icons on toolbar - different icons for songbook, new icon for stylesheet
+// TODO: recent files and recent songbooks
 
 namespace bschords
 {

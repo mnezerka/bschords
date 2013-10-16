@@ -72,6 +72,8 @@ void SongStyleSheet::LoadFromConfig(const wxConfigBase *config)
         m_songbookSectionPages = config->Read(wxT("stylesheet/content/songbook-section-pages"), m_songbookSectionPages);
         m_songbookToc = config->Read(wxT("stylesheet/content/songbook-toc"), m_songbookToc);
 
+        mBackgroundImagePath = config->Read(wxT("stylesheet/content/background-image"), mBackgroundImagePath);
+
         // read fonts
         for (int i = 0; i < BS_FONT_LAST; i++)
         {
@@ -116,6 +118,8 @@ void SongStyleSheet::SaveToConfig(wxConfigBase *config)
     config->Write(wxT("stylesheet/content/songbook-title-page"), m_songbookTitlePage);
     config->Write(wxT("stylesheet/content/songbook-section-pages"), m_songbookSectionPages);
     config->Write(wxT("stylesheet/content/songbook-toc"), m_songbookToc);
+
+    config->Write(wxT("stylesheet/content/background-image"), mBackgroundImagePath);
 
     // save font information
     for (int i = 0; i < BS_FONT_LAST; i++)

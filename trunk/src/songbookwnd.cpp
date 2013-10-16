@@ -332,10 +332,18 @@ void SongBookWnd::OnMoveDown(wxCommandEvent &event)
 
 void SongBookWnd::OnDeleteSelected(wxCommandEvent& event)
 {
-    wxLogDebug(wxT("Delete selected"));
-    copySelectionToSongbook();
-    wxGetApp().m_songBook.deleteSelected();
-    Update();
+    wxMessageDialog* dialog = new wxMessageDialog(this, wxT("Delete selected items?"), wxT("Songbook"), wxYES_NO);
+
+    int answer = dialog->ShowModal();
+    dialog->Destroy();
+
+    if (answer == wxID_YES)
+    {
+        wxLogDebug(wxT("Delete selected"));
+        copySelectionToSongbook();
+        wxGetApp().m_songBook.deleteSelected();
+        Update();
+    }
 }
 
 void SongBookWnd::OnPrintOn(wxCommandEvent& event)

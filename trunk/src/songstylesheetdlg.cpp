@@ -28,12 +28,20 @@ BEGIN_EVENT_TABLE(SongStyleSheetDlg, wxDialog)
     EVT_BUTTON(idBtnLoad, SongStyleSheetDlg::OnLoad)
     EVT_BUTTON(idBtnSave, SongStyleSheetDlg::OnSave)
     EVT_BUTTON(idBtnSelBackgroundImagePath, SongStyleSheetDlg::OnSelBackgroundImagePath)
+    EVT_COMBOBOX(idComboPaperSize, SongStyleSheetDlg::OnPaperSizeChnage)
 END_EVENT_TABLE()
 
 SongStyleSheetDlg::SongStyleSheetDlg(wxDialog *dlg, const wxString &title, SongStyleSheet *styleSheet)
     : wxDialog(dlg, -1, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
 {
     SetExtraStyle(wxWS_EX_VALIDATE_RECURSIVELY);
+
+    // initialize array of paper sizes
+    mPaperSizes.push_back(PaperSize(wxSize(100, 100), wxT("User defined")));
+    mPaperSizes.push_back(PaperSize(wxSize(148, 210), wxT("A5")));
+    mPaperSizes.push_back(PaperSize(wxSize(210, 297), wxT("A4")));
+    mPaperSizes.push_back(PaperSize(wxSize(297, 420), wxT("A3")));
+    mPaperSizes.push_back(PaperSize(wxSize(216, 279), wxT("Letter")));
 
     // create copy of style sheet data
     mStyleSheet = *styleSheet;
@@ -87,17 +95,24 @@ wxPanel* SongStyleSheetDlg::CreatePageSetupPage(wxWindow* parent)
     wxBoxSizer* pageStaticBoxSizer = new wxStaticBoxSizer(pageStaticBox, wxHORIZONTAL);
     item0->Add(pageStaticBoxSizer, 0, wxGROW|wxALL, 5);
 
-    // TODO: handling of paper sizes
-    wxComboBox *comboPageSize = new wxComboBox(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(150,-1));
-    comboPageSize->Append(_T("User defined"));
-    comboPageSize->Append(_T("A4 (210x219 mm)"));
-    comboPageSize->Select(0);
-    pageStaticBoxSizer->Add(comboPageSize, 0, wxALL | wxCENTER, CTRL_BORDER);
+    mComboPaperSize = new wxComboBox(panel, idComboPaperSize, wxEmptyString, wxDefaultPosition, wxSize(150,-1), 0, NULL, wxCB_READONLY);
+    for (unsigned int i = 0; i < mPaperSizes.size(); i++)
+    {
+        // Don't show any dimensions for item allowing to insert "User defined size"
+        if (i == 0)
+            mComboPaperSize->Append(wxString::Format(wxT("%s"), mPaperSizes[i].mName.c_str()));
+        else
+            mComboPaperSize->Append(wxString::Format(wxT("%s (%d x %d mm)"), mPaperSizes[i].mName.c_str(), mPaperSizes[i].mSize.GetWidth(), mPaperSizes[i].mSize.GetHeight()));
+    }
+
+    pageStaticBoxSizer->Add(mComboPaperSize, 0, wxALL | wxCENTER, CTRL_BORDER);
 
     pageStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, _("=")), 0, wxALL | wxCENTER, CTRL_BORDER);
-    pageStaticBoxSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageWidth)), 0, wxALL | wxCENTER, CTRL_BORDER);
+    mCtrlPaperWidth = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageWidth));
+    pageStaticBoxSizer->Add(mCtrlPaperWidth, 0, wxALL | wxCENTER, CTRL_BORDER);
     pageStaticBoxSizer->Add(new wxStaticText(panel, wxID_ANY, _(" x ")), 0, wxALL | wxCENTER, CTRL_BORDER);
-    pageStaticBoxSizer->Add(new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageHeight)), 0, wxALL | wxCENTER, CTRL_BORDER);
+    mCtrlPaperHeight = new wxTextCtrl(panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(40, wxDefaultCoord), 0, wxTextValidator(wxFILTER_NUMERIC, &m_pageHeight));
+    pageStaticBoxSizer->Add(mCtrlPaperHeight, 0, wxALL | wxCENTER, CTRL_BORDER);
 
     // --------------------------------------------------------------------------------------
     // margins panel
@@ -168,6 +183,7 @@ wxPanel* SongStyleSheetDlg::CreatePageSetupPage(wxWindow* parent)
 
     panel->SetSizer(topSizer);
     topSizer->Fit(panel);
+
 
     return panel;
 }
@@ -289,7 +305,7 @@ void SongStyleSheetDlg::OnSelFont(wxCommandEvent &event)
         wxFontData fontData;
         fontData.SetInitialFont(mStyleSheet.m_fonts[fontIx]);
         //data.SetColour(canvasTextColour);
-        wxFontDialog dialog(this, &fontData);
+        wxFontDialog dialog(this, fontData);
         if (dialog.ShowModal() == wxID_OK)
         {
             wxFontData retData = dialog.GetFontData();
@@ -301,7 +317,7 @@ void SongStyleSheetDlg::OnSelFont(wxCommandEvent &event)
 
 void SongStyleSheetDlg::OnLoad(wxCommandEvent &event)
 {
-    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open stylesheet file"), wxEmptyString, wxEmptyString, wxT("*.sst"), wxOPEN, wxDefaultPosition);
+    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open stylesheet file"), wxEmptyString, wxEmptyString, wxT("*.sst"), wxFD_OPEN, wxDefaultPosition);
     if (openFileDialog->ShowModal() == wxID_OK )
     {
         wxFileInputStream stream(openFileDialog->GetPath());
@@ -314,7 +330,7 @@ void SongStyleSheetDlg::OnLoad(wxCommandEvent &event)
 
 void SongStyleSheetDlg::OnSave(wxCommandEvent &event)
 {
-    wxFileDialog* saveDlg = new wxFileDialog(this, _("Save stylesheet file"), wxEmptyString, wxEmptyString, wxT("*.sst"), wxSAVE, wxDefaultPosition);
+    wxFileDialog* saveDlg = new wxFileDialog(this, _("Save stylesheet file"), wxEmptyString, wxEmptyString, wxT("*.sst"), wxFD_SAVE, wxDefaultPosition);
 
     if (saveDlg->ShowModal() == wxID_OK )
     {
@@ -330,7 +346,7 @@ void SongStyleSheetDlg::OnSelBackgroundImagePath(wxCommandEvent& event)
 {
     wxFileName fileName(mBgImagePathCtrl->GetValue());
     wxString dir(fileName.GetPath());
-    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), fileName.GetPath(), fileName.GetName(), _("*.png"), wxOPEN, wxDefaultPosition);
+    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), fileName.GetPath(), fileName.GetName(), _("*.png"), wxFD_OPEN, wxDefaultPosition);
     if (openFileDialog->ShowModal() == wxID_OK )
     {
         mBgImagePathCtrl->SetValue(openFileDialog->GetPath());
@@ -352,12 +368,22 @@ bool SongStyleSheetDlg::TransferDataToWindow()
     m_lineChordSpacing = wxString::Format(wxT("%d"), mStyleSheet.m_chordLineSpacing);
     m_indentChorus = wxString::Format(wxT("%d"), mStyleSheet.m_indentChorus);
 
-    bool result = wxDialog::TransferDataToWindow();
+    // update combo and controls, this must be done here after all involved controls are created and initialized
+    int toSelect = 0; // select a4 by default
+    for (unsigned int i = 0; i < mPaperSizes.size(); i++)
+    {
+        // check if current size could be matched against predefined paper sizes
+        if (mPaperSizes[i].mSize.GetWidth() == mStyleSheet.m_pageSize.GetWidth() && mPaperSizes[i].mSize.GetHeight() == mStyleSheet.m_pageSize.GetHeight())
+        {
+            toSelect = i;
+            break;
+        }
 
-    // These function calls have to be made here, after the
-    // dialog has been created.
-    //text->SetFocus();
-    //combobox->SetSelection(0);
+    }
+    mComboPaperSize->Select(toSelect);
+    SetPaperSize(toSelect);
+
+    bool result = wxDialog::TransferDataToWindow();
 
     return result;
 }
@@ -380,6 +406,32 @@ bool SongStyleSheetDlg::TransferDataFromWindow()
     mStyleSheet.m_indentChorus = wxAtoi(m_indentChorus);
 
     return result;
+}
+
+void SongStyleSheetDlg::OnPaperSizeChnage(wxCommandEvent &event)
+{
+    // get index of selected item
+    int selection = mComboPaperSize->GetSelection();
+    wxLogDebug(wxT("Paper size have changed to index %d"), selection);
+    if (selection >= 0)
+        SetPaperSize(selection);
+}
+
+void SongStyleSheetDlg::SetPaperSize(unsigned int index)
+{
+    wxLogDebug(wxT("SetPaperSize to index %d"), index);
+
+    // copy values from paper size definition to appropriate controls (don't do it for setting user size)
+    if (index > 0 && index < mPaperSizes.size())
+    {
+        mCtrlPaperWidth->SetValue(wxString::Format(wxT("%d"), mPaperSizes[index].mSize.GetWidth()));
+        mCtrlPaperHeight->SetValue(wxString::Format(wxT("%d"), mPaperSizes[index].mSize.GetHeight()));
+    }
+
+    // enable or disable controls for user defined size according to index of selected item,
+    // zero item enables controls (User defined size), other value disables controls
+    mCtrlPaperHeight->Enable(index == 0);
+    mCtrlPaperWidth->Enable(index == 0);
 }
 
 } // namespace

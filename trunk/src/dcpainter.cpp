@@ -639,17 +639,26 @@ void TSetDCPainter::onBegin()
         getDeviceY(m_ss->m_pageSize.GetHeight() - m_ss->m_marginTop - m_ss->m_marginBottom));
     mPageRect = pageRect;
 
+    /*wxLogDebug(wxT("Page size: (%d, %d) -> (%d, %d)"), m_ss->m_pageSize.GetWidth(), m_ss->m_pageSize.GetHeight(),
+                getDeviceX(m_ss->m_pageSize.GetWidth()), getDeviceY(m_ss->m_pageSize.GetHeight()));
+    wxLogDebug(wxT("New page rect: (%d, %d, %d, %d)"), pageRect.GetLeft(), pageRect.GetTop(), pageRect.GetWidth(), pageRect.GetHeight());*/
+
     // create page structure
     m_curPage = new TSetPage(this, mPageRect);
     m_pages.push_back(m_curPage);
     m_stat.m_pages++;
 
-    wxImage img;
-    bool loadOk = img.LoadFile(m_ss->mBackgroundImagePath);
-    if (loadOk)
+    // if background image exists, try to load it and use
+    if (::wxFileExists(m_ss->mBackgroundImagePath))
     {
-        //wxLogDebug(wxT("Image loaded with result %d, hasAlpha=%d"), loadOk, img.HasAlpha());
-        mBitmapBackground = new wxBitmap(img.Scale(getDeviceX(m_ss->m_pageSize.GetWidth()), getDeviceX(m_ss->m_pageSize.GetHeight()), wxIMAGE_QUALITY_HIGH));
+        wxImage img;
+
+        bool loadOk = img.LoadFile(m_ss->mBackgroundImagePath);
+        if (loadOk)
+        {
+            //wxLogDebug(wxT("Image loaded with result %d, hasAlpha=%d"), loadOk, img.HasAlpha());
+            mBitmapBackground = new wxBitmap(img.Scale(getDeviceX(m_ss->m_pageSize.GetWidth()), getDeviceX(m_ss->m_pageSize.GetHeight()), wxIMAGE_QUALITY_HIGH));
+        }
     }
 }
 

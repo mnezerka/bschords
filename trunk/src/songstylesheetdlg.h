@@ -15,6 +15,14 @@
 namespace bschords
 {
 
+/** \brief Structure for paper size and its name */
+struct PaperSize
+{
+    PaperSize(wxSize s, wxString n) : mSize(s), mName(n) { };
+    wxSize mSize;
+    wxString mName;
+};
+
 /** \brief Class for dialog with stylesheet properties */
 class SongStyleSheetDlg: public wxDialog
 {
@@ -55,7 +63,8 @@ protected:
         idBtnSelFont,
         idBtnLoad,
         idBtnSave,
-        idBtnSelBackgroundImagePath
+        idBtnSelBackgroundImagePath,
+        idComboPaperSize,
     };
     wxStaticText* m_staticText1;
     wxStaticLine* m_staticline1;
@@ -65,17 +74,23 @@ protected:
     wxComboBox *fontSelType;
 
 private:
+    void SetPaperSize(unsigned int index);
     void OnClose(wxCloseEvent& event);
     void OnQuit(wxCommandEvent& event);
     void OnSelFont(wxCommandEvent &event);
     void OnLoad(wxCommandEvent &event);
     void OnSave(wxCommandEvent &event);
     void OnSelBackgroundImagePath(wxCommandEvent &event);
+    void OnPaperSizeChnage(wxCommandEvent &event);
 
     wxPanel* CreatePageSetupPage(wxWindow* parent);
     wxPanel* CreateFontsPage(wxWindow* parent);
     wxPanel* CreateContentPage(wxWindow* parent);
     wxTextCtrl *mBgImagePathCtrl;
+    wxComboBox *mComboPaperSize;
+    wxTextCtrl *mCtrlPaperWidth;
+    wxTextCtrl *mCtrlPaperHeight;
+    std::vector<PaperSize> mPaperSizes;
 
     DECLARE_EVENT_TABLE()
 };

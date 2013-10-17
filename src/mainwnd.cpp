@@ -23,8 +23,11 @@
 #include "preferencesdlg.h"
 #include "songstylesheetdlg.h"
 #include "songbookdlg.h"
-#include "bschordsicon.xpm"
 #include "dcpainter.h"
+
+#if !defined(__WXMSW__) && !defined(__WXPM__)
+    #include "bschordsicon.xpm"
+#endif
 
 using namespace bschords;
 
@@ -393,7 +396,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     m_auiMgr.AddPane(m_preview, wxAuiPaneInfo().Name(_("song-preview")).Caption(wxT("Song Preview")).Right().CloseButton(false).MinSize(200, wxDefaultCoord));
 
     // create file browser window
-    m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER, _T("Chordpro songs (*.txt)|*.txt"), 0 );
+    m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER | wxDIRCTRL_SHOW_FILTERS, _T("Chordpro songs (*.txt)|*.txt|All files (*.*)|*.*"), 0 );
     m_dirCtrl->SetPath(wxGetApp().m_settings->m_rootPath);
     m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
@@ -481,7 +484,7 @@ void MainWnd::OnFileOpenSong(wxCommandEvent& event)
     wxFileName fileName(m_dirCtrl->GetPath());
     wxString dir(fileName.GetPath());
 
-    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.txt"), wxOPEN, wxDefaultPosition);
+    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.txt"), wxFD_OPEN, wxDefaultPosition);
 
     if (openFileDialog->ShowModal() == wxID_OK )
     {
@@ -512,7 +515,7 @@ void MainWnd::OnFileSaveAsSong(wxCommandEvent& event)
         name = _("untitled.txt");
     }
 
-    wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.txt"), wxSAVE, wxDefaultPosition);
+    wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.txt"), wxFD_SAVE, wxDefaultPosition);
 
     if (saveDlg->ShowModal() == wxID_OK )
     {
@@ -536,7 +539,7 @@ void MainWnd::OnFileOpenSongBook(wxCommandEvent& event)
 {
     wxFileName fileName(wxGetApp().m_settings->m_rootPath);
     wxString dir(fileName.GetFullPath());
-    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.xml"), wxOPEN, wxDefaultPosition);
+    wxFileDialog* openFileDialog = new wxFileDialog(this, _("Open file"), dir, _(""), _("*.xml"), wxFD_OPEN, wxDefaultPosition);
     if (openFileDialog->ShowModal() == wxID_OK )
     {
         OpenSongBook(openFileDialog->GetPath());
@@ -567,7 +570,7 @@ void MainWnd::OnFileSaveSongBookAs(wxCommandEvent& event)
         name = _("untitled.xml");
     }
 
-    wxFileDialog* saveDlg = new wxFileDialog(this, _("Save song book as"), dir, name, _("*.xml"), wxSAVE, wxDefaultPosition);
+    wxFileDialog* saveDlg = new wxFileDialog(this, _("Save song book as"), dir, name, _("*.xml"), wxFD_SAVE, wxDefaultPosition);
 
     if (saveDlg->ShowModal() == wxID_OK )
     {
@@ -725,7 +728,7 @@ void MainWnd::OnFileExportSongbook(wxCommandEvent& event)
     wxString dir = fileName.GetPath();
     wxString name = wxGetApp().m_songBook.getName().Lower();
     name.Replace(wxT(" "), wxT("_"));
-    wxFileDialog *saveDlg = new wxFileDialog(this, wxT("Export songbook ss"), dir, name , wxT("*.*"), wxSAVE, wxDefaultPosition);
+    wxFileDialog *saveDlg = new wxFileDialog(this, wxT("Export songbook ss"), dir, name , wxT("*.*"), wxFD_SAVE, wxDefaultPosition);
 
     switch (event.GetId())
     {
@@ -1239,7 +1242,7 @@ void MainWnd::SaveFile()
         wxFileName fileName(m_dirCtrl->GetPath());
         wxString dir = fileName.GetPath();
         wxString name = _("untitled.txt");
-        wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.txt"), wxSAVE, wxDefaultPosition);
+        wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.txt"), wxFD_SAVE, wxDefaultPosition);
 
         if (saveDlg->ShowModal() == wxID_OK )
             m_file.m_path = saveDlg->GetPath();
@@ -1280,7 +1283,7 @@ void MainWnd::SaveSongBook()
         wxFileName fileName(m_dirCtrl->GetPath());
         wxString dir = fileName.GetPath();
         wxString name = _("untitled.xml");
-        wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.xml"), wxSAVE, wxDefaultPosition);
+        wxFileDialog* saveDlg = new wxFileDialog(this, _("Save file as"), dir, name, _("*.xml"), wxFD_SAVE, wxDefaultPosition);
 
         if (saveDlg->ShowModal() == wxID_OK )
             m_songBookPath = saveDlg->GetPath();
@@ -1453,21 +1456,28 @@ void MainWnd::OnSongbookProperties(wxCommandEvent& event)
 void BSChordsPrintout::OnPreparePrinting()
 {
     // set user scale to fit a4
-    //GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
-    //GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
+    int pageSizeXMM, pageSizeYMM, pageSizeXPx, pageSizeYPx;
+    GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
+    GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
+
+    wxRect rct = GetPaperRectPixels();
 
     int ppiScreenX, ppiScreenY;
     GetPPIScreen(&ppiScreenX, &ppiScreenY);
 
+    wxLogDebug(wxT("OnPreparePrinting, PPI=(%d, %d), PageSizeMM=(%d, %d), PageSizePx=(%d, %d), PaperRect=(%d, %d, %d, %d)"),
+               ppiScreenX, ppiScreenY, pageSizeXMM, pageSizeYMM, pageSizeXPx, pageSizeYPx, rct.GetLeft(), rct.GetTop(), rct.GetWidth(), rct.GetHeight());
+
     wxSize paperPixels;
-    paperPixels.SetWidth(ppiScreenX * 210 / MM_PER_IN);
-    paperPixels.SetHeight(ppiScreenY * 290 / MM_PER_IN);
+    paperPixels.SetWidth((ppiScreenX * 210) / MM_PER_IN);
+    paperPixels.SetHeight((ppiScreenY * 290) / MM_PER_IN);
     FitThisSizeToPaper(paperPixels);
     double newScaleX, newScaleY;
     GetDC()->GetUserScale(&newScaleX, &newScaleY);
-    //cout << "new user scale: " << newScaleX << "x" << newScaleY << endl;
 
     float scale = ppiScreenX / MM_PER_IN;
+
+    wxLogDebug(wxT("OnPreparePrinting, scaleXY=(%f, %f), scale=%f"), newScaleX, newScaleY, scale);
 
     TSetDCPainter pn(*GetDC(), scale);
     bschordpro::Parser p(&pn);

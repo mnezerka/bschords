@@ -204,7 +204,7 @@ void SongBookWnd::OnNewSection(wxCommandEvent &event)
 
 void SongBookWnd::addSongFile(wxString filePath)
 {
-    //std::cout << "song book wnd - addSongFile" << std::endl;
+    copySelectionToSongbook();
     wxGetApp().m_songBook.addItem(new SongBookSong(filePath));
     Update();
 }

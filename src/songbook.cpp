@@ -507,7 +507,21 @@ void SongBook::addItem(SongBookItem *item)
     if (!item)
         return;
 
-    m_items.push_back(item);
+    std::list<SongBookItem *>::iterator lastSelected = m_items.end();
+    // loop through the list in reverse direction to find last selected item
+    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+        if ((*it)->isSelected())
+            lastSelected = it;
+
+    // if item was not added after last selected item (in previous step), push it to the back of the list
+    if (lastSelected == m_items.end())
+        m_items.push_back(item);
+    else
+    {
+        //lastSelected++;
+        m_items.insert(lastSelected, item);
+    }
+
     mModified = true;
 }
 
@@ -678,6 +692,19 @@ void SongBook::selectItem(unsigned int index, bool select)
     SongBookItem *item = getItem(index);
     if (item)
         item->select(select);
+}
+
+int SongBook::getLastSelected()
+{
+    int result = -1;
+    unsigned int i = 0;
+    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    {
+        if ((*it)->isSelected())
+            result = i;
+        i++;
+    }
+    return result;
 }
 
 void SongBook::moveSelectedUp()

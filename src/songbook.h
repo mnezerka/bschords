@@ -153,6 +153,7 @@ public:
     void selectAll(bool select = true);
     void selectItem(unsigned int index, bool select = true);
     void deleteSelected();
+    int getLastSelected();
     void moveSelectedUp();
     void moveSelectedDown();
     void setPrintFlagForSelected(bool printFlag);

@@ -202,7 +202,7 @@ void PreferencesDlg::OnSelFont(wxCommandEvent &event)
     // fonts stuff
     wxFontData fontData;
     fontData.SetInitialFont(wxGetApp().m_settings->m_editorFont);
-    wxFontDialog dialog(this, &fontData);
+    wxFontDialog dialog(this, fontData);
     if (dialog.ShowModal() == wxID_OK)
     {
         wxFontData retData = dialog.GetFontData();

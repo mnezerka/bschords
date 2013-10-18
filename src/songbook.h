@@ -20,54 +20,94 @@ namespace bschords
 class SongBookItem
 {
 public:
+    /// Ctor
     SongBookItem() : mSelected(false), mPrintFlag(true), mTransposeStep(0) { };
+
+    /// Dtor
     virtual ~SongBookItem() = 0;
+
+    /// Mark item as selected
     void select(bool select = true)
     {
         mSelected = select;
     };
+
+    /// Get selection for this item
     bool isSelected()
     {
         return(mSelected);
     };
+
+    /// Enable printing for this item
     void setPrintFlag(bool printFlag = true)
     {
         mPrintFlag = printFlag;
     };
+
+    /// Get status of printing for this item
     bool getPrintFlag()
     {
         return(mPrintFlag);
     };
+
+    /// Check if item could be printed
     virtual bool isPrintable()
     {
         return false;
     };
+
+    /// Check if item is transposeable (musicaly)
     virtual bool isTransposeable()
     {
         return false;
     };
+
+    /// Get transpose step (item must be transposeable)
     virtual int getTransposeStep()
     {
         return mTransposeStep;
     }
+
+    /// Set transpose step (item must be transposeable)
     virtual void setTransposeStep(int newStep)
     {
         mTransposeStep = newStep;
     }
+
+    /// Get path for items that represent file in filesystem
     virtual wxString getPath() = 0;
+
+    /// Get item title
     virtual wxString getTitle() = 0;
+
+    /// Set item title
     virtual void setTitle(wxString title) = 0;
+
+    /// Get item contents in ChordPro format)
     virtual wxString getContents() = 0;
+
+    /// Get item comment
     wxString getComment()
     {
         return (mComment);
     };
+
+    /// Set item comment
     void setComment(wxString comment)
     {
         mComment = comment;
     };
+
+    /// Get BSChords toc directive
+    virtual wxString getTocDirective() = 0;
+
+    /// Create XML representation of item
     virtual wxXmlNode *createXmlNode(const wxString basePath) = 0;
+
+    /// Read item data from XML representation
     virtual void readFromXmlNode(wxXmlNode *node);
+
+    /// Write item data to XML representation
     virtual void writeToXmlNode(wxXmlNode *node);
 private:
     bool mSelected;
@@ -95,6 +135,7 @@ public:
         mTitle = title;
     };
     virtual wxString getContents();
+    virtual wxString getTocDirective();
     virtual wxString getPath()
     {
         return wxT("");
@@ -125,8 +166,9 @@ public:
     };
     virtual wxString getTitle();
     virtual void setTitle(wxString title) { };
-    wxString getPath();
-    wxString getContents();
+    virtual wxString getPath();
+    virtual wxString getContents();
+    virtual wxString getTocDirective();
     virtual wxXmlNode *createXmlNode(const wxString basePath);
     virtual void readFromXmlNode(wxXmlNode *node);
     virtual void writeToXmlNode(wxXmlNode *node);

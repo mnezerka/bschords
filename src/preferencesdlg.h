@@ -21,6 +21,7 @@ public:
     wxFont m_fonts[BS_FONT_LAST];
     bool m_showTsetBlocks;
     bool m_showTsetMargins;
+    bool m_showTsetClipping;
     wxColor m_editorColorText;
     wxColor m_editorColorChords;
     wxColor m_editorColorCommands;

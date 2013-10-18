@@ -109,8 +109,9 @@ wxPanel* PreferencesDlg::CreateViewPage(wxWindow* parent)
     wxBoxSizer* previewStaticBoxSizer = new wxStaticBoxSizer(previewStaticBox, wxVERTICAL );
     item0->Add(previewStaticBoxSizer, 0, wxGROW|wxALL, 0);
 
-    previewStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show margins"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_showTsetMargins)));
-    previewStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show typesetting blocks"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_showTsetBlocks)));
+    previewStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show margins"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_showTsetMargins)), 1, wxEXPAND | wxALL, 5);
+    previewStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show typesetting blocks (colored bounding box)"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_showTsetBlocks)), 1, wxEXPAND | wxALL, 5);
+    previewStaticBoxSizer->Add(new wxCheckBox(panel, wxID_ANY, wxT("Show typesetting clipping (red line on right side of clipped region)"), wxDefaultPosition, wxDefaultSize, 0, wxGenericValidator(&m_showTsetClipping)), 1, wxEXPAND | wxALL, 5);
 
     // global stuff
     topSizer->Add(item0, 1, wxGROW|wxALIGN_CENTRE|wxALL, 5 );

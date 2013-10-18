@@ -574,13 +574,15 @@ void TSetPage::draw()
         // draw clipping warning
         if (clipRect.GetWidth() != blockRect.GetWidth())
         {
-            std::cout << "clipping" << std::endl;
-            //std::cout << r.GetLeft() << " " << r.GetTop() << " " << r.GetRight() << " " << r.GetBottom() << std::endl;
-            //std::cout << c.GetLeft() << " " << c.GetTop() << " " << c.GetRight() << " " << c.GetBottom() << std::endl;
-            // draw bounding rect^M
-            wxPen pen(wxColor(255, 50, 50), 5);
-            mPainter->m_dc.SetPen(pen);
-            mPainter->m_dc.DrawLine(clipRect.GetRight(), clipRect.GetTop(), clipRect.GetRight(), clipRect.GetBottom());
+            if (mPainter->m_drawTsetClippingWarnings)
+            {
+                //std::cout << r.GetLeft() << " " << r.GetTop() << " " << r.GetRight() << " " << r.GetBottom() << std::endl;
+                //std::cout << c.GetLeft() << " " << c.GetTop() << " " << c.GetRight() << " " << c.GetBottom() << std::endl;
+                // draw bounding rect^M
+                wxPen pen(wxColor(255, 50, 50), 5);
+                mPainter->m_dc.SetPen(pen);
+                mPainter->m_dc.DrawLine(clipRect.GetRight(), clipRect.GetTop(), clipRect.GetRight(), clipRect.GetBottom());
+            }
         }
         // draw block content
         block->draw();
@@ -592,7 +594,7 @@ void TSetPage::draw()
 // ------- TSetDCPainter -------------------------------------------------------------
 
 TSetDCPainter::TSetDCPainter(wxDC& dc, float scale)
-    : m_drawTsetBlocks(false), m_drawTsetMargins(false), m_ss(NULL), m_dc(dc), m_posX(0), m_posXChord(0),
+    : m_drawTsetBlocks(false), m_drawTsetMargins(false), m_drawTsetClippingWarnings(false), m_ss(NULL), m_dc(dc), m_posX(0), m_posXChord(0),
       m_eMHeight(0),m_verseCounter(0), m_section(SECTION_NONE), m_isLineEmpty(true), m_scale(scale), m_curBlock(NULL), mBitmapBackground(NULL)
 {
     //m_dcPPI = dc.GetPPI();
@@ -601,6 +603,7 @@ TSetDCPainter::TSetDCPainter(wxDC& dc, float scale)
     m_ss = &wxGetApp().m_styleSheet;
     m_drawTsetBlocks = wxGetApp().config->Read(_("/global/show-tset-blocks"), 0l) > 0;
     m_drawTsetMargins = wxGetApp().config->Read(_("/global/show-tset-margins"), 0l) > 0;
+    m_drawTsetClippingWarnings = wxGetApp().config->Read(_("/global/show-tset-clipping"), 0l) > 0;
 }
 
 TSetDCPainter::~TSetDCPainter()
@@ -759,6 +762,7 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
     {
         TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_SUBTITLE, wxGetApp().m_styleSheet.m_fonts[BS_FONT_TITLE_SUB]);
         block->setTxt(value);
+        block->setNeedsFullWidth(true);
         addBlock(block);
         m_curBlock = NULL;
     }
@@ -821,8 +825,7 @@ void TSetDCPainter::onCommand(const bschordpro::CommandType command, const std::
 
 void TSetDCPainter::onCommandUnknown(const std::wstring &cmdId, const std::wstring &value, const bschordpro::RawPos &pos)
 {
-    std::wcout << L"Unknown command " << cmdId << " -> " << value << std::endl;
-
+    wxLogDebug(wxT("onCommandUnknown %s"), cmdId.c_str());
 
     if (cmdId == L"bschords_section")
     {
@@ -869,12 +872,19 @@ void TSetDCPainter::onCommandUnknown(const std::wstring &cmdId, const std::wstri
     {
         ; // do nothing
     }
-    else if (cmdId == L"bschords_toc_item")
+    else if (cmdId == L"bschords_toc_section" || cmdId == L"bschords_toc_song")
     {
         // check if we are inside some block and block must be closed before new command
         if (m_curBlock != NULL)
             wxLogError(wxT("toc item inside block"));
-        TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_TOC_ITEM, wxGetApp().m_styleSheet.m_fonts[BS_FONT_TEXT]);
+        // select font
+        wxFont font = wxGetApp().m_styleSheet.m_fonts[BS_FONT_TOC_ITEM];
+        if (cmdId == L"bschords_toc_section")
+        {
+            addBlock(new TSetBlockHSpace(this));
+            font = wxGetApp().m_styleSheet.m_fonts[BS_FONT_TOC_SECTION];
+        }
+        TSetBlockSingleLine *block = new TSetBlockSingleLine(this, TSetBlock::BLTYPE_TOC_ITEM, font);
         block->setTxt(value);
         addBlock(block);
     }

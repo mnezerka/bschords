@@ -334,6 +334,11 @@ wxString SongBookSection::getContents()
         return (wxT(""));
 }
 
+wxString SongBookSection::getTocDirective()
+{
+    return (wxT("bschords_toc_section"));
+}
+
 /* ------------------- SongBookSong --------------------------------------- */
 SongBookSong::SongBookSong(wxString path)
 {
@@ -441,8 +446,10 @@ void SongBookSong::writeToXmlNode(wxXmlNode *node)
     node->AddProperty(prop);
 }
 
-
-
+wxString SongBookSong::getTocDirective()
+{
+    return (wxT("bschords_toc_song"));
+}
 
 /* ------------------- SongBook -------------------------------------------- */
 
@@ -646,9 +653,7 @@ wxString SongBook::getContents()
             if (!(*it)->isPrintable() || !(*it)->getPrintFlag())
                 continue;
 
-            result.Append(wxT("{bschords_toc_item: "));
-            result.Append((*it)->getTitle());
-            result.Append(wxT("}\n"));
+            result += wxString::Format(wxT("{%s: %s}\n"), (*it)->getTocDirective().c_str(), (*it)->getTitle().c_str());
         }
         result.Append(wxT("{bschords_toc_end}\n"));
     }

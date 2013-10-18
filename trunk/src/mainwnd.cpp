@@ -337,19 +337,6 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     tb2->SetToolBitmapSize(wxSize(16,16));
     wxBitmap tb2_bmp1 = wxArtProvider::GetBitmap(wxART_QUESTION, wxART_OTHER, wxSize(16,16));
 
-    m_chordCtrl = new wxComboBox(tb2, ID_COMBO_CHORD, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY);
-    m_chordCtrl->Append(_("Chords"));
-    m_chordCtrl->Append(_("[]"));
-    m_chordCtrl->Append(_("[C]"));
-    m_chordCtrl->Append(_("[Dm]"));
-    m_chordCtrl->Append(_("[Em]"));
-    m_chordCtrl->Append(_("[F]"));
-    m_chordCtrl->Append(_("[G]"));
-    m_chordCtrl->Append(_("[Am]"));
-    m_chordCtrl->Append(_("[Hm5b]"));
-    m_chordCtrl->SetSelection(0);
-    tb2->AddControl(m_chordCtrl);
-
     m_cmdCtrl = new wxComboBox(tb2, ID_COMBO_CMD, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY);
     m_cmdCtrl->Append(_("Commands"));
     m_cmdCtrl->Append(_("{title: }"));
@@ -358,6 +345,8 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     m_cmdCtrl->Append(_("{end_of_chorus}"));
     m_cmdCtrl->Append(_("{start_of_tab}"));
     m_cmdCtrl->Append(_("{end_of_tab}"));
+    m_cmdCtrl->Append(_("{start_of_struct}"));
+    m_cmdCtrl->Append(_("{end_of_struct}"));
     m_cmdCtrl->SetSelection(0);
     tb2->AddControl(m_cmdCtrl);
     tb2->Realize();
@@ -465,7 +454,6 @@ void MainWnd::SetEditMode(bool newEditMode)
     m_isInEditMode = newEditMode;
 
     // controls
-    m_chordCtrl->Enable(m_isInEditMode);
     m_cmdCtrl->Enable(m_isInEditMode);
 
     // menu items
@@ -756,11 +744,13 @@ void MainWnd::OnPreferences(wxCommandEvent &event)
 
     dlg->m_showTsetBlocks = wxGetApp().config->Read(_("/global/show-tset-blocks"), 0l) > 0;
     dlg->m_showTsetMargins = wxGetApp().config->Read(_("/global/show-tset-margins"), 0l) > 0;
+    dlg->m_showTsetClipping = wxGetApp().config->Read(_("/global/show-tset-clipping"), 0l) > 0;
 
     if (dlg->ShowModal() == wxID_OK)
     {
         wxGetApp().config->Write(_("/global/show-tset-blocks"), dlg->m_showTsetBlocks ? 1 : 0);
         wxGetApp().config->Write(_("/global/show-tset-margins"), dlg->m_showTsetMargins ? 1 : 0);
+        wxGetApp().config->Write(_("/global/show-tset-clipping"), dlg->m_showTsetClipping ? 1 : 0);
         m_preview->Refresh();
         m_preview->Update();
 
@@ -1094,12 +1084,7 @@ void MainWnd::OnChordProToken(wxCommandEvent& event)
     if (!m_auiMgr.GetPane(m_songContent).IsShown())
         return;
 
-    if (event.GetId() == ID_COMBO_CHORD && m_chordCtrl->GetSelection() != 0)
-    {
-        m_songContent->AddText(m_chordCtrl->GetValue());
-        m_chordCtrl->SetSelection(0);
-    }
-    else if	(event.GetId() == ID_COMBO_CMD && m_cmdCtrl->GetSelection() != 0)
+    if	(event.GetId() == ID_COMBO_CMD && m_cmdCtrl->GetSelection() != 0)
     {
         m_songContent->AddText(m_cmdCtrl->GetValue());
         m_cmdCtrl->SetSelection(0);

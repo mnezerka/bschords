@@ -25,6 +25,8 @@ enum
     BS_FONT_STRUCT,         /**< Font for typesetting song structure sections */
     BS_FONT_MAIN_TITLE,     /**< Font for typesetting songbook title */
     BS_FONT_SECTION_TITLE,  /**< Font for typesetting songbook section titles */
+    BS_FONT_TOC_SECTION,    /**< FOnt for typesetting songbook toc section entries */
+    BS_FONT_TOC_ITEM,       /**< FOnt for typesetting songbook toc items (songs) */
     BS_FONT_LAST            /**< Not used */
 };
 
@@ -97,12 +99,16 @@ public:
 
     /// Ctor
     SongStyleSheet();
+
     /// Dtor
     ~SongStyleSheet();
+
     /// Load all configuration parameters from Config class (ini file, registry, etc.)
     void LoadFromConfig(const wxConfigBase *config);
+
     /// Save all configuration parameters to Config class (ini file, registry, etc.)
     void SaveToConfig(wxConfigBase *config);
+
     /// Get name of the font (for use in GUI)
     static wxString getFontName(unsigned int index);
 

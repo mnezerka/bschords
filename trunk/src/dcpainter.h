@@ -367,6 +367,7 @@ public:
 
     bool m_drawTsetBlocks;
     bool m_drawTsetMargins;
+    bool m_drawTsetClippingWarnings;
 
     SongStyleSheet *m_ss;
     wxDC& m_dc;

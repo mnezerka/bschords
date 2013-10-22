@@ -21,7 +21,8 @@ public:
     PreviewWndCanvas(wxWindow *parent, wxStyledTextCtrl *sourceCtrl, wxStaticText *infoCtrl = NULL);
     virtual ~PreviewWndCanvas();
     virtual void OnDraw(wxDC& dc);
-    void setZoom(float zoom);
+    void setZoom(int zoom);
+    int getZoom() { return m_zoom; };
     wxCoord getDeviceX(int numMM);
     wxCoord getDeviceY(int numMM);
 protected:
@@ -30,7 +31,7 @@ private:
     wxStyledTextCtrl *m_sourceCtrl;
     wxStaticText *m_infoCtrl;
     //wxStyledTextCtrl *m_sourceCtrl;
-    float m_zoom;
+    int m_zoom;
     wxSize m_screenPPI;
 };
 
@@ -40,7 +41,7 @@ public:
     //BSChordsPreview(wxWindow *parent, wxRichTextCtrl *sourceCtrl);
     PreviewWnd(wxWindow *parent, wxStyledTextCtrl *sourceCtrl);
     virtual ~PreviewWnd();
-    void setZoom(float zoom);
+    void setZoom(int zoom);
 
 private:
     PreviewWndCanvas *m_canvas;
@@ -49,6 +50,7 @@ private:
 
     void OnSize(wxSizeEvent& event);
     void OnZoomChanged(wxCommandEvent& event);
+    void OnClose(wxCloseEvent& event);
 
     DECLARE_EVENT_TABLE()
 };

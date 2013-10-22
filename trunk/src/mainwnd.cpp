@@ -446,6 +446,9 @@ void MainWnd::OnClose(wxCloseEvent &event)
     wxGetApp().config->Write(_("/global/left"), x);
     wxGetApp().config->Write(_("/global/top"), y);
 
+    // force closing of child windows (to emit OnClose events)
+    m_preview->Close();
+
     Destroy();
 }
 

@@ -17,13 +17,25 @@
 
 // http://wiki.wxwidgets.org/Converting_everything_to_and_from_wxString#std::string_to_wxString
 
-using namespace bschords;
+namespace bschords
+{
+
+/** \brief Structure for zoom */
+struct ZoomItem
+{
+    ZoomItem(int s, wxString l) : mSize(s), mLabel(l) { };
+    int mSize;
+    wxString mLabel;
+};
+
+/// list of zoom items
+std::vector<ZoomItem> gZoomItems;
 
 // ------- PreviewWndCanvas --------------------------------------------------------
 
 //PreviewWndCanvas::PreviewWndCanvas(wxWindow *parent, wxRichTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
 PreviewWndCanvas::PreviewWndCanvas(wxWindow *parent, wxStyledTextCtrl *sourceCtrl, wxStaticText *infoCtrl)
-    : wxScrolledWindow(parent), m_sourceCtrl(sourceCtrl), m_infoCtrl(infoCtrl), m_zoom(1)
+    : wxScrolledWindow(parent), m_sourceCtrl(sourceCtrl), m_infoCtrl(infoCtrl), m_zoom(100)
 {
     wxClientDC dc(this);
     //DoPrepareDC(dc);
@@ -40,7 +52,9 @@ PreviewWndCanvas::~PreviewWndCanvas()
 
 void PreviewWndCanvas::OnDraw(wxDC& dc)
 {
-    dc.SetUserScale(m_zoom, m_zoom);
+    float zoomRel = m_zoom / 100.0;
+
+    dc.SetUserScale(zoomRel, zoomRel);
 
     int cx, cy;
     GetViewStart(&cx, &cy);
@@ -78,13 +92,15 @@ void PreviewWndCanvas::OnDraw(wxDC& dc)
     }
 }
 
-void PreviewWndCanvas::setZoom(float zoom)
+void PreviewWndCanvas::setZoom(int zoom)
 {
     m_zoom = zoom;
 
+    float zoomRel = m_zoom / 100.0;
+
     wxSize newVirtSize;
-    newVirtSize.SetWidth((int)(wxGetApp().m_styleSheet.m_pageSize.GetWidth() * m_zoom * m_screenPPI.GetWidth() / MM_PER_IN));
-    newVirtSize.SetHeight((int)(wxGetApp().m_styleSheet.m_pageSize.GetHeight() * m_zoom * m_screenPPI.GetHeight() / MM_PER_IN));
+    newVirtSize.SetWidth((int)(wxGetApp().m_styleSheet.m_pageSize.GetWidth() * zoomRel * m_screenPPI.GetWidth() / MM_PER_IN));
+    newVirtSize.SetHeight((int)(wxGetApp().m_styleSheet.m_pageSize.GetHeight() * zoomRel * m_screenPPI.GetHeight() / MM_PER_IN));
 
     SetVirtualSize(newVirtSize);
     SetScrollRate(10, 10);
@@ -101,6 +117,7 @@ enum
 };
 
 BEGIN_EVENT_TABLE(PreviewWnd, wxWindow)
+    EVT_CLOSE(PreviewWnd::OnClose)
     EVT_SIZE(PreviewWnd::OnSize)
     EVT_COMBOBOX(ID_COMBO_ZOOM, PreviewWnd::OnZoomChanged)
 END_EVENT_TABLE()
@@ -118,27 +135,39 @@ PreviewWnd::PreviewWnd(wxWindow *parent, wxStyledTextCtrl *sourceCtrl)
 
     wxBoxSizer *panelSizer = new wxBoxSizer(wxHORIZONTAL);
     panel->SetSizer(panelSizer);
+
     // adding a combo with zoom level
+    gZoomItems.push_back(ZoomItem(10, wxT("10%")));
+    gZoomItems.push_back(ZoomItem(20, wxT("20%")));
+    gZoomItems.push_back(ZoomItem(30, wxT("30%")));
+    gZoomItems.push_back(ZoomItem(40, wxT("40%")));
+    gZoomItems.push_back(ZoomItem(50, wxT("50%")));
+    gZoomItems.push_back(ZoomItem(60, wxT("60%")));
+    gZoomItems.push_back(ZoomItem(70, wxT("70%")));
+    gZoomItems.push_back(ZoomItem(80, wxT("80%")));
+    gZoomItems.push_back(ZoomItem(90, wxT("90%")));
+    gZoomItems.push_back(ZoomItem(100, wxT("100%")));
+    gZoomItems.push_back(ZoomItem(110, wxT("110%")));
+    gZoomItems.push_back(ZoomItem(120, wxT("120%")));
+    gZoomItems.push_back(ZoomItem(130, wxT("130%")));
+    gZoomItems.push_back(ZoomItem(140, wxT("140%")));
+    gZoomItems.push_back(ZoomItem(150, wxT("150%")));
+    gZoomItems.push_back(ZoomItem(175, wxT("175%")));
+    gZoomItems.push_back(ZoomItem(200, wxT("200%")));
+    gZoomItems.push_back(ZoomItem(250, wxT("250%")));
+    gZoomItems.push_back(ZoomItem(300, wxT("300%")));
+    gZoomItems.push_back(ZoomItem(400, wxT("400%")));
+    gZoomItems.push_back(ZoomItem(500, wxT("500%")));
+    gZoomItems.push_back(ZoomItem(600, wxT("600%")));
+
     m_zoomCtrl = new wxComboBox(panel, ID_COMBO_ZOOM, wxEmptyString, wxDefaultPosition, wxSize(100, wxDefaultCoord), 0, NULL, wxCB_READONLY);
-    m_zoomCtrl->Append(_("10%"));
-    m_zoomCtrl->Append(_("20%"));
-    m_zoomCtrl->Append(_("30%"));
-    m_zoomCtrl->Append(_("40%"));
-    m_zoomCtrl->Append(_("50%"));
-    m_zoomCtrl->Append(_("60%"));
-    m_zoomCtrl->Append(_("70%"));
-    m_zoomCtrl->Append(_("80%"));
-    m_zoomCtrl->Append(_("90%"));
-    int ix100 = m_zoomCtrl->Append(_("100%"));
-    m_zoomCtrl->Append(_("110%"));
-    m_zoomCtrl->Append(_("120%"));
-    m_zoomCtrl->Append(_("130%"));
-    m_zoomCtrl->Append(_("140%"));
-    m_zoomCtrl->Append(_("150%"));
-    m_zoomCtrl->Append(_("175%"));
-    m_zoomCtrl->Append(_("200%"));
-    m_zoomCtrl->Append(_("250%"));
-    m_zoomCtrl->Append(_("300%"));
+    unsigned int ix100 = 0;
+    for (unsigned int i = 0; i < gZoomItems.size(); i++)
+    {
+        m_zoomCtrl->Append(wxString::Format(wxT("%s"), gZoomItems[i].mLabel.c_str()));
+        if (gZoomItems[i].mSize == 100)
+            ix100 = i;
+    }
     m_zoomCtrl->Select(ix100);
     panelSizer->Add(m_zoomCtrl, 0, wxALL | wxCENTER, 2);
 
@@ -152,8 +181,10 @@ PreviewWnd::PreviewWnd(wxWindow *parent, wxStyledTextCtrl *sourceCtrl)
     m_canvas = new PreviewWndCanvas(this, sourceCtrl, m_info);
     sizer->Add(m_canvas, 1, wxALL | wxEXPAND);
 
+    int zoom = wxGetApp().config->Read(wxT("/preview/zoom"), 100);
+
     //Resize();
-    setZoom(1);
+    setZoom(zoom);
 }
 
 PreviewWnd::~PreviewWnd()
@@ -161,13 +192,27 @@ PreviewWnd::~PreviewWnd()
     //dtor
 }
 
-void PreviewWnd::setZoom(float zoom)
+void PreviewWnd::setZoom(int zoom)
 {
     if (m_canvas)
     {
         m_canvas->setZoom(zoom);
         m_canvas->Refresh();
         m_canvas->Update();
+
+        // select appropriate entry in combo box
+        int ix = -1;
+
+        for (unsigned int i = 0; i < gZoomItems.size(); i++)
+        {
+            if (gZoomItems[i].mSize == zoom)
+            {
+                ix = i;
+                break;
+            }
+        }
+        if (ix >= 0)
+             m_zoomCtrl->Select(ix);
     }
 }
 
@@ -181,9 +226,18 @@ void PreviewWnd::OnZoomChanged(wxCommandEvent& event)
 {
     int zoom = wxAtoi(m_zoomCtrl->GetValue());
 
-    if (zoom > 0 && zoom < 2000)
+    if (zoom > 0 && zoom < 20000)
     {
-        setZoom((double)zoom / 100);
+        setZoom(zoom);
     }
 }
 
+void PreviewWnd::OnClose(wxCloseEvent &event)
+{
+    wxLogDebug(wxT("Preview - OnClose()"));
+    wxGetApp().config->Write(_("/preview/zoom"), m_canvas->getZoom());
+
+    Destroy();
+}
+
+} // namespace

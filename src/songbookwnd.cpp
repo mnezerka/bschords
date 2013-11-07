@@ -36,6 +36,7 @@ enum
     ID_BTN_REMOVE,
     ID_BTN_UP,
     ID_BTN_DOWN,
+    idActionSort,
     idActionDeleteSelected,
     idActionPrintOn,
     idActionPrintOff,
@@ -51,6 +52,7 @@ BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
     EVT_LIST_ITEM_ACTIVATED(idSongBookListCtrlId, SongBookWnd::OnSongBookItemActivated)
     EVT_LIST_ITEM_RIGHT_CLICK(ID_SONG_LIST, SongBookWnd::OnSongBookItemRightClick)
     EVT_LIST_KEY_DOWN(ID_SONG_LIST, SongBookWnd::OnListKeyDown)
+    EVT_MENU(idActionSort, SongBookWnd::OnSort)
     EVT_MENU(idActionDeleteSelected, SongBookWnd::OnDeleteSelected)
     EVT_MENU(idActionPrintOn, SongBookWnd::OnPrintOn)
     EVT_MENU(idActionPrintOff, SongBookWnd::OnPrintOff)
@@ -107,6 +109,7 @@ void SongBookListCtrl::OnContextMenu(wxContextMenuEvent& event)
     //ShowContextMenu(point);
     wxMenu menu;
 
+    menu.Append(idActionSort, wxT("Sort items"));
     menu.Append(idActionDeleteSelected, _T("Delete selected items"));
     menu.Append(idActionPrintOn, _T("Enable printing for selected items"));
     menu.Append(idActionPrintOff, _T("Disable printing for selected items"));
@@ -344,6 +347,13 @@ void SongBookWnd::OnDeleteSelected(wxCommandEvent& event)
         wxGetApp().m_songBook.deleteSelected();
         Update();
     }
+}
+
+void SongBookWnd::OnSort(wxCommandEvent& event)
+{
+    wxLogDebug(wxT("Sort Songbook"));
+    wxGetApp().m_songBook.sort();
+    Update();
 }
 
 void SongBookWnd::OnPrintOn(wxCommandEvent& event)

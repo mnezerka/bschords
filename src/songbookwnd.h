@@ -60,6 +60,7 @@ private:
     void OnListKeyDown(wxListEvent& event);
     void OnMoveUp(wxCommandEvent &event);
     void OnMoveDown(wxCommandEvent &event);
+    void OnSort(wxCommandEvent& event);
     void OnDeleteSelected(wxCommandEvent& event);
     void OnPrintOn(wxCommandEvent& event);
     void OnPrintOff(wxCommandEvent& event);

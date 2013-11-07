@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <vector>
+#include <stdexcept>
 #include <wx/textfile.h>
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
@@ -16,6 +17,21 @@
 
 namespace bschords
 {
+
+/*bool SongBookItemGreater(const SongBookItem* a, const SongBookItem& b)
+{
+    return true;
+
+	if(a.age == b.age)
+		return a.name < b.name;
+
+	return a.age > b.age;
+} */
+
+template <typename T> bool PComp(T * & a, T * & b)
+{
+   return *a < *b;
+};
 
 /* ------------------- SongBookWriterHtml --------------------------------------- */
 
@@ -256,10 +272,6 @@ void SongbookWriterTxt::write(const wxString &path)
 }
 
 /* ------------------- SongBookItem --------------------------------------- */
-SongBookItem::~SongBookItem()
-{
-
-}
 
 void SongBookItem::readFromXmlNode(wxXmlNode *node)
 {
@@ -310,7 +322,7 @@ void SongBookSection::readFromXmlNode(wxXmlNode *node)
 
     SongBookItem::readFromXmlNode(node);
 
-    mTitle = node->GetPropVal(wxT("name"), wxT("section"));
+    setTitle(node->GetPropVal(wxT("name"), wxT("section")));
 }
 
 wxXmlNode* SongBookSection::createXmlNode(wxString basePath)
@@ -322,14 +334,14 @@ void SongBookSection::writeToXmlNode(wxXmlNode *node)
 {
     SongBookItem::writeToXmlNode(node);
 
-    wxXmlProperty *prop = new wxXmlProperty(wxT("name"), mTitle);
+    wxXmlProperty *prop = new wxXmlProperty(wxT("name"), getTitle());
     node->AddProperty(prop);
 }
 
 wxString SongBookSection::getContents()
 {
     if (wxGetApp().m_styleSheet.m_songbookSectionPages)
-        return (wxT("{bschords_section: ") + mTitle + wxT("}"));
+        return (wxT("{bschords_section: ") + getTitle() + wxT("}"));
     else
         return (wxT(""));
 }
@@ -340,20 +352,18 @@ wxString SongBookSection::getTocDirective()
 }
 
 /* ------------------- SongBookSong --------------------------------------- */
-SongBookSong::SongBookSong(wxString path)
+SongBookSong::SongBookSong(wxString path) : SongBookItem(wxT(""))
 {
     wxFileName filePath(path);
     mPath = filePath.GetFullPath();
+
+    setTitle(getTitleFromPath(mPath));
 }
 
-wxString SongBookSong::getTitle()
+wxString SongBookSong::getTitleFromPath(wxString path)
 {
-    if (mTitle.Length() > 0)
-        return mTitle;
-
     wxString contents;
-
-    wxFile file(mPath, wxFile::read);
+    wxFile file(path, wxFile::read);
     if (file.IsOpened())
     {
         // get the file size (assume it is not huge file...)
@@ -373,8 +383,7 @@ wxString SongBookSong::getTitle()
 
     std::wstring toParse(contents.wc_str());
     bschordpro::InfoReader infoReader(toParse);
-    mTitle = infoReader.getTitle();
-    return mTitle;
+    return infoReader.getTitle();
 }
 
 wxString SongBookSong::getPath()
@@ -434,6 +443,8 @@ void SongBookSong::readFromXmlNode(wxXmlNode *node)
     wxFileName fileName(songPath, wxPATH_UNIX);
     fileName.MakeAbsolute(wxGetApp().m_settings->m_rootPath);
     mPath = fileName.GetFullPath(wxPATH_NATIVE);
+
+    setTitle(getTitleFromPath(mPath));
 }
 
 void SongBookSong::writeToXmlNode(wxXmlNode *node)
@@ -482,24 +493,30 @@ void SongBook::setBasePath(wxString path)
 
 void SongBook::empty()
 {
-    std::list<SongBookItem *>::iterator it;
+    m_items.clear();
+
+    /*std::list<SongBookItem *>::iterator it;
     while (!m_items.empty())
     {
         it = m_items.begin();
         delete(*it);
         m_items.erase(it);
-    }
+    }*/
 }
 
 SongBookItem *SongBook::getItem(unsigned int index)
 {
+    if (index > m_items.size())
+        throw std::out_of_range("Item index out of range");
+
     SongBookItem *result = NULL;
+
     unsigned int i = 0;
-    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
     {
         if (i == index)
         {
-            result = *it;
+            result = (*it);
             break;
         }
         else
@@ -511,12 +528,10 @@ SongBookItem *SongBook::getItem(unsigned int index)
 
 void SongBook::addItem(SongBookItem *item)
 {
-    if (!item)
-        return;
 
-    std::list<SongBookItem *>::iterator lastSelected = m_items.end();
+    std::list<SongBookItem*>::iterator lastSelected = m_items.end();
     // loop through the list in reverse direction to find last selected item
-    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
         if ((*it)->isSelected())
             lastSelected = it;
 
@@ -534,13 +549,12 @@ void SongBook::addItem(SongBookItem *item)
 
 void SongBook::deleteSelected()
 {
-    std::list<SongBookItem *>::iterator it = m_items.begin();
+    std::list<SongBookItem*>::iterator it = m_items.begin();
 
     while (it != m_items.end())
     {
         if ((*it)->isSelected())
         {
-            delete(*it);
             m_items.erase(it);
             it = m_items.begin();
         }
@@ -565,7 +579,7 @@ void SongBook::saveToXmlFile(wxString path, wxString rootPath)
     rootNode->AddChild(descriptionNode);
 
     wxXmlNode *lastChild = descriptionNode;
-    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
     {
         wxXmlNode *itemNode = (*it)->createXmlNode(m_basePath);
         (*it)->writeToXmlNode(itemNode);
@@ -614,13 +628,11 @@ void SongBook::loadFromXmlFile(wxString path)
         }
         else if (c->GetName() == wxT("song"))
         {
-            SongBookSong *s = new SongBookSong(c);
-            m_items.push_back(s);
+            m_items.push_back(new SongBookSong(c));
         }
         else if (c->GetName() == wxT("section"))
         {
-            SongBookSection *s = new SongBookSection(c);
-            m_items.push_back(s);
+            m_items.push_back(new SongBookSection(c));
         }
         c = c->GetNext();
     }
@@ -648,7 +660,7 @@ wxString SongBook::getContents()
     if (wxGetApp().m_styleSheet.m_songbookToc)
     {
         result.Append(wxT("{bschords_toc_begin}\n"));
-        for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+        for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
         {
             if (!(*it)->isPrintable() || !(*it)->getPrintFlag())
                 continue;
@@ -659,7 +671,7 @@ wxString SongBook::getContents()
     }
 
     unsigned int i = 0;
-    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
     {
         if (!(*it)->isPrintable())
             continue;
@@ -678,32 +690,26 @@ wxString SongBook::getContents()
 
 void SongBook::setItemTitle(unsigned int index, wxString title)
 {
-    SongBookItem *item = getItem(index);
-    if (!item)
-        return;
-
-    item->setTitle(title);
+    getItem(index)->setTitle(title);
     mModified = true;
 }
 
 void SongBook::selectAll(bool select)
 {
-    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
         (*it)->select(select);
 }
 
 void SongBook::selectItem(unsigned int index, bool select)
 {
-    SongBookItem *item = getItem(index);
-    if (item)
-        item->select(select);
+    getItem(index)->select(select);
 }
 
 int SongBook::getLastSelected()
 {
     int result = -1;
     unsigned int i = 0;
-    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
     {
         if ((*it)->isSelected())
             result = i;
@@ -714,7 +720,7 @@ int SongBook::getLastSelected()
 
 void SongBook::moveSelectedUp()
 {
-    std::list<SongBookItem *>::iterator it = m_items.begin();
+    std::list<SongBookItem*>::iterator it = m_items.begin();
 
     while (it != m_items.end())
     {
@@ -725,7 +731,7 @@ void SongBook::moveSelectedUp()
                 break;
 
             // get previous item
-            std::list<SongBookItem *>::iterator prev = it;
+            std::list<SongBookItem*>::iterator prev = it;
             std::advance(prev, -1);
             // if previous item exists
             if (it != prev && it != m_items.begin())
@@ -744,7 +750,7 @@ void SongBook::moveSelectedUp()
 
 void SongBook::moveSelectedDown()
 {
-    std::list<SongBookItem *>::iterator it = m_items.end();
+    std::list<SongBookItem*>::iterator it = m_items.end();
 
     if (m_items.empty())
         return;
@@ -759,14 +765,14 @@ void SongBook::moveSelectedDown()
         if ((*it)->isSelected())
         {
             // get 2 next items
-            std::list<SongBookItem *>::iterator next = it;
+            std::list<SongBookItem*>::iterator next = it;
             next++;
             if (next != m_items.end())
             {
-                std::list<SongBookItem *>::iterator next2 = next;
+                std::list<SongBookItem*>::iterator next2 = next;
                 next2++;
                 SongBookItem *movedItem = *it;
-                std::list<SongBookItem *>::iterator toMove = it;
+                std::list<SongBookItem*>::iterator toMove = it;
                 it--;
                 m_items.erase(toMove);
                 m_items.insert(next2, movedItem);
@@ -784,11 +790,34 @@ void SongBook::moveSelectedDown()
 
 void SongBook::setPrintFlagForSelected(bool printFlag)
 {
-    for (std::list<SongBookItem *>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
     {
         if ((*it)->isSelected())
             (*it)->setPrintFlag(printFlag);
     }
+}
+
+void SongBook::sort()
+{
+    unsigned int groupId = 0;
+
+    // mark all items with group id reflecting current position in songbook
+    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
+    {
+        // check if current item is group separator
+        if ((*it)->isGroupSeparator())
+        {
+            // set unique id to group and move to next item
+            groupId++;
+            (*it)->setGroupId(groupId);
+            groupId++;
+        }
+        else
+            (*it)->setGroupId(groupId);
+
+    }
+
+    m_items.sort(PComp<SongBookItem>);
 }
 
 void SongBook::exportHtml(const wxString path)

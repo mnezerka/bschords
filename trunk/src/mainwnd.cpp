@@ -212,7 +212,7 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
 END_EVENT_TABLE()
 
 MainWnd::MainWnd(wxFrame *frame, const wxString& title)
-    : wxFrame(frame, -1, title), m_isInEditMode(false)
+    : wxFrame(frame, -1, title), mLogTextCtrl(NULL), m_isInEditMode(false)
 {
     SetIcon(wxICON(bschordsicon));
 
@@ -224,6 +224,7 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     wxMenu* fileMenu = new wxMenu(_T(""));
     fileMenu->Append(wxID_NEW, _("&New song"), _("Create a new song file"));
     fileMenu->Append(wxID_OPEN, _("&Open song..."), _("Open a song file"));
+    fileMenu->Append(wxID_OPEN, _("Recent song..."), _("Open a song file"));
     fileMenu->Append(wxID_SAVE, _("&Save song\tCtrl-S"), _("Save the active song file"));
     fileMenu->Append(wxID_SAVEAS, _("Save song &as..."), _("Save the active song under different a name"));
     fileMenu->Append(wxID_CLOSE, _("&Close song"), _("Close song file"));
@@ -1164,7 +1165,7 @@ void MainWnd::OpenFile(const wxString filePath)
         return;
     }
 
-    wxLogDebug(wxT("loading song file %s"), fileName.GetFullPath().wc_str());
+    wxGetApp().info(wxT("Loading song: %s\n"), fileName.GetFullPath().wc_str());
 
     m_file.m_path = fileName.GetFullPath();
 
@@ -1246,7 +1247,7 @@ void MainWnd::SaveFile()
         return;
     }
 
-    wxLogDebug(wxT("saving song file %s"), fileName.GetFullPath().wc_str());
+    wxGetApp().info(wxT("Saving song: %s\n"), fileName.GetFullPath().wc_str());
 
     wxFile file(fileName.GetFullPath(), wxFile::write);
 
@@ -1287,7 +1288,7 @@ void MainWnd::SaveSongBook()
         return;
     }
 
-    wxLogDebug(wxT("saving songbook file %s"), fileName.GetFullPath().wc_str());
+    wxGetApp().info(wxT("Saving songbook: %s\n"), fileName.GetFullPath().wc_str());
     wxGetApp().m_songBook.saveToXmlFile(fileName.GetFullPath(), wxGetApp().m_settings->m_rootPath);
 }
 
@@ -1309,7 +1310,7 @@ void MainWnd::OpenSongBook(const wxString filePath)
         return;
     }
 
-    wxLogDebug(wxT("loading songbook file %s"), fileName.GetFullPath().wc_str());
+    wxGetApp().info(wxT("Loading songbook: %s\n"), fileName.GetFullPath().wc_str());
 
     wxGetApp().m_songBook.loadFromXmlFile(fileName.GetFullPath());
 
@@ -1435,6 +1436,13 @@ void MainWnd::OnSongbookProperties(wxCommandEvent& event)
         ;
     }
     dlg->Destroy();
+}
+
+void MainWnd::addInfo(wxString info)
+{
+    if (!mLogTextCtrl)
+        return;
+    mLogTextCtrl->AppendText(info);
 }
 
 // ----------------------------------------------------------------------------

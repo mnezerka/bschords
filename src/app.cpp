@@ -83,7 +83,7 @@ bool App::OnInit()
 
     //-----------------------------------------------------------------
     // open main window (frame)
-    MainWnd *mFrame = new MainWnd(0L, _("BSChords"));
+    mFrame = new MainWnd(0L, _("BSChords"));
     mFrame->Show();
 
     // initialize logging
@@ -119,3 +119,17 @@ wxLog* App::CreateLogTarget()
 }
 
 
+void App::info(wxString fmt, ...)
+{
+    if (!mFrame)
+        return;
+
+    wxString infoText;
+
+    va_list argptr;
+    va_start(argptr, fmt);
+    infoText.PrintfV(fmt, argptr);
+    va_end(argptr);
+
+    mFrame->addInfo(infoText);
+}

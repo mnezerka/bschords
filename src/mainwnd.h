@@ -45,6 +45,7 @@ class MainWnd: public wxFrame
 {
 public:
     void OpenFile(const wxString filePath);
+    void addInfo(wxString info);
     //wxRichTextCtrl *m_songContent;
     wxStyledTextCtrl *m_songContent;
     MainWnd(wxFrame *frame, const wxString& title);

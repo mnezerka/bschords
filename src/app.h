@@ -8,6 +8,7 @@
 #define BSCHORDSAPP_H
 
 #include <list>
+#include <vector>
 
 #include <wx/app.h>
 #include <wx/fileconf.h>
@@ -25,6 +26,7 @@ http://linkesoft.com/songbook/chordproformat.html
 http://en.wikipedia.org/wiki/Chord_%28software%29
 */
 
+// TODO: fix bug in songstructure - not able to typeset rythm changes (e.g. half of bar)
 // TODO: remember position and size of print preview window
 // TODO: fix bitmap reloading and scaling for each draw
 // TODO: additional song properties in songbook - comment, chordpro prefix (inserted after title), postfix (at the bottom), columns, font size etc.
@@ -52,6 +54,11 @@ struct AppSettings
 
     /// Colors for song editor commands
     wxColor m_editorColorCommands;
+
+    /// Recent songs
+    std::vector<wxString> mRecentSongFiles;
+
+    /// Recent songbooks
 
     /// Ctor
     AppSettings();
@@ -94,8 +101,11 @@ public:
     /// Called by wx framework when log target is created
     virtual wxLog* CreateLogTarget();
 
-private:
+    /// Writes message to the info window
+    virtual void info(wxString fmt, ...);
 
+private:
+    class MainWnd *mFrame;
 };
 
 } // namespace

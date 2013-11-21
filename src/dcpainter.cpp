@@ -300,6 +300,8 @@ std::vector< std::vector<TSetStructItem> > TSetBlockStruct::prepare()
             continue;
         }
 
+        //wxGetApp().info(wxT("process line <%s>\n"), line->wc_str());
+
         // configure tokenizer - set separator and string to be tokenized
         tkBars.SetString(*line, wxT("/"), wxTOKEN_RET_EMPTY);
         // loop over bars
@@ -307,7 +309,7 @@ std::vector< std::vector<TSetStructItem> > TSetBlockStruct::prepare()
         {
             // analyze individual bars
             wxString bar = tkBars.GetNextToken();
-            //std::wcout << L"analyzing bar <" << bar.wc_str() << L">" << std::endl;
+            //wxGetApp().info(wxT("analyzing bar <%s> of length %d\n"), bar.wc_str(), bar.Length());
 
             wxString chord;
             enum {READING_CHORD_SPACE, READING_CHORD_SYMBOL} state = READING_CHORD_SYMBOL;
@@ -326,7 +328,7 @@ std::vector< std::vector<TSetStructItem> > TSetBlockStruct::prepare()
                 case READING_CHORD_SPACE:
                     if (bar[i] != wxChar(' '))
                     {
-                        //std::wcout << L"Chord found <" << chord.wc_str() << L">" << (chord.Length() / (float)bar.Length()) << std::endl;
+                        //wxGetApp().info(wxT("chord <%s>"), chord.wc_str());
                         result[lineIx].push_back(TSetStructItem(chord.Trim(), (chord.Length() / (float)bar.Length())));
                         chord.Empty();
                         state = READING_CHORD_SYMBOL;
@@ -337,9 +339,13 @@ std::vector< std::vector<TSetStructItem> > TSetBlockStruct::prepare()
                 i++;
             }
             if (chord.Length() > 0)
+            {
+                //wxGetApp().info(wxT("chord <%s> "), chord.wc_str());
                 result[lineIx].push_back(TSetStructItem(chord.Trim(), (chord.Length() / (float)bar.Length())));
-
+            }
+            //wxGetApp().info(wxT("\n"));
         }
+
     }
 
     return result;
@@ -354,27 +360,38 @@ void TSetBlockStruct::getSizeParams(std::vector< std::vector<TSetStructItem> > i
     numSeparatorSize = m_painter->m_dc.GetTextExtent(wxT("/")).GetWidth();
 
     // look for longest string and minimal size to be able to compute size of cell
-    wxString maxChord;
+    wxString maxChord(wxT(""));
+    wxSize maxChordSize = m_painter->m_dc.GetTextExtent(maxChord);
+    // loop over all lines
     for (std::vector< std::vector<TSetStructItem> >::iterator lineIt = items.begin(); lineIt != items.end(); lineIt++)
     {
         float numLineSize = 0;
+        // loop over all chords on current line
         for (std::vector<TSetStructItem>::iterator it = (*lineIt).begin(); it != (*lineIt).end(); it++)
         {
             // skip non struct items
             if ((*it).mSize == -1)
                 continue;
 
-            size_t l = (*it).mChord.Length();
-            if (l > maxChord.Length())
+            wxSize chordSize = m_painter->m_dc.GetTextExtent((*it).mChord);
+            //wxGetApp().info(wxT("chord: <%s> size: %f\n"), (*it).mChord.wc_str(), (*it).mSize);
+            if (chordSize.GetWidth() > maxChordSize.GetWidth())
+            {
                 maxChord = (*it).mChord;
+                maxChordSize = m_painter->m_dc.GetTextExtent(maxChord);
+            }
             if ((*it).mSize < numMinSize)
                 numMinSize = (*it).mSize;
             numLineSize += (*it).mSize;
         }
+        //wxGetApp().info(wxT("line analyzed, size: %f\n"), numLineSize);
         if (numLineSize > numMaxLineSize)
             numMaxLineSize = numLineSize;
     }
-    numCellSize = m_painter->m_dc.GetTextExtent(maxChord).GetWidth() + m_painter->m_dc.GetCharWidth();
+
+    numCellSize = maxChordSize.GetWidth() + m_painter->m_dc.GetCharWidth() / 2;
+    //wxGetApp().info(wxT("Cell size: %d (maxChord: <%s>, maxChordSize: %d, numMaxLineSize: %f)\n"), numCellSize, maxChord.wc_str(), maxChordSize.GetWidth(), numMaxLineSize);
+    //wxGetApp().info(wxT("Cell size: %f, Max chord: <%s>\n"), numCellSize, maxChord.wc_str());
 }
 
 void TSetBlockStruct::draw()
@@ -387,6 +404,8 @@ void TSetBlockStruct::draw()
     float numMinSize;
     float numMaxLineSize;
     size_t numSeparatorSize;
+
+    // get size parameters of structure block
     getSizeParams(st, numCellSize, numMinSize, numMaxLineSize, numSeparatorSize);
 
     float numLinePos = 0;
@@ -407,7 +426,10 @@ void TSetBlockStruct::draw()
             lineHasCells = true;
 
             // draw separator
-            if (numLinePos == (long)numLinePos)
+            // following comparison rounds current position to nearest integer and compares it to same value, but rounded to 2 decimals
+            // such comparison should find bar boundaries. Rounding is necessary because numLinePos is incremented by mSize attribute
+            // which is result of division
+            if (floorf(numLinePos + 0.5) == floorf(numLinePos * 100 + 0.5) / 100)
             {
                 m_painter->m_dc.DrawText(wxChar('/'), pos);
                 pos.x += numSeparatorSize;

@@ -29,7 +29,6 @@ http://en.wikipedia.org/wiki/Chord_%28software%29
 // TODO: fix bug in songstructure - not able to typeset rythm changes (e.g. half of bar)
 // TODO: remember position and size of print preview window
 // TODO: fix bitmap reloading and scaling for each draw
-// TODO: additional song properties in songbook - comment, chordpro prefix (inserted after title), postfix (at the bottom), columns, font size etc.
 // TODO: apply stylesheet to Txt and Html outputs (hiding or showning appropriate sections)
 // TODO: more icons on toolbar - different icons for songbook, new icon for stylesheet
 // TODO: recent files and recent songbooks

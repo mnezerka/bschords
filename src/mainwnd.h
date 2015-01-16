@@ -61,9 +61,7 @@ private:
     wxComboBox *m_zoomCtrl;
     wxToolBar *m_toolBar;
     wxPanel *m_chordsPanel;
-    wxAuiToolBar* tb2;
     //wxButton *m_chordButtons[7];
-    wxComboBox *m_cmdCtrl;
     wxAuiManager m_auiMgr;
     bool m_isInEditMode;
 

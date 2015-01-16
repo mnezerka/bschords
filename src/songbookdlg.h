@@ -8,6 +8,7 @@
 #define BSCHORDS_SONGBOOKDLG_H
 
 #include <wx/button.h>
+#include <wx/bmpbuttn.h>
 #include <wx/statline.h>
 #include "app.h"
 

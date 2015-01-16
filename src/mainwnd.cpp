@@ -10,6 +10,9 @@
 #include <wx/listctrl.h>
 #include <wx/imaglist.h>
 #include <wx/dir.h>
+#include <wx/filedlg.h>
+#include <wx/menu.h>
+#include <wx/msgdlg.h>
 #include <wx/toolbar.h>
 #include <wx/spinctrl.h>
 #include <wx/srchctrl.h>
@@ -105,8 +108,16 @@ enum
     idMenuViewTbChords,
     idMenuViewLog,
 
-    idMenuSongInsertChorus,
-    idMenuSongInsertTab,
+    idMenuSongInsertTitle,
+    idMenuSongInsertSubTitle,
+    idMenuSongInsertChorusBegin,
+    idMenuSongInsertChorusEnd,
+    idMenuSongInsertTabBegin,
+    idMenuSongInsertTabEnd,
+    idMenuSongInsertStructBegin,
+    idMenuSongInsertStructEnd,
+
+
     idMenuSongAddToSongbook,
     idMenuSongTrnUp1,
     idMenuSongTrnUp2,
@@ -127,8 +138,6 @@ enum
 
     idFSBrowserAddToSongbook,
 
-    ID_COMBO_CHORD,
-    ID_COMBO_CMD,
     //idMenuViewTSetBook,
     ID_MENU_FILE_EXPORT,
     ID_FSBROWSER,
@@ -175,8 +184,14 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
     EVT_MENU(idMenuViewTbChords, MainWnd::OnViewToolbar)
     EVT_MENU(idMenuViewEditor, MainWnd::OnViewPane)
     EVT_MENU(idMenuViewLog, MainWnd::OnViewPane)
-    EVT_MENU(idMenuSongInsertChorus, MainWnd::OnSongInsert)
-    EVT_MENU(idMenuSongInsertTab, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertTitle, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertSubTitle, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertChorusBegin, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertChorusEnd, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertTabBegin, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertTabEnd, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertStructBegin, MainWnd::OnSongInsert)
+    EVT_MENU(idMenuSongInsertStructEnd, MainWnd::OnSongInsert)
     EVT_MENU(idMenuSongAddToSongbook, MainWnd::OnSongAddToSongbook)
 
     EVT_MENU(idMenuSongTrnUp1, MainWnd::OnSongTranspose)
@@ -207,8 +222,6 @@ BEGIN_EVENT_TABLE(MainWnd, wxFrame)
     EVT_TREE_ITEM_MENU(wxID_TREECTRL, MainWnd::OnFSBrowserItemMenu)
     EVT_MENU(idFSBrowserAddToSongbook, MainWnd::OnFSBrowserItemAddToSongbook)
     EVT_AUI_PANE_CLOSE(MainWnd::OnPaneClose)
-    EVT_COMBOBOX(ID_COMBO_CHORD, MainWnd::OnChordProToken)
-    EVT_COMBOBOX(ID_COMBO_CMD, MainWnd::OnChordProToken)
 END_EVENT_TABLE()
 
 MainWnd::MainWnd(wxFrame *frame, const wxString& title)
@@ -277,8 +290,15 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     mbar->Append(viewMenu, _("&View"));
 
     wxMenu* songMenu = new wxMenu(_T(""));
-    songMenu->Append(idMenuSongInsertChorus, _("&Insert chorus"), _("Insert chorus section"));
-    songMenu->Append(idMenuSongInsertTab, _("Insert &tab"), _("Insert tab section"));
+    songMenu->Append(idMenuSongInsertTitle, _("Insert title"), _("Insert {title:} markup"));
+    songMenu->Append(idMenuSongInsertSubTitle, _("Insert subtitle"), _("Insert {subtitle:} markup"));
+    songMenu->Append(idMenuSongInsertChorusBegin, _("Insert chorus begin"), _("Insert {start_of_chorus} markup"));
+    songMenu->Append(idMenuSongInsertChorusEnd, _("Insert chorus end"), _("Insert {end_of_chorus} markup"));
+    songMenu->Append(idMenuSongInsertTabBegin, _("Insert tab begin"), _("Insert {start_of_tab} markup"));
+    songMenu->Append(idMenuSongInsertTabEnd, _("Insert tab end"), _("Insert {end_of_tab} markup"));
+    songMenu->Append(idMenuSongInsertStructBegin, _("Insert struct begin"), _("Insert {start_of_struct} markup"));
+    songMenu->Append(idMenuSongInsertStructEnd, _("Insert struct end"), _("Insert {end_of_struct} markup"));
+
     songMenu->AppendSeparator();
     songMenu->Append(idMenuSongAddToSongbook, _("Add to songbook"), _("Add item to current songbook"));
 
@@ -334,24 +354,6 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     tb1->Realize();
     m_auiMgr.AddPane(tb1, wxAuiPaneInfo().Name(wxT("toolbar-main")).Caption(wxT("Mainx Toolbar")).ToolbarPane().Top().Row(0).LeftDockable(false).RightDockable(false));
 
-    tb2 = new wxAuiToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_HORZ_TEXT);
-    tb2->SetToolBitmapSize(wxSize(16,16));
-    wxBitmap tb2_bmp1 = wxArtProvider::GetBitmap(wxART_QUESTION, wxART_OTHER, wxSize(16,16));
-
-    m_cmdCtrl = new wxComboBox(tb2, ID_COMBO_CMD, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY);
-    m_cmdCtrl->Append(_("Commands"));
-    m_cmdCtrl->Append(_("{title: }"));
-    m_cmdCtrl->Append(_("{subtitle: }"));
-    m_cmdCtrl->Append(_("{start_of_chorus}"));
-    m_cmdCtrl->Append(_("{end_of_chorus}"));
-    m_cmdCtrl->Append(_("{start_of_tab}"));
-    m_cmdCtrl->Append(_("{end_of_tab}"));
-    m_cmdCtrl->Append(_("{start_of_struct}"));
-    m_cmdCtrl->Append(_("{end_of_struct}"));
-    m_cmdCtrl->SetSelection(0);
-    tb2->AddControl(m_cmdCtrl);
-    tb2->Realize();
-    m_auiMgr.AddPane(tb2, wxAuiPaneInfo().Name(wxT("toolbar-chords")).Caption(wxT("Chords Toolbar)")).ToolbarPane().Top().Row(1).LeftDockable(false).RightDockable(false));
 
     // -------------------- create the status bar
     // create a status bar with some information about the used wxWidgets version
@@ -386,7 +388,8 @@ MainWnd::MainWnd(wxFrame *frame, const wxString& title)
     m_auiMgr.AddPane(m_preview, wxAuiPaneInfo().Name(_("song-preview")).Caption(wxT("Song Preview")).Right().CloseButton(false).MinSize(200, wxDefaultCoord));
 
     // create file browser window
-    m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition, wxDefaultSize, wxNO_BORDER | wxDIRCTRL_SHOW_FILTERS, _T("Chordpro songs (*.txt)|*.txt|All files (*.*)|*.*"), 0 );
+    m_dirCtrl = new wxGenericDirCtrl(this, ID_FSBROWSER, _T(""), wxDefaultPosition,
+        wxDefaultSize, wxNO_BORDER | wxDIRCTRL_SHOW_FILTERS | wxDIRCTRL_MULTIPLE, _T("Chordpro songs (*.txt)|*.txt|All files (*.*)|*.*"), 0 );
     m_dirCtrl->SetPath(wxGetApp().m_settings->m_rootPath);
     m_auiMgr.AddPane(m_dirCtrl, wxAuiPaneInfo().Name(_("file-browser")).Caption(wxT("File Browser")).Left().CloseButton(false).MinSize(200, wxDefaultCoord));
 
@@ -458,12 +461,17 @@ void MainWnd::SetEditMode(bool newEditMode)
     m_isInEditMode = newEditMode;
 
     // controls
-    m_cmdCtrl->Enable(m_isInEditMode);
+    //m_cmdCtrl->Enable(m_isInEditMode);
 
     // menu items
-    GetMenuBar()->Enable(idMenuSongInsertChorus, m_isInEditMode);
-    GetMenuBar()->Enable(idMenuSongInsertTab, m_isInEditMode);
-
+    GetMenuBar()->Enable(idMenuSongInsertTitle, m_isInEditMode);
+    GetMenuBar()->Enable(idMenuSongInsertSubTitle, m_isInEditMode);
+    GetMenuBar()->Enable(idMenuSongInsertChorusBegin, m_isInEditMode);
+    GetMenuBar()->Enable(idMenuSongInsertChorusEnd, m_isInEditMode);
+    GetMenuBar()->Enable(idMenuSongInsertTabBegin, m_isInEditMode);
+    GetMenuBar()->Enable(idMenuSongInsertTabEnd, m_isInEditMode);
+    GetMenuBar()->Enable(idMenuSongInsertStructBegin, m_isInEditMode);
+    GetMenuBar()->Enable(idMenuSongInsertStructEnd, m_isInEditMode);
 }
 
 void MainWnd::OnFileNewSong(wxCommandEvent& event)
@@ -615,10 +623,13 @@ void MainWnd::OnFileExportSong(wxCommandEvent& event)
 
 void MainWnd::OnFilePrint(wxCommandEvent& event)
 {
+    // use FileName for extracting file name without path and extension
+    wxFileName fileName(m_file.m_path);
+
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
 
     wxPrinter printer(& printDialogData);
-    BSChordsPrintout printout(this, m_songContent->GetText(), wxT("ahoj"));
+    BSChordsPrintout printout(this, m_songContent->GetText(), fileName.GetName());
     if (!printer.Print(this, &printout, true /*prompt*/))
     {
         if (wxPrinter::GetLastError() == wxPRINTER_ERROR)
@@ -634,11 +645,14 @@ void MainWnd::OnFilePrint(wxCommandEvent& event)
 
 void MainWnd::OnFilePrintPreview(wxCommandEvent& event)
 {
+    // use FileName for extracting file name without path and extension
+    wxFileName fileName(m_file.m_path);
+
     // Pass two printout objects: for preview, and possible printing.
     wxPrintDialogData printDialogData(* wxGetApp().m_printData);
     wxPrintPreview *preview = new wxPrintPreview(
-        new BSChordsPrintout(this, m_songContent->GetText(), wxT("Song Preview")),
-        new BSChordsPrintout(this, m_songContent->GetText(), wxT("Song")),
+        new BSChordsPrintout(this, m_songContent->GetText(), wxT("Song Preview ") + fileName.GetName()),
+        new BSChordsPrintout(this, m_songContent->GetText(), fileName.GetName()),
         &printDialogData);
 
     if (!preview->IsOk())
@@ -648,7 +662,7 @@ void MainWnd::OnFilePrintPreview(wxCommandEvent& event)
         return;
     }
 
-    wxPreviewFrame *frame = new wxPreviewFrame(preview, this, wxT("Song Print Preview"), wxPoint(100, 100), wxSize(600, 650));
+    wxPreviewFrame *frame = new wxPreviewFrame(preview, this, wxT("Song Print Preview ") + fileName.GetName(), wxPoint(100, 100), wxSize(600, 650));
     frame->Centre(wxBOTH);
     frame->Initialize();
     frame->Show();
@@ -847,11 +861,29 @@ void MainWnd::OnSongInsert(wxCommandEvent& event)
 {
     switch (event.GetId())
     {
-    case idMenuSongInsertChorus:
-        m_songContent->AddText(_("{start_of_chorus}\n{end_of_chorus}"));
+    case idMenuSongInsertTitle:
+        m_songContent->AddText(_("{title:}"));
         break;
-    case idMenuSongInsertTab:
-        m_songContent->AddText(_("{start_of_tab}\n{end_of_tab}"));
+    case idMenuSongInsertSubTitle:
+        m_songContent->AddText(_("{subtitle:}"));
+        break;
+    case idMenuSongInsertChorusBegin:
+        m_songContent->AddText(_("{start_of_chorus}"));
+        break;
+    case idMenuSongInsertChorusEnd:
+        m_songContent->AddText(_("{end_of_chorus}"));
+        break;
+    case idMenuSongInsertTabBegin:
+        m_songContent->AddText(_("{start_of_tab}"));
+        break;
+    case idMenuSongInsertTabEnd:
+        m_songContent->AddText(_("{end_of_tab}"));
+        break;
+    case idMenuSongInsertStructBegin:
+        m_songContent->AddText(_("{start_of_struct}"));
+        break;
+    case idMenuSongInsertStructEnd:
+        m_songContent->AddText(_("{end_of_struct}"));
         break;
     }
 }
@@ -1083,18 +1115,6 @@ void MainWnd::OnSongEditorStyleNeeded(wxStyledTextEvent& event)
     }
 }
 
-void MainWnd::OnChordProToken(wxCommandEvent& event)
-{
-    if (!m_auiMgr.GetPane(m_songContent).IsShown())
-        return;
-
-    if	(event.GetId() == ID_COMBO_CMD && m_cmdCtrl->GetSelection() != 0)
-    {
-        m_songContent->AddText(m_cmdCtrl->GetValue());
-        m_cmdCtrl->SetSelection(0);
-    }
-}
-
 void MainWnd::OnFSBrowserSelChanged(wxTreeEvent& event)
 {
     wxTreeItemId id = event.GetItem();
@@ -1117,23 +1137,19 @@ void MainWnd::OnFSBrowserSelChanged(wxTreeEvent& event)
 
 void MainWnd::OnFSBrowserItemAddToSongbook(wxCommandEvent& event)
 {
-    wxTreeCtrl *treeCtrl = m_dirCtrl->GetTreeCtrl();
-
-    wxTreeItemId id = treeCtrl->GetSelection();
-    if (!id.IsOk())
-        return;
-
-    wxDirItemData* data = (wxDirItemData*) treeCtrl->GetItemData(id);
-    if (data)
+    wxArrayString selPaths;
+    m_dirCtrl->GetPaths(selPaths);
+    for (size_t selPathIndex = 0; selPathIndex < selPaths.GetCount(); selPathIndex++)
     {
-        if (!data->m_isDir)
-        {
-            wxFileName fileName(data->m_path);
-            fileName.MakeRelativeTo(wxGetApp().m_settings->m_rootPath);
-            m_songBookWnd->addSongFile(data->m_path);
-            m_songBookWnd->Update();
-        }
+        wxFileName fileName(selPaths[selPathIndex]);
+
+        // skio directories
+        if (fileName.IsDir())
+            continue;
+
+        m_songBookWnd->addSongFile(fileName.GetFullPath());
     }
+    m_songBookWnd->Update();
 }
 
 void MainWnd::OnFSBrowserItemMenu(wxTreeEvent& event)

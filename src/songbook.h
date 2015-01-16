@@ -21,7 +21,7 @@ class SongBookItem
 {
 public:
     /// Ctor
-    SongBookItem(wxString title) : mTitle(title), mSelected(false), mPrintFlag(true), mTransposeStep(0), mGroupId(0) { };
+    SongBookItem(wxString title) : mTitle(title), mSelected(false), mGroupId(0) { };
 
     /// Dtor
     virtual ~SongBookItem() {};
@@ -36,55 +36,19 @@ public:
     void select(bool select = true)
     {
         mSelected = select;
-    };
+    }
 
     /// Get selection for this item
     bool isSelected()
     {
         return(mSelected);
-    };
-
-    /// Enable printing for this item
-    void setPrintFlag(bool printFlag = true)
-    {
-        mPrintFlag = printFlag;
-    };
-
-    /// Get status of printing for this item
-    bool getPrintFlag()
-    {
-        return(mPrintFlag);
-    };
-
-    /// Check if item could be printed
-    virtual bool isPrintable()
-    {
-        return false;
-    };
-
-    /// Check if item is transposeable (musicaly)
-    virtual bool isTransposeable()
-    {
-        return false;
-    };
-
-    /// Get transpose step (item must be transposeable)
-    virtual int getTransposeStep()
-    {
-        return mTransposeStep;
-    }
-
-    /// Set transpose step (item must be transposeable)
-    virtual void setTransposeStep(int newStep)
-    {
-        mTransposeStep = newStep;
     }
 
     /// Get path for items that represent file in filesystem
-    virtual wxString getPath() { return wxT(""); };
+    virtual wxString getPath() { return wxT(""); }
 
     /// Get item title
-    virtual wxString getTitle() { return (mTitle); };
+    virtual wxString getTitle() { return (mTitle); }
 
     /// Set item title
     virtual void setTitle(wxString title) { mTitle = title; };
@@ -134,8 +98,6 @@ public:
 private:
     wxString mTitle;
     bool mSelected;
-    bool mPrintFlag;
-    int mTransposeStep;
     wxString mComment;
     unsigned int mGroupId;  // this attributes is used when sorting, it sotres index of grouop
 };
@@ -153,7 +115,7 @@ public:
     {
         return true;
     }
-    virtual bool isPrintable();
+
     virtual wxString getContents();
     virtual wxString getTocDirective();
     virtual wxXmlNode *createXmlNode(const wxString basePath);
@@ -170,14 +132,7 @@ public:
         readFromXmlNode(node);
     };
     virtual ~SongBookSong() { };
-    virtual bool isPrintable()
-    {
-        return true;
-    };
-    virtual bool isTransposeable()
-    {
-        return true;
-    };
+
     //virtual wxString getTitle();
     virtual wxString getPath();
     virtual wxString getContents();

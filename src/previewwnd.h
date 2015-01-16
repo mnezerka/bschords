@@ -10,6 +10,7 @@
 #include <wx/scrolwin.h>
 #include <wx/richtext/richtextctrl.h>
 #include <wx/stc/stc.h>
+#include <wx/combobox.h>
 
 namespace bschords
 {

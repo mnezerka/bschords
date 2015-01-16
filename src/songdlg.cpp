@@ -10,6 +10,7 @@
 #include <wx/artprov.h>
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
+#include <wx/statbox.h>
 #include <wx/valgen.h>
 #include "songdlg.h"
 

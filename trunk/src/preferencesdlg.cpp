@@ -5,11 +5,14 @@
  */
 
 #include <iostream>
+#include <wx/checkbox.h>
 #include <wx/treebook.h>
 #include <wx/imaglist.h>
 #include <wx/artprov.h>
 #include <wx/fontdlg.h>
 #include <wx/colordlg.h>
+#include <wx/statbox.h>
+#include <wx/stattext.h>
 #include <wx/valgen.h>
 
 #include "preferencesdlg.h"

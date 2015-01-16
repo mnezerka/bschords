@@ -5,8 +5,12 @@
  */
 
 #include <iostream>
-#include <wx/imaglist.h>
 #include <wx/filename.h>
+#include <wx/imaglist.h>
+#include <wx/menu.h>
+#include <wx/msgdlg.h>
+#include <wx/stattext.h>
+
 #include "app.h"
 #include "songbook.h"
 #include "songbookwnd.h"
@@ -38,8 +42,6 @@ enum
     ID_BTN_DOWN,
     idActionSort,
     idActionDeleteSelected,
-    idActionPrintOn,
-    idActionPrintOff,
     idActionSongbookProperties,
     idActionSongProperties
 };
@@ -54,8 +56,6 @@ BEGIN_EVENT_TABLE(SongBookWnd, wxWindow)
     EVT_LIST_KEY_DOWN(ID_SONG_LIST, SongBookWnd::OnListKeyDown)
     EVT_MENU(idActionSort, SongBookWnd::OnSort)
     EVT_MENU(idActionDeleteSelected, SongBookWnd::OnDeleteSelected)
-    EVT_MENU(idActionPrintOn, SongBookWnd::OnPrintOn)
-    EVT_MENU(idActionPrintOff, SongBookWnd::OnPrintOff)
     EVT_MENU(idActionSongbookProperties, SongBookWnd::OnSongbookProperties)
 END_EVENT_TABLE()
 
@@ -111,11 +111,9 @@ void SongBookListCtrl::OnContextMenu(wxContextMenuEvent& event)
 
     menu.Append(idActionSort, wxT("Sort items"));
     menu.Append(idActionDeleteSelected, _T("Delete selected items"));
-    menu.Append(idActionPrintOn, _T("Enable printing for selected items"));
-    menu.Append(idActionPrintOff, _T("Disable printing for selected items"));
-    menu.AppendSeparator();
+    //menu.AppendSeparator();
     menu.Append(idActionSongProperties, _T("Item properties..."));
-    menu.AppendSeparator();
+    //menu.AppendSeparator();
     menu.Append(idActionSongbookProperties, _T("Songbook properties..."));
 
     PopupMenu(&menu, point.x, point.y);
@@ -160,11 +158,11 @@ SongBookWnd::SongBookWnd(wxWindow *parent, wxWindowID id)
 
     m_listCtrl = new SongBookListCtrl(this, idSongBookListCtrlId, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxSUNKEN_BORDER | wxLC_EDIT_LABELS);
     m_listCtrl->InsertColumn(0, wxT("Name"));
-    m_listCtrl->InsertColumn(1, wxT("P"));
-    m_listCtrl->InsertColumn(2, wxT("T"));
+    //m_listCtrl->InsertColumn(1, wxT("P"));
+   // m_listCtrl->InsertColumn(2, wxT("T"));
     m_listCtrl->SetColumnWidth(0, 200);
-    m_listCtrl->SetColumnWidth(1, 20);
-    m_listCtrl->SetColumnWidth(2, 20);
+   // m_listCtrl->SetColumnWidth(1, 20);
+    //m_listCtrl->SetColumnWidth(2, 20);
     sizer->Add(m_listCtrl, 1, wxALL | wxEXPAND, 1);
 
     // create buttons bar
@@ -223,13 +221,6 @@ void SongBookWnd::Update()
     {
         SongBookItem *item = wxGetApp().m_songBook.getItem(i);
         long itemIndex = m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), item->getTitle());
-        if (item->getPrintFlag())
-            m_listCtrl->SetItem(itemIndex, 1, wxT("X"));
-        if (item->isTransposeable())
-        {
-            wxString transpositionLabel(wxString::Format(wxT("%d"), item->getTransposeStep()));
-            m_listCtrl->SetItem(itemIndex, 2, transpositionLabel);
-        }
 
         //m_listCtrl->SetBackgroundColor();
         if (item->isSelected())
@@ -353,22 +344,6 @@ void SongBookWnd::OnSort(wxCommandEvent& event)
 {
     wxLogDebug(wxT("Sort Songbook"));
     wxGetApp().m_songBook.sort();
-    Update();
-}
-
-void SongBookWnd::OnPrintOn(wxCommandEvent& event)
-{
-    wxLogDebug(wxT("Print on for selected"));
-    copySelectionToSongbook();
-    wxGetApp().m_songBook.setPrintFlagForSelected(true);
-    Update();
-}
-
-void SongBookWnd::OnPrintOff(wxCommandEvent& event)
-{
-    wxLogDebug(wxT("Print off for selected"));
-    copySelectionToSongbook();
-    wxGetApp().m_songBook.setPrintFlagForSelected(false);
     Update();
 }
 

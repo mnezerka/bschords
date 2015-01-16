@@ -10,6 +10,7 @@
 #include <wx/textfile.h>
 #include <wx/filename.h>
 #include <wx/xml/xml.h>
+#include <wx/msgdlg.h>
 
 #include "app.h"
 #include "bschordpro.h"
@@ -38,11 +39,12 @@ template <typename T> bool PComp(T * & a, T * & b)
 class SongBookWriterHtml : public bschordpro::EventHandler
 {
 public:
-    SongBookWriterHtml(SongBook *songbook) : mSongbook(songbook) { };
+    SongBookWriterHtml(SongBook *songbook) : mSongbook(songbook), mSkipping(false) { };
     void write(const wxString &path);
 private:
     SongBook *mSongbook;
     wxString mOutput;
+    bool mSkipping;
     std::vector<std::wstring> mLineChordBuffer;
     std::vector<std::wstring> mLineTextBuffer;
     std::vector<std::wstring> mTocBuffer;
@@ -76,6 +78,7 @@ void SongBookWriterHtml::onEnd()
     mOutputHeader += wxT("      th { text-align: left; }\n");
     mOutputHeader += wxT("      td { text-align: left; }\n");
     mOutputHeader += wxT("      div.hspace { height: 20px; }\n");
+    mOutputHeader += wxT("      p { margin-top: 3px; margin-bottom: 3px; }\n");
     mOutputHeader += wxT("    </style>\n");
     mOutputHeader += wxT("  </head>\n");
     mOutputHeader += wxT("<body>\n");
@@ -96,13 +99,19 @@ void SongBookWriterHtml::onEnd()
 
 void SongBookWriterHtml::onLineBegin()
 {
+    if (mSkipping)
+        return;
+
     mLineChordBuffer.clear();
     mLineTextBuffer.clear();
 }
 
 void SongBookWriterHtml::onLineEnd()
 {
-    if (mLineTextBuffer.size() == 0)
+    if (mSkipping)
+        return;
+
+    if (mLineTextBuffer.size() == 0 && mLineChordBuffer.size() == 0)
     {
         mOutput += wxT("<div class=\"hspace\"></div>\n");
     }
@@ -147,6 +156,18 @@ void SongBookWriterHtml::onCommand(const bschordpro::CommandType command, const 
     else if (command == bschordpro::CMD_SUBTITLE)
     {
         mOutput += wxString::Format(wxT("<h3>%s</h3>\n"), value.c_str());
+    }
+    else if (command == bschordpro::CMD_COMMENT)
+    {
+        mOutput += wxString::Format(wxT("<p><i>%s</i></p>\n"), value.c_str());
+    }
+    else if (command == bschordpro::CMD_STRUCT_START || command == bschordpro::CMD_TAB_START)
+    {
+        mSkipping = true;
+    }
+    else if (command == bschordpro::CMD_STRUCT_END || command == bschordpro::CMD_TAB_END)
+    {
+        mSkipping = false;
     }
 }
 
@@ -310,11 +331,6 @@ void SongBookItem::writeToXmlNode(wxXmlNode *node)
 
 /* ------------------- SongBookSection ------------------------------------ */
 
-bool SongBookSection::isPrintable()
-{
-    return wxGetApp().m_styleSheet.m_songbookSectionPages;
-}
-
 void SongBookSection::readFromXmlNode(wxXmlNode *node)
 {
     if (node->GetName() != wxT("section"))
@@ -322,7 +338,7 @@ void SongBookSection::readFromXmlNode(wxXmlNode *node)
 
     SongBookItem::readFromXmlNode(node);
 
-    setTitle(node->GetPropVal(wxT("name"), wxT("section")));
+    setTitle(node->GetAttribute(wxT("name"), wxT("section")));
 }
 
 wxXmlNode* SongBookSection::createXmlNode(wxString basePath)
@@ -334,8 +350,8 @@ void SongBookSection::writeToXmlNode(wxXmlNode *node)
 {
     SongBookItem::writeToXmlNode(node);
 
-    wxXmlProperty *prop = new wxXmlProperty(wxT("name"), getTitle());
-    node->AddProperty(prop);
+    wxXmlAttribute *att = new wxXmlAttribute(wxT("name"), getTitle());
+    node->AddAttribute(att);
 }
 
 wxString SongBookSection::getContents()
@@ -439,7 +455,7 @@ void SongBookSong::readFromXmlNode(wxXmlNode *node)
 
     SongBookItem::readFromXmlNode(node);
 
-    wxString songPath = node->GetPropVal(wxT("path"), wxT(""));
+    wxString songPath = node->GetAttribute(wxT("path"), wxT(""));
     wxFileName fileName(songPath, wxPATH_UNIX);
     fileName.MakeAbsolute(wxGetApp().m_settings->m_rootPath);
     mPath = fileName.GetFullPath(wxPATH_NATIVE);
@@ -453,8 +469,8 @@ void SongBookSong::writeToXmlNode(wxXmlNode *node)
 
     wxFileName filePath(mPath);
     filePath.MakeRelativeTo(wxGetApp().m_settings->m_rootPath);
-    wxXmlProperty *prop = new wxXmlProperty(wxT("path"), filePath.GetFullPath(wxPATH_UNIX));
-    node->AddProperty(prop);
+    wxXmlAttribute *prop = new wxXmlProperty(wxT("path"), filePath.GetFullPath(wxPATH_UNIX));
+    node->AddAttribute(prop);
 }
 
 wxString SongBookSong::getTocDirective()
@@ -568,8 +584,8 @@ void SongBook::saveToXmlFile(wxString path, wxString rootPath)
 {
     wxXmlDocument doc;
     wxXmlNode *rootNode = new wxXmlNode(NULL, wxXML_ELEMENT_NODE, wxT("songbook"));
-    wxXmlProperty *prop = new wxXmlProperty(wxT("name"), mName);
-    rootNode->AddProperty(prop);
+    wxXmlAttribute *att = new wxXmlAttribute(wxT("name"), mName);
+    rootNode->AddAttribute(att);
 
     // create description node
     wxXmlNode *descriptionNode = new wxXmlNode(rootNode, wxXML_ELEMENT_NODE, wxT("description"));
@@ -614,7 +630,7 @@ void SongBook::loadFromXmlFile(wxString path)
         return;
 
     // get songbook name
-    mName = rootNode->GetPropVal(wxT("name"), wxT("Songbook"));
+    mName = rootNode->GetAttribute(wxT("name"), wxT("Songbook"));
 
     wxXmlNode *c = rootNode->GetChildren();
     while (c)
@@ -662,8 +678,8 @@ wxString SongBook::getContents()
         result.Append(wxT("{bschords_toc_begin}\n"));
         for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
         {
-            if (!(*it)->isPrintable() || !(*it)->getPrintFlag())
-                continue;
+            //if (!(*it)->isPrintable() || !(*it)->getPrintFlag())
+            //    continue;
 
             result += wxString::Format(wxT("{%s: %s}\n"), (*it)->getTocDirective().c_str(), (*it)->getTitle().c_str());
         }
@@ -673,11 +689,11 @@ wxString SongBook::getContents()
     unsigned int i = 0;
     for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
     {
-        if (!(*it)->isPrintable())
+        /*if (!(*it)->isPrintable())
             continue;
 
         if (!(*it)->getPrintFlag())
-            continue;
+            continue;*/
 
         if (i > 0)
             result.Append(wxT("\n\n"));
@@ -786,15 +802,6 @@ void SongBook::moveSelectedDown()
     }
 
     mModified = true;
-}
-
-void SongBook::setPrintFlagForSelected(bool printFlag)
-{
-    for (std::list<SongBookItem*>::iterator it = m_items.begin(); it != m_items.end(); it++)
-    {
-        if ((*it)->isSelected())
-            (*it)->setPrintFlag(printFlag);
-    }
 }
 
 void SongBook::sort()

@@ -7,10 +7,15 @@
 #include <iostream>
 
 #include "songstylesheetdlg.h"
+#include <wx/checkbox.h>
 #include <wx/treebook.h>
 #include <wx/artprov.h>
+#include <wx/filedlg.h>
 #include <wx/fontdlg.h>
+#include <wx/statbox.h>
+#include <wx/stattext.h>
 #include <wx/valgen.h>
+#include <wx/valtext.h>
 #include <wx/wfstream.h>
 
 namespace bschords

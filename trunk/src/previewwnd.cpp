@@ -4,10 +4,12 @@
  * @brief   Song Preview Window Implementation
  */
 
+#include <wx/dcclient.h>
 #include <wx/dc.h>
 #include <wx/dir.h>
 #include <wx/richtext/richtextbuffer.h>
 #include <wx/pen.h>
+#include <wx/stattext.h>
 #include <vector>
 
 #include "app.h"

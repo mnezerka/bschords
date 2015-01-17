@@ -10,6 +10,7 @@
 #include <wx/fileconf.h>
 #include <wx/config.h>
 #include <wx/font.h>
+#include <wx/gdicmn.h>
 
 namespace bschords
 {

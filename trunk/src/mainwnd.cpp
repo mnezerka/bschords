@@ -1472,13 +1472,13 @@ void BSChordsPrintout::OnPreparePrinting()
     GetPageSizeMM(&pageSizeXMM, &pageSizeYMM);
     GetPageSizePixels(&pageSizeXPx, &pageSizeYPx);
 
-    wxRect rct = GetPaperRectPixels();
+    //wxRect rct = GetPaperRectPixels();
 
     int ppiScreenX, ppiScreenY;
     GetPPIScreen(&ppiScreenX, &ppiScreenY);
 
-    wxLogDebug(wxT("OnPreparePrinting, PPI=(%d, %d), PageSizeMM=(%d, %d), PageSizePx=(%d, %d), PaperRect=(%d, %d, %d, %d)"),
-               ppiScreenX, ppiScreenY, pageSizeXMM, pageSizeYMM, pageSizeXPx, pageSizeYPx, rct.GetLeft(), rct.GetTop(), rct.GetWidth(), rct.GetHeight());
+    //wxLogDebug(wxT("OnPreparePrinting, PPI=(%d, %d), PageSizeMM=(%d, %d), PageSizePx=(%d, %d), PaperRect=(%d, %d, %d, %d)"),
+    //           ppiScreenX, ppiScreenY, pageSizeXMM, pageSizeYMM, pageSizeXPx, pageSizeYPx, rct.GetLeft(), rct.GetTop(), rct.GetWidth(), rct.GetHeight());
 
     wxSize paperPixels;
     paperPixels.SetWidth((ppiScreenX * 210) / MM_PER_IN);

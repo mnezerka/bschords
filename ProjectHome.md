@@ -1,0 +1,1 @@
+BChord is an application for typesetting songsheets and songbooks. The program runs on MS Windows and Linux. Song files are written in the ChordPro (Chord Pro) format, a common text format.

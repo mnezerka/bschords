@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <wx/stdpaths.h>
+#include <wx/settings.h>
 
 #include "app.h"
 
@@ -16,6 +17,9 @@ AppSettings::AppSettings()
 {
     m_editorFont = wxSystemSettings::GetFont(wxSYS_SYSTEM_FONT);
     m_rootPath = wxStandardPaths::Get().GetDocumentsDir();
+    m_editorColorText = *wxRED;
+    m_editorColorChords = *wxRED;
+    m_editorColorCommands = *wxRED;
 }
 
 void AppSettings::LoadFromConfig(wxConfig *config)

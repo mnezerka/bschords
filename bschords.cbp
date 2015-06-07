@@ -129,12 +129,10 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
-					<Add option="`wx-config --cxxflags`" />
+					<Add option="`wx-config --version=3.0 --cxxflags`" />
 				</Compiler>
 				<Linker>
-					<Add option="`wx-config --libs`" />
-					<Add library="wx_gtk2u_stc-2.8" />
-					<Add library="fontconfig" />
+					<Add option="`wx-config --version=3.0  --libs std,aui,stc`" />
 				</Linker>
 			</Target>
 			<Target title="release_linux">
@@ -143,10 +141,10 @@
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="`wx-config --cxxflags`" />
+					<Add option="`wx-config --version=3.0 --cxxflags`" />
 				</Compiler>
 				<Linker>
-					<Add option="`wx-config --libs`" />
+					<Add option="`wx-config --version=3.0  --libs std,aui,stc`" />
 				</Linker>
 			</Target>
 			<Target title="cli_debug_linux">
@@ -180,9 +178,6 @@
 			<Add directory="$(#wx)/include" />
 			<Add directory="$(#wx)/contrib/include" />
 		</Compiler>
-		<ResourceCompiler>
-			<Add directory="$(#wx)/include" />
-		</ResourceCompiler>
 		<Unit filename="src/app.cpp">
 			<Option target="debug_win" />
 			<Option target="release_win" />

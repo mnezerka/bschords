@@ -307,8 +307,11 @@ wxBitmap PreferencesDlg::createColorBitmap(const wxColour& c)
         {
             wxColour pixcol = c;
             if (x == 0 || x == 24 || y == 0 || y == 13)
+            {
                 pixcol = *wxBLACK;
-            image.SetRGB(x, y, pixcol.Red(), pixcol.Green(), pixcol.Blue());
+                image.SetRGB(x, y, pixcol.Red(), pixcol.Green(), pixcol.Blue());
+            }
+            //image.SetRGB(x, y, pixcol.Red(), pixcol.Green(), pixcol.Blue());
         }
     return wxBitmap(image);
 }
